@@ -1,0 +1,38 @@
+{
+  "name": "election-map-prototype",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "generate:map": "node scripts/generate-map.mjs"
+  },
+  "dependencies": {
+    "motion": "^13.1.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@axe-core/react": "^4.13.0",
+    "@eslint/js": "^9.39.5",
+    "@types/d3-geo": "^3.1.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/topojson-client": "^3.1.5",
+    "@vitejs/plugin-react": "^6.0.5",
+    "d3-geo": "^3.1.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "playwright": "^1.62.1",
+    "topojson-client": "^3.1.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.67.0",
+    "us-atlas": "^3.0.1",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  }
+}
