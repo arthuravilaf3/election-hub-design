@@ -4,6 +4,7 @@ import { buildBallot } from '../data/mockRaces';
 import { DEFAULT_SOURCE_ID, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 import { STATE_SHAPES } from '../data/states';
+import { loadTrust, trustKey, type TrustPicks } from '../data/trust';
 
 const CHAMBERS: Chamber[] = ['senate', 'house', 'governor'];
 
@@ -24,6 +25,12 @@ export interface ElectionState {
   flash: { stateId: string; nonce: number } | null;
   /** True while a coordinated full-map cutover wave is animating (drives stagger). */
   staggering: boolean;
+  /**
+   * Reader-declared trusted source per race, `${chamber}:${stateId}` ->
+   * sourceId. A pick overrides the global source for THAT state only — it is
+   * never mixed into any aggregate (see summarize()).
+   */
+  trust: TrustPicks;
 }
 
 export type ElectionAction =
@@ -41,6 +48,8 @@ export type ElectionAction =
   | { type: 'AGE_DATA' }
   | { type: 'CLEAR_BANNER' }
   | { type: 'STAGGER_DONE' }
+  | { type: 'SET_TRUST'; stateId: string; sourceId: string }
+  | { type: 'CLEAR_TRUST'; stateId: string }
   | { type: 'RESET' };
 
 export const CUTOVER_BANNER = 'Live results have replaced predictions.';
@@ -58,6 +67,7 @@ export function initialElectionState(): ElectionState {
     announcement: '',
     flash: null,
     staggering: false,
+    trust: loadTrust(),
   };
 }
 
@@ -155,6 +165,9 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
         chamber: action.chamber,
         selectedId: keepSelection,
         zoomedId: keepSelection === state.zoomedId ? state.zoomedId : null,
+        // Race switches crossfade with the same stagger wave as cutover, so
+        // the recolor is perceivable even in peripheral vision.
+        staggering: true,
         announcement: `Showing ${CHAMBER_LABEL[action.chamber]} races. ${Object.keys(races).length} on the ballot.`,
       };
     }
@@ -286,11 +299,41 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
     case 'CLEAR_BANNER':
       return state.banner === null ? state : { ...state, banner: null };
 
+    /* Radio semantics: choosing the source already picked clears the pick
+       and the state goes back to the global source. */
+    case 'SET_TRUST': {
+      const key = trustKey(state.chamber, action.stateId);
+      const next = { ...state.trust };
+      const cleared = next[key] === action.sourceId;
+      if (cleared) delete next[key];
+      else next[key] = action.sourceId;
+      return {
+        ...state,
+        trust: next,
+        announcement: cleared
+          ? `${nameOf(action.stateId)} back to the map source, ${sourceLabel(state.sourceId)}.`
+          : `${nameOf(action.stateId)} now shows ${sourceLabel(action.sourceId)} on your map.`,
+      };
+    }
+
+    case 'CLEAR_TRUST': {
+      const key = trustKey(state.chamber, action.stateId);
+      if (!(key in state.trust)) return state;
+      const next = { ...state.trust };
+      delete next[key];
+      return {
+        ...state,
+        trust: next,
+        announcement: `${nameOf(action.stateId)} back to the map source, ${sourceLabel(state.sourceId)}.`,
+      };
+    }
+
     case 'STAGGER_DONE':
       return state.staggering ? { ...state, staggering: false } : state;
 
     case 'RESET':
-      return initialElectionState();
+      // Dev reset rebuilds the fixture; the reader's picks are theirs to keep.
+      return { ...initialElectionState(), trust: state.trust };
   }
 }
 

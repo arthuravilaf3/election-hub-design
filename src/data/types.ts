@@ -44,10 +44,13 @@ export interface Results {
 
 /** A House district within a state — rendered in the zoomed frame, not on the map. */
 export interface District {
-  /** e.g. 'CA-13'. */
+  /** e.g. 'CA-13', or 'WY-AL' where the state elects at large. */
   id: string;
   incumbent: Party;
   reads: SourceRead[];
+  /** One of the editor-curated "29 closest races" — the set the map and the
+   *  game are scoped to. The rest of the delegation is context. */
+  curated?: boolean;
 }
 
 /** One named candidate in a race (drawer redesign, Aug 2026). Mock data. */

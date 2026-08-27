@@ -101,6 +101,34 @@ export function fillFor(race: StateRace, sourceId: string): string {
   return r.leader ? `var(--${r.leader}-5)` : 'var(--uncalled)';
 }
 
+/**
+ * Ink tone for the state-abbreviation label drawn ON a fill. Light fills
+ * (lean/tossup steps) take dark ink; saturated fills take light ink;
+ * not-on-ballot dims. Must track the rating palette in colors.css.
+ */
+export function labelToneFor(race: StateRace | undefined, sourceId: string): 'dark' | 'light' | 'dim' {
+  if (!race) return 'dim'; // not on ballot
+  if (race.mode === 'results') {
+    const r = race.results;
+    if (!r || r.status === 'uncalled') return 'light';
+    if (r.status === 'counting') return 'dark'; // steps 1-3 are light fills
+    return 'light'; // called: solid party color
+  }
+  const read = readFor(race, sourceId);
+  if (!read) return 'light'; // no-read gray
+  const rating = ratingOf(read);
+  return rating === 'tossup' || rating.startsWith('lean') ? 'dark' : 'light';
+}
+
+/**
+ * True when THIS source published nothing for this race — the designed
+ * "no data from this source" state. Never resolved by borrowing another
+ * provider's number: a gap is information.
+ */
+export function hasNoRead(race: StateRace, sourceId: string): boolean {
+  return race.mode === 'prediction' && !readFor(race, sourceId);
+}
+
 /** True when the diagonal hatch overlay (non-color channel) applies. */
 export function isHatched(race: StateRace): boolean {
   return race.mode === 'results' && race.results?.status === 'counting' && !!race.results.leader;

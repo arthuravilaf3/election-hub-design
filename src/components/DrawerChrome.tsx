@@ -5,9 +5,7 @@
 // bar's arrow is `tabler-icon-arrow-right`), drawn with Tabler's official
 // paths.
 import type { Chamber } from '../data/types';
-import { CHAMBER_LABEL } from '../data/summary';
-
-const CHAMBERS: Chamber[] = ['house', 'senate', 'governor'];
+import { RaceTabs } from './RaceTabs';
 
 export interface StateRef {
   id: string;
@@ -21,26 +19,19 @@ interface ChamberTabsProps {
   onChamber: (chamber: Chamber) => void;
 }
 
-/** DS tabs: switch the drawer (and the map behind it) between chambers.
- *  Replaces the floating dock while the drawer is open. */
+/** The panel's race tabs — the SAME component the map header uses, so the two
+ *  cannot drift; the panel only adds per-state availability. */
 export function ChamberTabs({ chamber, availability, onChamber }: ChamberTabsProps) {
   return (
-    <div className="drawer-tabs" role="tablist" aria-label="Chamber">
-      {CHAMBERS.map((c) => (
-        <button
-          key={c}
-          type="button"
-          role="tab"
-          aria-selected={chamber === c}
-          disabled={!availability[c]}
-          title={availability[c] ? undefined : `No ${CHAMBER_LABEL[c]} race in this state`}
-          className={`drawer-tab${chamber === c ? ' is-active' : ''}`}
-          onClick={() => onChamber(c)}
-        >
-          {CHAMBER_LABEL[c]}
-        </button>
-      ))}
-    </div>
+    <RaceTabs
+      chamber={chamber}
+      availability={availability}
+      controls="drawer-body"
+      idPrefix="panel-race-tab"
+      label="Race"
+      className="race-tabs--panel"
+      onChamber={onChamber}
+    />
   );
 }
 

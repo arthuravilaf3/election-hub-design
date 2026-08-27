@@ -1,3 +1,4 @@
+import { DISTRICT_COUNT, districtId } from './districts';
 import type { Ballot, Candidate, Chamber, District, Party, Results, SourceRead, StateRace } from './types';
 
 const RESULTS_SOURCE = 'AP vote count (mock)';
@@ -105,16 +106,30 @@ const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 
 /**
+ * MARKET COVERAGE GAPS — authored, not derived. Prediction markets list the
+ * contests that draw volume; safe seats and small races often have no market
+ * at all. Keeping real holes in the fixture is what keeps the "no data from
+ * this source" state honest: a source with nothing to say must SAY nothing,
+ * never inherit another provider's number (and a trust pick pointed at a hole
+ * stays empty too).
+ */
+const MARKET_GAPS: Record<string, string[]> = {
+  kalshi: ['governor:VT', 'governor:WY', 'senate:WV', 'house:NE'],
+  polymarket: ['governor:VT', 'senate:ID', 'house:CO'],
+};
+
+/**
  * Polling averages refresh a few times a day; markets tick continuously. The
  * gap is deliberate — it is what the freshness line has to communicate.
  */
 function buildReads(id: string, [, poll, kalshi, poly]: Seed, now: number): SourceRead[] {
   const h = hash(id);
-  return [
+  const reads: SourceRead[] = [
     { sourceId: 'dw-poll-avg', kind: 'poll', margin: poll, asOf: new Date(now - (2 * HOUR + (h % 90) * MINUTE)).toISOString() },
     { sourceId: 'kalshi', kind: 'market', demOdds: kalshi, asOf: new Date(now - (3 + (h % 14)) * MINUTE).toISOString() },
     { sourceId: 'polymarket', kind: 'market', demOdds: poly, asOf: new Date(now - (2 + (h % 21)) * MINUTE).toISOString() },
   ];
+  return reads.filter((r) => !MARKET_GAPS[r.sourceId]?.includes(id));
 }
 
 /**
@@ -159,6 +174,47 @@ function buildCandidates(key: string, poll: number): Candidate[] {
   return list.sort((a, b) => b.pct - a.pct);
 }
 
+/**
+ * The state's FULL 2026 delegation, not just the curated rows: every seat
+ * the state actually elects (2020 apportionment, see districts.ts).
+ *
+ * The curated "closest races" keep their authored numbers — those are the
+ * ones the map and the game are scoped to. Every other seat is generated
+ * around the STATE's own read, deterministically, so the list can never
+ * contradict the color the state carries on the map. Each district still
+ * owns its three separate reads: nothing here is a blended number.
+ */
+function buildDelegation(seed: Seed, curated: District[], now: number): District[] {
+  const [stateId, poll, kalshi, poly] = seed;
+  const total = DISTRICT_COUNT[stateId] ?? curated.length;
+  const authored = new Map(curated.map((d) => [d.id, d]));
+  const clamp = (v: number) => Math.max(3, Math.min(97, Math.round(v)));
+  const out: District[] = [];
+
+  for (let seat = 1; seat <= total; seat++) {
+    const id = districtId(stateId, seat);
+    const known = authored.get(id);
+    if (known) {
+      out.push(known);
+      continue;
+    }
+    const h = hash(`${id}:seat`);
+    // Seats spread around the statewide margin: most safe, a few close.
+    const swing = ((h % 29) - 14) * 0.9; // ±12.6 pts
+    const districtPoll = Math.round((poll + swing) * 10) / 10;
+    const shift = swing * 2.4;
+    // ~1 in 7 seats is held by the party it does NOT lean toward — the
+    // seats that make a delegation interesting.
+    const lean: Party = districtPoll >= 0 ? 'dem' : 'rep';
+    out.push({
+      id,
+      incumbent: h % 7 === 0 ? (lean === 'dem' ? 'rep' : 'dem') : lean,
+      reads: buildReads(id, [id, districtPoll, clamp(kalshi + shift), clamp(poly + shift)], now),
+    });
+  }
+  return out;
+}
+
 function buildRace(seed: Seed, chamber: Chamber, now: number, districts?: District[]): StateRace {
   const [id, poll] = seed;
   return {
@@ -188,12 +244,13 @@ export function buildBallot(now: number = Date.now()): Ballot {
 
   const house: Record<string, StateRace> = {};
   for (const { state, districts } of HOUSE) {
-    const built: District[] = districts.map(([districtId, incumbent, poll, kalshi, poly]) => ({
-      id: districtId,
+    const curated: District[] = districts.map(([id, incumbent, poll, kalshi, poly]) => ({
+      id,
       incumbent,
-      reads: buildReads(districtId, [districtId, poll, kalshi, poly], now),
+      reads: buildReads(id, [id, poll, kalshi, poly], now),
+      curated: true,
     }));
-    house[state[0]] = buildRace(state, 'house', now, built);
+    house[state[0]] = buildRace(state, 'house', now, buildDelegation(state, curated, now));
   }
 
   return { senate, house, governor };

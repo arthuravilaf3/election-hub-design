@@ -8,10 +8,28 @@
   box-sizing: border-box;
 }
 
+/* DS text-style aliases (DW 3.0 Source of Truth). NOT new tokens — local
+   aliases of `semantic/font-family/*` so components never hardcode a family.
+   default = Libre Franklin; exclusive = Libre Caslon Text (premium/editorial,
+   the ONLY sanctioned second typographic system). */
+:root {
+  --font-default: 'Libre Franklin', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica,
+    Arial, sans-serif;
+  --font-exclusive: 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+
+  /* DS semantic text tones the shared colors.css does not carry yet. NOT new
+     colors — local aliases of `semantic/color/text/neutral/*`, values read
+     off the DW 3.0 file (dark mode here, light in the theme layer below).
+     Worth folding into colors.css: the dek and the meta line in the article
+     card are bound to these, and --ink-soft (#a3a3a3) is a shade off the
+     DS's own subtlest (#8f8f8f). */
+  --ink-subtle: #dfdfdf; /* text/neutral/subtle/default -> color/gray/200 */
+  --ink-subtlest: #8f8f8f; /* text/neutral/subtlest/default -> color/gray/400 */
+}
+
 body {
   margin: 0;
-  font-family: 'Libre Franklin', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
-    sans-serif;
+  font-family: var(--font-default);
   font-size: 14px;
   line-height: 20px;
   color: var(--ink);
@@ -24,9 +42,8 @@ body {
 .app {
   max-width: 1400px;
   margin: 0 auto;
-  /* top: clears the overlayed promo bar (36px) at the top of the page;
-     bottom: clearance for the floating dock */
-  padding: 60px 32px 140px;
+  /* promo bar is in normal flow now — no overlay clearance needed */
+  padding: 24px 32px 80px;
 }
 
 /* With the dev toolbar expanded, the bottom chrome is much taller — give the
@@ -43,6 +60,15 @@ body {
    loop that visibly oscillates the promo bar. Anchoring off ends the loop. */
 html {
   overflow-anchor: none;
+}
+
+/* Modal (state drawer) open: the page behind holds still — see
+   hooks/useScrollLock.ts for why the lock lives on <body> and not on <html>.
+   The gutter var replaces the width the scrollbar gives up, so nothing
+   shifts sideways when it disappears (0 under macOS overlay scrollbars). */
+body.is-scroll-locked {
+  overflow: hidden;
+  padding-right: var(--scroll-lock-gutter, 0px);
 }
 
 body {
@@ -296,22 +322,31 @@ button,
 /* ---------- Map card (redesign Aug 2026) ---------- */
 
 /*
- * The map lives in a rounded #151515 card nearly full-bleed (Figma: x16,
- * radius 24). Rendered FLAT: any transform on an SVG ancestor makes the
- * compositor rasterize + resample it, pixelating the borders.
+ * The map card: background/neutral/subtle (--surface) section holding the
+ * whole dynamic unit — header, statement, seat bar, map, legend.
+ * overflow+radius clip the zoom camera. Rendered FLAT: any transform on an
+ * SVG ancestor makes the compositor rasterize + resample it, pixelating the
+ * borders.
  */
 .map-card {
   position: relative;
   background: var(--surface);
   border-radius: 24px;
-  overflow: hidden;
+  /* CLIP, not hidden: `hidden` makes the card a scroll container, and the
+     zoomed map's transformed bounds give it a huge scrollable area. The
+     browser then "reveals" any focused child (the drawer's buttons) by
+     scrolling that box AND the page — which threw the document to the top.
+     `clip` cuts the same shape without ever being scrollable. */
+  overflow: clip;
   margin-top: 24px;
 }
 
 /* Padding lives on the wrap and collapses during zoom, so the zoomed map
-   bleeds edge-to-edge inside the card — no bare gray ring. */
+   bleeds edge-to-edge inside the card — no bare gray ring. Generous sides
+   keep the map itself a touch smaller than the card, and scale with it so
+   mid widths don't get squeezed. */
 .map-wrap {
-  padding: 28px 44px;
+  padding: 96px clamp(32px, 9%, 128px) 52px;
   transition: padding 550ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -323,28 +358,6 @@ button,
   .map-wrap {
     transition: none;
   }
-}
-
-/* Prediction Game chip pinned to the card corner (Figma: 102px, r24). */
-.game-chip {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 6;
-  width: 102px;
-  height: 102px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 44px;
-  text-decoration: none;
-  background: rgba(10, 9, 9, 0.86);
-  border-radius: 24px;
-  transition: transform 180ms ease-out;
-}
-
-.game-chip:hover {
-  transform: scale(1.05);
 }
 
 .election-map {
@@ -648,26 +661,6 @@ button,
   gap: 12px;
 }
 
-.zoom-exit {
-  position: absolute;
-  top: 20px;
-  left: 134px; /* clear of the game chip pinned to the card corner */
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-2);
-  color: var(--ink);
-  cursor: pointer;
-  z-index: 5;
-}
-
-.zoom-exit:hover {
-  background: var(--surface-hover);
-}
-
 /* States with no race in this chamber: inert — no lift, no hover feedback. */
 .state-shape.is-empty {
   cursor: default;
@@ -713,6 +706,14 @@ button,
   top: 100%;
   left: 0;
   right: 0;
+  /* The band is an overlay — clicks/hover must reach the map underneath
+     wherever the scrim has faded; only the header's actual content is
+     interactive (it re-enables below). */
+  pointer-events: none;
+}
+
+.compact-header > * {
+  pointer-events: auto;
 }
 
 /* Height-collapse wrapper: hides a bar smoothly inside the overlay. */
@@ -723,7 +724,8 @@ button,
 }
 
 .chrome-collapse--tall {
-  height: 64px;
+  /* Title row + tab row (see .compact-header). */
+  height: 92px;
 }
 
 .chrome-collapse.is-collapsed {
@@ -782,83 +784,105 @@ button,
   text-decoration: underline;
 }
 
-/* ---------- Hero ---------- */
+/* ---------- Race header (above the card) ---------- */
 
-.hero {
-  max-width: 680px;
-  margin: 32px auto 0;
+/* Countdown, then tabs, then the headline they drive, its byline and the
+   seat bar — centered, per the Figma comp. The order IS the argument: the
+   control sits immediately above its own consequence. */
+.race-header {
+  margin: 36px 0 0;
+  /* Grid so every row is its own line and shrink-to-fit + centered; the seat
+     bar opts back into the full width. */
+  display: grid;
+  justify-items: center;
   text-align: center;
 }
 
-.hero-title {
-  margin: 0;
-  font-size: 40px;
-  line-height: 48px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.hero-updated {
-  margin: 16px 0 0;
-  font-size: 14px;
-  color: #8f8f8f;
-}
-
-.hero-bar-block {
-  max-width: 592px;
-  margin: 14px auto 0;
-}
-
-.hero-stats {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 16px;
-  font-size: 16px;
-}
-
-.hero-stats-mid {
+/* Days-to-election pill: brand/bold/pressed ground, DS label/400/sm. */
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: var(--brand-pressed);
   color: var(--ink);
+  font-size: 12px;
+  line-height: 20px;
 }
 
-/* ---------- Balance bar (+ compact header) ---------- */
-
-.balance-bar {
-  display: flex;
-  gap: 2px;
-  height: 6px;
-  border-radius: 200px;
-  overflow: hidden;
-  cursor: default;
+.countdown strong {
+  font-weight: 600;
 }
 
-.balance-dem {
-  background: var(--bar-dem);
+.countdown svg {
+  flex: none;
 }
 
-.balance-rep {
-  background: var(--bar-rep);
+/* Shrink-to-fit so the tablist rule spans the tabs, not the page. Written
+   with both classes: the base .race-tabs block is declared later. */
+.race-tabs.race-tabs--header {
+  display: inline-flex;
+  justify-content: center;
 }
 
-.balance-bar--compact {
-  width: 398px;
-  max-width: 60vw;
-  height: 4px;
-  margin: 6px auto 0;
+.race-statement {
+  margin-top: 16px;
+  animation: statement-in 200ms ease-out;
 }
 
-.balance-tooltip {
-  transform: translateY(calc(-100% - 10px));
-  width: 260px;
+/* Crossfade via filter, not opacity: @axe-core audits on re-render and can
+   sample mid-animation — element opacity factors into its contrast math
+   (false "serious" hit), filter does not. Visual result is identical. */
+@keyframes statement-in {
+  from {
+    filter: opacity(0);
+  }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .race-statement {
+    animation: none;
+  }
+}
+
+/* Page-title scale: this line IS the page title now. Regular weight with
+   the figure it is about set in bold — the comp's own treatment. Sized to
+   sit on ONE line at desktop widths (no measure cap); the phone step below
+   is allowed to wrap. */
+.race-title {
+  margin: 0 auto;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  max-width: none;
+}
+
+.race-title strong {
+  font-weight: 700;
+}
+
+.race-byline {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* The pinned bar: headline on top, race tabs under it, so the reader can
+   switch races from here instead of scrolling back up. Solid page ground —
+   the same fill the nav carries, so the two read as one piece of chrome. */
 .compact-header {
-  height: 64px;
+  height: 92px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px 12px;
+  gap: 2px;
+  padding: 8px 16px 10px;
+  background: var(--surface-dim);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 .compact-title {
@@ -873,6 +897,20 @@ button,
   max-width: 90vw;
 }
 
+/* Same tabs, smaller and rule-less: the band's own bottom edge separates it,
+   a second hairline right above it would read as a double line. */
+.race-tabs.race-tabs--compact {
+  display: inline-flex;
+  flex: none;
+  gap: 18px;
+  border-bottom: 0;
+}
+
+.race-tabs--compact .race-tab {
+  font-size: 13px;
+  padding: 4px 2px 6px;
+}
+
 /* ---------- Live row ---------- */
 
 .live-row {
@@ -884,8 +922,9 @@ button,
 
 /* ---------- Legend strip ---------- */
 
+/* Sits between the hero and the map — compact, quiet. */
 .legend-strip {
-  margin-top: 16px;
+  margin-top: 40px;
 }
 
 .legend-strip ul {
@@ -895,8 +934,9 @@ button,
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px 20px;
-  font-size: 12px;
+  gap: 6px 16px;
+  font-size: 11px;
+  color: var(--ink-soft);
 }
 
 .legend-strip li {
@@ -906,8 +946,8 @@ button,
 }
 
 .legend-swatch {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   display: inline-block;
   flex: none;
@@ -921,6 +961,58 @@ button,
   );
 }
 
+/* Mirrors the map's no-data stripes (lighter, wider, opposite angle). */
+.legend-swatch-striped {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--ink) 26%, transparent) 0 2px,
+    transparent 2px 5px
+  );
+}
+
+/* The override marker, drawn at legend scale: light core, dark ring. */
+.legend-swatch-trust {
+  border-radius: 999px;
+  background: var(--ink);
+  box-shadow: 0 0 0 2px var(--surface-dim);
+}
+
+/* ---------- Trust override marker (map) ---------- */
+
+/* Two tones so the dot survives every fill: the ring separates it from
+   saturated colors, the core from the light ones and the no-data gray. */
+.trust-dot-ring {
+  fill: var(--surface-dim);
+}
+
+.trust-dot {
+  fill: var(--ink);
+}
+
+.trust-markers {
+  transition: opacity 150ms ease-out;
+}
+
+.trust-markers.is-hidden {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-markers {
+    transition: none;
+  }
+}
+
+/* Tooltip echo of the marker. */
+.map-tooltip-trust {
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--brand-hover);
+  white-space: nowrap;
+}
+
 .legend-rule {
   margin: 8px 0 0;
   text-align: center;
@@ -928,147 +1020,12 @@ button,
   color: var(--ink-soft);
 }
 
-/* ---------- Floating dock (chambers + sources) ---------- */
+/* ---------- Dropdown menus (feed filters, source lists) ---------- */
 
-.dock-row {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 350;
-  transition: bottom 250ms ease-out, opacity 250ms ease-out, transform 250ms ease-out;
-}
-
-.dock-row.is-raised {
-  bottom: 200px;
-}
-
-/* Dock leaves while the drawer owns navigation. */
-.dock-row.is-dismissed {
-  opacity: 0;
-  transform: translateX(-50%) translateY(24px);
-  pointer-events: none;
-}
-
-/* One pill: chamber chips + divider + sources dropdown (Figma: 76px tall,
-   #0A0909 @ 90%, radius 200). */
-.dock-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background: color-mix(in srgb, var(--surface-dim) 90%, transparent);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 200px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-}
-
-.dock {
-  border: 0;
-  margin: 0;
-  padding: 0;
-}
-
-.dock-options {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.dock-option {
-  position: relative;
-  display: inline-flex;
-}
-
-.dock-option input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  margin: 0;
-  cursor: pointer;
-  z-index: 1;
-}
-
-.dock-label {
-  display: inline-flex;
-  align-items: center;
-  height: 52px;
-  padding: 0 22px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink-soft);
-  white-space: nowrap;
-  transition: background 140ms ease-out, color 140ms ease-out, border-color 140ms ease-out;
-}
-
-.dock-option input:hover + .dock-label {
-  color: var(--ink);
-}
-
-/* Active chamber: subtly raised surface, per the Figma chip. */
-.dock-option input:checked + .dock-label {
-  background: var(--surface);
-  border-color: transparent;
-  color: var(--ink);
-}
-
-.dock-option input:focus-visible + .dock-label {
-  outline: 2px solid var(--selection);
-  outline-offset: 2px;
-}
-
-.dock-divider {
-  width: 1px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.14);
-  flex: none;
-}
-
-.dock-sources {
-  position: relative;
-}
-
-.dock-sources-trigger {
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 52px;
-  padding: 0 20px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  transition: background 140ms ease-out;
-}
-
-.dock-sources-trigger:hover:not(:disabled) {
-  background: var(--surface);
-}
-
-.dock-sources-trigger:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.dock-sources-trigger svg {
-  transition: transform 180ms ease-out;
-}
-
-.dock-sources-trigger svg.is-flipped {
-  transform: rotate(180deg);
-}
-
-/* Menu opens UPWARD from the dock. */
+/* Shared menu surface (feed filters, source lists). */
 .dock-menu {
   position: absolute;
-  bottom: calc(100% + 14px);
+  top: calc(100% + 8px);
   right: 0;
   min-width: 180px;
   padding: 6px;
@@ -1090,10 +1047,7 @@ button,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dock-row,
-  .dock-menu,
-  .dock-label,
-  .dock-sources-trigger {
+  .dock-menu {
     transition: none;
     animation: none;
   }
@@ -1133,7 +1087,9 @@ button,
   height: calc(100% - 32px);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  /* The frame never scrolls — .drawer-scroll inside does, so the header,
+     tabs and the prev/next STATE navigation stay fixed in the modal. */
+  overflow: hidden;
   z-index: 5;
   background: color-mix(in srgb, var(--surface-dim) 96%, transparent);
   backdrop-filter: blur(10px);
@@ -1205,14 +1161,16 @@ button,
   background: var(--surface);
 }
 
-.drawer-tabs {
+/* THE race tabs — one definition, used by the map header and the state
+   panel (see RaceTabs.tsx). Underline is the active channel; weight backs it
+   up so the state does not rest on color alone. */
+.race-tabs {
   display: flex;
   gap: 20px;
-  margin-top: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
-.drawer-tab {
+.race-tab {
   font: inherit;
   font-size: 14px;
   padding: 8px 2px 10px;
@@ -1224,14 +1182,25 @@ button,
   transition: color 150ms ease-out, border-color 150ms ease-out;
 }
 
-.drawer-tab:hover {
+.race-tab:hover {
   color: var(--ink);
 }
 
-.drawer-tab.is-active {
+.race-tab.is-active {
   color: var(--ink);
   font-weight: 600;
   border-bottom-color: var(--ink);
+}
+
+/* Panel: sits under the state title. */
+.race-tabs--panel {
+  margin-top: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .race-tab {
+    transition: none;
+  }
 }
 
 .drawer-sec {
@@ -1260,29 +1229,135 @@ button,
   font-weight: 600;
 }
 
-/* Cross-source comparison rows */
+/* Cross-source comparison + trust picker */
 .drawer-reads {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: grid;
   gap: 8px;
 }
 
-.drawer-reads li {
+/* Each comparison card IS the trust control (role=radio). Same row shape as
+   before — the card only gained a right-hand slot and a picked state. */
+.source-card {
+  font: inherit;
+  text-align: left;
   display: grid;
-  grid-template-columns: 10px auto 1fr auto;
+  grid-template-columns: 10px auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid color-mix(in srgb, var(--ink) 6%, transparent);
   border-radius: 12px;
   font-size: 12px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 150ms ease-out, background 150ms ease-out;
+}
+
+.source-card:hover {
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+
+/* Picked: accent border, no color-only signal — the badge says it in words. */
+.source-card.is-picked {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 10%, transparent);
+}
+
+/* Right slot stacks state over freshness: the "as of" line moves down
+   instead of being squeezed out. */
+.source-card-slot {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+  text-align: right;
+}
+
+.trust-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.trust-default {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+/* Idle cards stay quiet: the invitation only appears on hover/focus. */
+.trust-hint {
+  font-size: 10px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.source-card:hover .trust-hint,
+.source-card:focus-visible .trust-hint {
+  opacity: 1;
+}
+
+/* Microcopy under the section title, and its inline reset action. */
+.trust-copy {
+  margin: 10px 0 12px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.trust-reset {
+  font: inherit;
+  font-size: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.trust-reset:hover {
+  color: var(--brand-hover);
+}
+
+.trust-warn {
+  color: var(--warning);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .source-card,
+  .trust-hint {
+    transition: none;
+  }
 }
 
 .drawer-read-label {
   font-weight: 600;
   font-size: 13px;
+}
+
+/* The kind disclaimer, same words as the map's source control. */
+.source-kind {
+  display: block;
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }
 
 .drawer-read-value {
@@ -1311,46 +1386,105 @@ button,
 .district-chip-rep { background: var(--rating-likely-rep); }
 .district-chip-tossup { background: var(--rating-tossup); }
 
-/* District rows (House zoom) */
-.drawer-districts {
+/* District blocks carry the full seven-step rating scale. */
+.district-rating-safe-dem { background: var(--rating-safe-dem); }
+.district-rating-likely-dem { background: var(--rating-likely-dem); }
+.district-rating-lean-dem { background: var(--rating-lean-dem); }
+.district-rating-tossup { background: var(--rating-tossup); }
+.district-rating-lean-rep { background: var(--rating-lean-rep); }
+.district-rating-likely-rep { background: var(--rating-likely-rep); }
+.district-rating-safe-rep { background: var(--rating-safe-rep); }
+
+/* District blocks (House detail): two per row so a 52-seat delegation does
+   not become a 52-row scroll. An odd last block keeps its half width —
+   stretching it would read as a bigger seat. */
+.district-grid {
   list-style: none;
   margin: 12px 0 0;
   padding: 0;
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  align-items: start;
 }
 
-.drawer-districts li {
-  display: grid;
-  grid-template-columns: 10px 1fr;
-  grid-template-areas:
-    'chip id'
-    '.    read'
-    '.    meta';
-  align-items: center;
-  gap: 2px 10px;
+.district-block {
   padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
 }
 
-.drawer-districts .district-chip { grid-area: chip; }
+/* The curated "closest races" carry the watchlist marker — the rest of the
+   delegation is context around them. */
+.district-block.is-curated {
+  border-color: color-mix(in srgb, var(--brand) 45%, transparent);
+}
+
+.district-block-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
 
 .district-id {
-  grid-area: id;
   font-weight: 600;
   font-size: 14px;
 }
 
-.district-read {
-  grid-area: read;
+.district-watch {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-hover);
+}
+
+.district-rating {
+  margin: 6px 0 0;
   font-size: 12px;
+  font-weight: 600;
+}
+
+.district-read {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-soft);
 }
 
 .district-meta {
-  grid-area: meta;
+  margin: 4px 0 0;
   font-size: 10px;
   color: var(--ink-soft);
+}
+
+/* Expander: the delegation opens in place, no new surface. */
+.district-expander {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 10px;
+  padding: 8px 14px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 120ms ease-out, border-color 120ms ease-out;
+}
+
+.district-expander:hover {
+  background: var(--surface-2);
+  border-color: var(--selection);
+}
+
+/* Only the narrowest screens fall back to one column. */
+@media (max-width: 480px) {
+  .district-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ---------- Candidate photo-bars (drawer) ---------- */
@@ -1500,12 +1634,12 @@ button,
 }
 
 /* Chamber tabs inside the drawer: disabled = state has no race there. */
-.drawer-tab:disabled {
+.race-tab:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
-.drawer-tab:disabled:hover {
+.race-tab:disabled:hover {
   color: var(--ink-soft);
 }
 
@@ -1542,5 +1676,2475 @@ button,
   .drawer-nav-btn,
   .btn-follow {
     transition: none;
+  }
+}
+
+/* ---------- Map section, card header, state labels, feed (Aug 2026) ---------- */
+
+/* The section that scopes the sticky race selector. */
+.map-section {
+  position: relative;
+}
+
+/* Static attribution (results mode). */
+.source-byline {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* Brand wordmarks: the SVG is a MASK, painted with currentColor — the
+   asset's own fills never show, so the "white" is really var(--ink) and
+   follows the UI tokens. Widths keep each file's aspect ratio at 14px. */
+.source-logo {
+  display: inline-block;
+  height: 14px;
+  background: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  vertical-align: -2px;
+}
+
+.source-logo--polymarket {
+  width: 76px;
+  -webkit-mask-image: url('/logos/polymarket.svg');
+  mask-image: url('/logos/polymarket.svg');
+}
+
+.source-logo--kalshi {
+  width: 55px;
+  -webkit-mask-image: url('/logos/kalshi.svg');
+  mask-image: url('/logos/kalshi.svg');
+}
+
+/* The picker's menu: brand on the left, kind disclaimer on the right. */
+.source-menu {
+  z-index: 20;
+}
+
+.source-menu .dock-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.source-menu .dock-menu-item em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+/* State abbreviation labels: decorative geometry captions. Tone follows the
+   fill (dark ink on light ratings, light ink on saturated ones). */
+.state-labels {
+  pointer-events: none;
+  transition: opacity 250ms ease-out;
+}
+
+.state-labels.is-hidden {
+  opacity: 0;
+}
+
+.state-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+  letter-spacing: 0.02em;
+}
+
+.state-label--light {
+  fill: var(--ink);
+  opacity: 0.9;
+}
+
+.state-label--dark {
+  fill: var(--surface-dim);
+  opacity: 0.85;
+}
+
+.state-label--dim {
+  fill: var(--ink-soft);
+  opacity: 0.45;
+}
+
+/* ---------- Coverage feed ---------- */
+
+/* Full-bleed band one surface step above the page, with generous distance
+   from the map section so the territory change reads at speed. */
+.feed-section {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-top: 64px;
+  /* Same family as the page — the separation is editorial (the plan banner),
+     not chromatic. The gradient adds quiet depth toward the bottom. */
+  background: linear-gradient(
+    180deg,
+    var(--surface-dim) 0%,
+    color-mix(in srgb, var(--surface) 55%, var(--surface-dim)) 100%
+  );
+  padding: 48px 0 64px;
+}
+
+.feed-rail {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.feed-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.feed-head h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.feed-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* DS Chip (DW 3.0), Size=Default: 52px pill, 16px side padding, 14/155%
+   Regular with 2% tracking. Off = transparent + gray-16 stroke; On/Active
+   = solid --surface, no stroke. */
+.feed-filter {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.55;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid var(--surface-hover);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease-out, color 140ms ease-out;
+}
+
+.feed-filter:hover {
+  background: var(--surface-2);
+}
+
+/* Selected = DS Type=On, State=Active. */
+.feed-filter.is-active {
+  background: var(--surface);
+  border-color: transparent;
+}
+
+.feed-group {
+  margin-top: 32px;
+}
+
+ /* Day header, per the comp: DS label/600/lg over a hairline rule. */
+.feed-date {
+  margin: 48px 0 24px;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 8px 8px 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.feed-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* The comp runs the list at 864 inside a 1440 frame — a measure, not the
+   full page rail. Ads and the load-more row stay full width. */
+.feed-item,
+.feed-skeleton,
+.feed-date {
+  max-width: 864px;
+}
+
+/* Article card, per the comp: 16:9 still on the left, text column beside it,
+   rows separated by space rather than rules (only the day header rules). */
+.feed-item {
+  display: grid;
+  grid-template-columns: 204px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.feed-item + .feed-item,
+.feed-item + .feed-skeletons,
+.feed-ad + .feed-item {
+  margin-top: 40px;
+}
+
+/* Relative timestamp rides in the meta line (the left column is the image). */
+.feed-time {
+  color: var(--ink-soft);
+}
+
+.feed-body {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+
+.feed-headline {
+  margin: 0;
+  /* The comp's card uses Heading-Article-Content size=md weight=medium:
+     Libre Franklin 500 at 20px / 120%. (The xl/semibold variant is the
+     article PAGE headline, not the card.) */
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 500;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feed-dek {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-subtle);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Comp's meta row: the metadata group runs at gap 6, and the race tag sits
+   a wider 14 away from it. */
+.feed-meta {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ink-subtlest);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.feed-metadata {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.feed-sep {
+  color: var(--ink-subtlest);
+  font-weight: 600;
+}
+
+/* Only the recency slot carries weight, and only while it is today's — the
+   comp's bold "New" against the gray "Today". */
+.feed-time.is-fresh {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* 20px host mark before the byline (initials until real host photos land). */
+.feed-byline-avatar {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.feed-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--ink);
+}
+
+/* Fixed 16:9 box + object-fit cover: the image can arrive whenever it likes,
+   the row never moves. The dark surface is the placeholder. */
+.feed-thumb {
+  position: relative;
+  width: 204px;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.feed-img,
+.short-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feed-duration {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--surface-dim) 82%, transparent);
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .feed-item {
+    grid-template-columns: 148px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .feed-thumb {
+    width: 148px;
+  }
+
+  .feed-headline {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .race-statement {
+    animation: none;
+  }
+
+  .state-labels,
+  .feed-filter {
+    transition: none;
+  }
+}
+
+/* ---------- Coverage feed v2 (Aug 2026): shorts, hosts, premium, ads ---------- */
+
+/* Latest shorts: horizontal scroll row of 9:16 cards. */
+.shorts-row-block {
+  margin-top: 28px;
+}
+
+.shorts-row-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.shorts-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  /* Scrolls by swipe/wheel only — no visible scrollbar. */
+  scrollbar-width: none;
+}
+
+.shorts-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* Shorts card, per the comp: 9:16 still edge to edge, caption over a scrim
+   at the bottom — no separate title/host block underneath. */
+.short-card {
+  position: relative;
+  flex: none;
+  width: 166px;
+  cursor: pointer;
+}
+
+/* Playback stays INSIDE the card bounds — absolute-filled video, no layout
+   shift, no scale (hover growth was cut by request). */
+
+.short-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 166 / 293;
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.short-thumb video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+/* The 9:16 still fills the same box, so the loop starting changes nothing
+   about the layout. */
+.short-thumb .short-img {
+  position: absolute;
+  inset: 0;
+}
+
+/* Caption sits INSIDE the still, over a gradient scrim (comp: 64px of scrim
+   above 12px padding), DS heading size=xsm weight=medium. */
+/* The caption owns the bottom of the card now — the duration moves up. */
+.short-thumb .feed-duration {
+  top: 6px;
+  bottom: auto;
+}
+
+.short-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 64px 12px 12px;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--ink);
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--surface-dim) 88%, transparent) 62%);
+  border-radius: 0 0 4px 4px;
+  pointer-events: none;
+}
+
+.short-caption span {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Shorts pill view: grid of the same cards, no ads, no duplicate top row. */
+.shorts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(166px, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.shorts-grid .short-card,
+.shorts-grid .short-thumb {
+  width: 100%;
+}
+
+.feed-clear {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.feed-clear:hover {
+  color: var(--ink);
+}
+
+/* Opinion = the component's tone=exclusive: Libre Caslon Text SemiBold with
+   its -2% tracking. Emphasized author, lock + DW+ signals stay ours.
+   Exactly two typographic systems. */
+/* Opinion carries the component's tone=exclusive and nothing else: no
+   eyebrow, no lock, no badge — the comp's own rows are exactly headline,
+   dek and meta, and the serif IS the signal. */
+.feed-item--opinion .feed-headline,
+.related-item--opinion .related-headline {
+  font-family: var(--font-exclusive);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.feed-author {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Race tags are interactive (deep-link into Follow a Race, stubbed). */
+.feed-tag {
+  font: inherit;
+  font-size: 10px;
+  line-height: 20px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 120ms ease-out, border-color 120ms ease-out;
+}
+
+.feed-tag:hover {
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--ink) 40%, transparent);
+}
+
+.feed-tag:active {
+  background: var(--surface-hover);
+  transform: translateY(1px);
+}
+
+/* Ad slot: fixed row height, one surface step DOWN, clearly labeled,
+   quieter than content. */
+.feed-ad {
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface) 55%, var(--surface-dim));
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  margin: 12px 0;
+}
+
+.feed-ad-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+/* Skeletons: match row heights so content never jumps in. */
+.feed-skeletons {
+  margin-top: 28px;
+}
+
+.feed-skeleton {
+  display: grid;
+  grid-template-columns: 204px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 0 0 40px;
+}
+
+.sk {
+  display: block;
+  border-radius: 6px;
+  background: var(--surface-2);
+  /* Figma prototype spec: 600ms, custom bezier (0.8, 0, 0.6, 1). */
+  animation: sk-pulse 600ms cubic-bezier(0.8, 0, 0.6, 1) infinite alternate;
+}
+
+.sk-time {
+  height: 12px;
+  width: 48px;
+  margin-top: 4px;
+}
+
+.sk-body {
+  display: grid;
+  gap: 10px;
+}
+
+.sk-line {
+  height: 16px;
+  width: 85%;
+}
+
+.sk-line.sk-short {
+  width: 55%;
+}
+
+.sk-meta {
+  height: 11px;
+  width: 35%;
+}
+
+.sk-thumb {
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+}
+
+@keyframes sk-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.45; }
+}
+
+/* Load more */
+.feed-more-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.feed-more {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 28px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.feed-more:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.feed-more:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.feed-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--ink) 25%, transparent);
+  border-top-color: var(--ink);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.feed-empty {
+  text-align: center;
+  padding: 48px 0 24px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.feed-empty .feed-clear {
+  margin-top: 8px;
+}
+
+/* Feed rows are clickable surfaces now. */
+.feed-item {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .short-card,
+  .host-row-collapse,
+  .host-chip,
+  .feed-tag,
+  .feed-more {
+    transition: none;
+  }
+
+  .sk {
+    animation: none;
+  }
+}
+
+/* ---------- Collapsing-pill filter bar (Aug 2026) ---------- */
+
+/* Own row below the title; FIXED height so the feed never shifts while the
+   bar animates. Everything animates via transform/opacity only. */
+.feed-head {
+  display: block;
+}
+
+.filter-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  margin-top: 14px;
+}
+
+/* ✕ — full 52px DS chip circle (Off style: gray-16 stroke). Absolute ghost
+   during the phases so inserting it never reflows the pills; in-flow once
+   settled. */
+.filter-x {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.filter-x--collapsing,
+.filter-x--expanding {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.filter-x-circle {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--surface-hover);
+  background: transparent;
+  transition: background 140ms ease-out;
+}
+
+.filter-x:hover .filter-x-circle {
+  background: var(--surface-hover);
+}
+
+.filter-x--collapsing {
+  animation: x-in 150ms ease-out 100ms both;
+}
+
+.filter-x--expanding {
+  animation: x-out 150ms ease-out both;
+}
+
+@keyframes x-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes x-out {
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+/* The chosen pill rides ABOVE the emerging trigger. DS Type=On/Active. */
+.feed-filter.is-selected {
+  position: relative;
+  z-index: 2;
+  background: var(--surface);
+  border-color: transparent;
+}
+
+/* Phase animations — all transform/opacity, fill both so end state holds
+   until the mode swap lands on identical flow positions. */
+.anim-pill-out {
+  animation: pill-out 240ms ease both;
+  /* Strokes go first: chips fading with their gray outlines read as rings
+     hanging in the air mid-motion. Text fades, borders just vanish. */
+  border-color: transparent;
+  pointer-events: none;
+}
+
+/* Fade only — no scale: the squeeze read as a bounce. */
+@keyframes pill-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.anim-pill-in {
+  animation: pill-in 240ms ease both;
+  /* Inert while fading in — clicks here would be silently swallowed by the
+     barMode guard anyway; don't offer a cursor that does nothing. */
+  pointer-events: none;
+}
+
+@keyframes pill-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.anim-pill-flip {
+  animation: pill-flip 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pill-flip {
+  to {
+    transform: translateX(var(--dx));
+  }
+}
+
+.anim-pill-return {
+  animation: pill-return 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pill-return {
+  from {
+    transform: translateX(var(--dx));
+  }
+}
+
+/* Host trigger anchor: absolute at the pill's slot during phases (so it can
+   hide BEHIND the pill, z-index 1 < pill 2) and slide right into place. */
+.host-anchor {
+  position: relative;
+  z-index: 1;
+}
+
+.host-anchor--collapsing,
+.host-anchor--expanding {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.host-anchor--collapsing {
+  animation: trigger-out 280ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
+}
+
+@keyframes trigger-out {
+  from {
+    opacity: 0.4;
+    transform: translateX(-12px);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translateX(var(--slide));
+  }
+}
+
+.host-anchor--expanding {
+  animation: trigger-back 220ms ease-out both;
+}
+
+@keyframes trigger-back {
+  from {
+    opacity: 1;
+    transform: translateX(var(--slide));
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+/* DS host chip (Type=Off + Show Host + Chevron): transparent, gray-16
+   stroke, 38px avatar tucked left (8px padding on that side). */
+.host-trigger {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.55;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 0 8px;
+  border: 1px solid var(--surface-hover);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 140ms ease-out;
+}
+
+.host-trigger:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.host-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 180px;
+  padding: 6px;
+  background: color-mix(in srgb, var(--surface-dim) 94%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--surface-dim) 50%, transparent);
+  display: grid;
+  gap: 2px;
+  z-index: 30;
+  animation: menu-in 180ms ease-out;
+}
+
+/* Reduced motion: instant swaps with a plain crossfade — no translation,
+   no scale. */
+@media (prefers-reduced-motion: reduce) {
+  .anim-pill-out,
+  .anim-pill-in,
+  .anim-pill-flip,
+  .anim-pill-return,
+  .filter-x--collapsing,
+  .filter-x--expanding,
+  .host-anchor--collapsing,
+  .host-anchor--expanding,
+  .host-menu {
+    animation: none;
+  }
+
+  .filter-bar--selected > *,
+  .filter-bar--browse > * {
+    animation: rm-crossfade 150ms ease-out;
+  }
+
+  @keyframes rm-crossfade {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* ---------- Race tag dot + hovercard, plan banner (Aug 2026) ---------- */
+
+.race-tag-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Status dot inside the tag: the exact color this race wears on the map
+   right now (live ballot + active source, results included). */
+.race-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-right: 6px;
+  flex: none;
+}
+
+.feed-tag {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Mini drawer on hover: same surface language as the map drawer, scaled down. */
+.race-hovercard {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  width: 240px;
+  z-index: 40;
+  display: block;
+  padding: 14px 16px 16px;
+  background: color-mix(in srgb, var(--surface-dim) 96%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--surface-dim) 55%, transparent);
+  cursor: default;
+  text-align: left;
+  animation: hovercard-in 160ms ease-out;
+}
+
+@keyframes hovercard-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.race-hovercard-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--ink);
+}
+
+.race-hovercard-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+/* Mini bars: gray on purpose — a glance-reminder, not a second scoreboard. */
+.race-mini-bars {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.race-mini-row {
+  display: block;
+}
+
+.race-mini-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.race-mini-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.race-mini-pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.race-mini-track {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  margin-top: 5px;
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+  overflow: hidden;
+}
+
+.race-mini-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ink-soft);
+}
+
+.race-mini-fill--dem { background: var(--bar-dem); }
+.race-mini-fill--rep { background: var(--bar-rep); }
+.race-mini-fill--ind { background: var(--cand-ind); }
+
+/* Plan banner: the editorial boundary between map and feed. Brand/600 base
+   (AA with white text; brand/500 measures 4.24:1 — the SIGN UP precedent). */
+.plan-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-top: 96px;
+  padding: 36px 44px;
+  border-radius: 24px;
+  background: linear-gradient(
+    120deg,
+    var(--brand-pressed) 0%,
+    color-mix(in srgb, var(--brand-pressed) 72%, var(--surface-dim)) 100%
+  );
+}
+
+.plan-copy h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.plan-copy p {
+  margin: 8px 0 0;
+  max-width: 56ch;
+  font-size: 14px;
+  line-height: 21px;
+  color: color-mix(in srgb, var(--ink) 88%, transparent);
+}
+
+.plan-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.plan-btn-secondary {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  height: 36px;
+  padding: 0 18px;
+  border: 1px solid color-mix(in srgb, var(--ink) 45%, transparent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.plan-btn-secondary:hover {
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .race-hovercard {
+    animation: none;
+  }
+}
+
+/* Host dropdown items: avatar slot (initials placeholder until real photos). */
+.host-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.host-avatar {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Trigger-size avatar (DS Personality Image: 38px circle). */
+.host-avatar--lg {
+  width: 38px;
+  height: 38px;
+  font-size: 13px;
+}
+
+/* ---------- Drawer: Related Content tab (Aug 2026) ---------- */
+
+/* Quiet text switcher (no pills): inactive is soft text, active carries a
+   short brand underline — visually distinct from the white chamber-tab
+   underline above it. Lives INSIDE the scroll, so it rides away with the
+   content. */
+.drawer-subtabs {
+  display: flex;
+  gap: 20px;
+  margin: 16px 0 6px;
+}
+
+.drawer-subtab {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 0 5px;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 140ms ease-out;
+}
+
+.drawer-subtab:hover {
+  color: var(--ink);
+}
+
+.drawer-subtab.is-active {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--brand);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 7px;
+}
+
+.related {
+  margin-top: 12px;
+}
+
+.related-search {
+  font: inherit;
+  font-size: 13px;
+  width: 100%;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--surface-hover);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+}
+
+.related-search::placeholder {
+  color: var(--ink-soft);
+}
+
+.related-search:focus-visible {
+  outline: 2px solid var(--selection);
+  outline-offset: 1px;
+}
+
+/* Mini pills — DS chip family at drawer scale. */
+.related-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.related-pill {
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid var(--surface-hover);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.related-pill:hover {
+  background: var(--surface-2);
+}
+
+.related-pill.is-active {
+  background: var(--surface-2);
+  border-color: transparent;
+}
+
+.related-state-anchor {
+  position: relative;
+  margin-left: auto;
+}
+
+.related-state-menu {
+  right: 0;
+  left: auto;
+}
+
+.related-empty {
+  margin: 22px 2px 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.related-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.related-item {
+  font: inherit;
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  padding: 10px 10px 11px;
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.related-item:hover {
+  background: var(--surface-2);
+}
+
+.related-kicker {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.related-headline {
+  display: block;
+  margin-top: 3px;
+  /* Same DS heading, size=sm. */
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.related-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+/* The visited treatment is off for now — the comp has no visited state, so
+   the class stays on the element (the click is still recorded) with nothing
+   painted on it. */
+
+/* ---------- Feed: state filter, opinion shelves, map hand-off (Aug 2026) ---------- */
+
+/* The trigger group holds up to two dropdowns side by side. */
+.host-anchor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* State trigger: same DS chip, no avatar — plain 16px side padding. */
+.state-trigger {
+  padding: 0 16px;
+}
+
+/* The state menu drops under ITS trigger (right half of the anchor). */
+.state-menu {
+  left: auto;
+  right: 0;
+}
+
+/* Opinion shelves: section titles between format groups. */
+.feed-shelf-title {
+  margin: 30px 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Hovercard hand-off button. */
+.race-open-map {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--surface-hover);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.race-open-map:hover {
+  background: var(--surface-2);
+}
+
+/* Brand without a vector yet: the label dressed as a wordmark. */
+.source-wordmark {
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+/* Internal search inside dropdown menus (state filter). */
+.menu-search {
+  font: inherit;
+  font-size: 12px;
+  width: 100%;
+  height: 32px;
+  margin-bottom: 4px;
+  padding: 0 10px;
+  border: 1px solid var(--surface-hover);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+}
+
+.menu-search::placeholder {
+  color: var(--ink-soft);
+}
+
+.menu-search:focus-visible {
+  outline: 2px solid var(--selection);
+  outline-offset: 1px;
+}
+
+/* ---------- Mock counties in the zoomed state (Aug 2026) ---------- */
+
+/* County cells: pure fills from the rating/results palette (inline) — no
+   divider strokes, the color steps ARE the division. The cells bloom in
+   sync with the camera flight (550ms = CAMERA_MS); only the text labels
+   wait for landing (their raster cost is the expensive part). */
+.county-layer {
+  pointer-events: none;
+  animation: county-in 550ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.county-labels {
+  pointer-events: none;
+  animation: county-in 220ms ease-out both;
+}
+
+@keyframes county-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .county-layer,
+  .county-labels {
+    animation: none;
+  }
+}
+
+.county-cell {
+  stroke: none;
+}
+
+.county-label {
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+}
+
+/* The drawer's scrollable middle: content scrolls under the fixed chrome;
+   negative margins keep the scrollbar at the panel edge. */
+.drawer-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Reaching the end of the panel must not hand the scroll to the page —
+     belt and braces alongside the page-level lock (useScrollLock). */
+  overscroll-behavior: contain;
+  margin: 0 -28px;
+  padding: 0 28px 8px;
+}
+
+/* ---------- Feed polish round (Aug 2026) ---------- */
+
+/* State menus take a scrollbar — a real 50-state list is taller than any
+   dropdown should be. The search stays pinned while options scroll. */
+.state-menu,
+.related-state-menu {
+  max-height: 264px;
+  overflow-y: auto;
+}
+
+.state-menu .menu-search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: color-mix(in srgb, var(--surface-dim) 94%, transparent);
+}
+
+/* Invisible halo around the OPEN hovercard (~40% larger hit area): the
+   pointer can travel from the tag to the "View on map" button without
+   stepping outside the wrap and closing it. */
+.race-hovercard::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+}
+
+/* Headline hover: brand/bold/hovered token — chrome, never data. Wins over
+   the visited dim (declared later, same specificity). */
+.feed-item {
+  cursor: pointer;
+}
+
+.feed-headline,
+.related-headline {
+  transition: color 140ms ease-out;
+}
+
+/* Per the DS component's state=hover / state=pressed: the headline steps
+   one neutral tone DOWN (text/neutral/bold/hovered), it does not turn
+   brand-colored and it never underlines.
+   NOTE: that exact token (gray/400 dark, gray/500 light) is not in this
+   prototype's colors.css — --ink-soft is the nearest existing token, a
+   shade lighter. Worth adding the real one to the shared token file. */
+.feed-item:hover .feed-headline,
+.related-item:hover .related-headline,
+.feed-item:active .feed-headline,
+.related-item:active .related-headline {
+  color: var(--ink-soft);
+}
+
+/* ==================== MOBILE (<= 700px) ==================== */
+/* One breakpoint, layout-only overrides — every token and encoding rule
+   stays identical to desktop. */
+@media (max-width: 700px) {
+  .app {
+    padding: 16px 16px 64px;
+  }
+
+  /* Nav: logo + utilities; section links wait for a real mobile menu. */
+  .dw-nav-sections,
+  .dw-nav-divider {
+    display: none;
+  }
+
+  .promo-bar {
+    padding: 8px 14px;
+  }
+
+  .promo-copy {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0; /* flex child: without this the ellipsis never triggers */
+  }
+
+  .promo-cta {
+    white-space: nowrap;
+    flex: none;
+  }
+
+  .race-header {
+    margin-top: 24px;
+  }
+
+  .race-title {
+    font-size: 26px;
+    line-height: 32px;
+    max-width: none;
+  }
+
+  .race-byline {
+    font-size: 12px;
+  }
+
+  /* Phone: a headline truncated to five words says nothing — the pinned bar
+     keeps the control and drops the echo. */
+  .compact-title {
+    display: none;
+  }
+
+  .race-tabs--compact .race-tab {
+    font-size: 14px;
+  }
+
+  .legend-strip {
+    margin-top: 24px;
+  }
+
+  .legend-strip ul {
+    gap: 4px 10px;
+    font-size: 10px;
+  }
+
+  /* Map: near full-bleed inside a tighter card; the source control stacks
+     ABOVE the map in normal flow (no room to share the top band). */
+  .map-card {
+    margin-top: 16px;
+    border-radius: 16px;
+  }
+
+  .map-wrap {
+    padding: 10px 14px 16px;
+  }
+
+  .race-tabs--header {
+    width: 100%;
+    gap: 16px;
+  }
+
+  .seat-bar {
+    gap: 10px;
+  }
+
+  .seat-bar-end {
+    font-size: 13px;
+  }
+
+  /* Drawer -> bottom sheet: fixed over the page, content still scrolls
+     inside, prev/next state nav stays pinned. */
+  .drawer {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: 78vh;
+    border-radius: 20px 20px 0 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    padding: 18px 18px calc(16px + env(safe-area-inset-bottom, 0px));
+    animation: sheet-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 600;
+  }
+
+  .drawer-scroll {
+    margin: 0 -18px;
+    padding: 0 18px 8px;
+  }
+
+  .plan-banner {
+    margin-top: 56px;
+    padding: 24px 20px;
+  }
+
+  .plan-copy h2 {
+    font-size: 22px;
+  }
+
+  .feed-section {
+    margin-top: 40px;
+    padding: 32px 0 48px;
+  }
+
+  .feed-rail {
+    padding: 0 16px;
+  }
+
+  .feed-head h2 {
+    font-size: 24px;
+  }
+
+  /* Filter bar wraps (the JS already swaps instantly at this width). */
+  .filter-bar {
+    height: auto;
+    min-height: 44px;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .feed-filter {
+    height: 44px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
+  .filter-x,
+  .filter-x-circle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .host-trigger {
+    height: 44px;
+    font-size: 13px;
+  }
+
+  .host-avatar--lg {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+  }
+
+  /* Feed rows: same pattern, smaller still. */
+  .feed-item,
+  .feed-skeleton {
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 12px;
+    padding: 0;
+  }
+
+  .feed-thumb {
+    width: 120px;
+  }
+
+  .feed-body {
+    gap: 8px;
+  }
+
+  /* Phone: the DS scale's sm step. */
+  .feed-headline {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  .feed-meta {
+    font-size: 12px;
+  }
+
+  .feed-date {
+    margin: 36px 0 10px;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(48px);
+    opacity: 0;
+  }
+}
+
+/* ---------- Mobile preview toggle (dev chrome) ---------- */
+
+.mobile-toggle {
+  position: fixed;
+  right: 24px;
+  bottom: 76px;
+  z-index: 640;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.mobile-toggle:hover {
+  background: var(--surface-2);
+}
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 650;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--surface-dim) 72%, transparent);
+  backdrop-filter: blur(10px);
+  animation: menu-in 160ms ease-out;
+}
+
+/* Phone bezel around a REAL 390px viewport (iframe → media queries apply). */
+.mobile-frame {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 38px;
+  background: var(--surface);
+  box-shadow: 0 24px 64px color-mix(in srgb, var(--surface-dim) 70%, transparent);
+}
+
+.mobile-frame iframe {
+  display: block;
+  width: 390px;
+  height: min(760px, calc(100vh - 120px));
+  border: 0;
+  border-radius: 28px;
+  background: var(--surface-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-overlay {
+    animation: none;
+  }
+}
+
+/* Inside the frame there is no reason to offer the toggle again — and on
+   real phones the fixed FAB would cover content. */
+@media (max-width: 700px) {
+  .mobile-toggle {
+    display: none;
+  }
+}
+
+/* ==================== LIGHT MODE (Aug 2026) ==================== */
+/*
+ * colors.css is the shared token source of truth and stays UNTOUCHED
+ * (dark = default). This layer re-skins the UI-CHROME tokens only, under
+ * [data-theme='light'] — same precedent as --font-exclusive living here.
+ * The DATA encodings (rating scale, party ramps, results steps, brand)
+ * are deliberately identical in both themes: light = estimate and
+ * solid = fact must read the same everywhere.
+ */
+:root[data-theme='light'] {
+  --ink: #141414;
+  --ink-soft: #6d6d6d;
+  --surface-dim: #ffffff;
+  --surface: #f4f4f4;
+  --surface-2: #eaeaea;
+  --surface-hover: #dfdfdf;
+  --border: #cfcfcf;
+  --selection: #141414;
+  /* Both DS text tones collapse onto gray/500 in light mode. */
+  --ink-subtle: #5c5c5c;
+  --ink-subtlest: #5c5c5c;
+  /* Map neutrals: "no information" recedes into the LIGHT canvas now. */
+  --state-border: #f4f4f4;
+  --not-on-ballot: #e4e4e4;
+  --no-read: #bdbdbd;
+  --uncalled: #cfcfcf;
+}
+
+/* Label tones swap roles: "dark ink on light fills" is now real ink, and
+   "light ink on saturated fills" stays white (= light surface-dim). */
+:root[data-theme='light'] .state-label--dark {
+  fill: var(--ink);
+}
+
+:root[data-theme='light'] .state-label--light {
+  fill: var(--surface-dim);
+}
+
+/* Light mode keeps the same neutral step (the token flips with the theme). */
+
+/* White-on-white hairlines: floating chrome borders come from ink now. */
+:root[data-theme='light'] .drawer {
+  border-color: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+/* Theme toggle FAB — stacked above the mobile-preview toggle. */
+.theme-toggle {
+  position: fixed;
+  right: 24px;
+  bottom: 128px;
+  z-index: 640;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-2);
+}
+
+@media (max-width: 700px) {
+  .theme-toggle {
+    display: none;
+  }
+}
+
+/* ---------- 4. Seat bar ---------- */
+
+/* One object: the numbers hang off the bar's own ends, the count line sits
+   under the neutral gap. Widths animate with the same easing family as the
+   map's fill transition, so a race switch reads as ONE recalculation. */
+.seat-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+  width: 100%;
+  justify-self: stretch;
+  text-align: left;
+}
+
+.seat-bar-end {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex: none;
+}
+
+.seat-bar-end abbr {
+  text-decoration: none;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+/* Party identity comes from the bar the number is anchored to, not from the
+   type: --bar-dem/--bar-rep as text on the card surface land at 2.3:1 and
+   3.6:1, well under AA. Ink text, colored bar. */
+.seat-bar-dem-num,
+.seat-bar-rep-num {
+  color: var(--ink);
+}
+
+.seat-bar-mid-col {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 20px;
+}
+
+.seat-bar-track {
+  display: flex;
+  height: 8px;
+  border-radius: 200px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.seat-bar-dem,
+.seat-bar-gap,
+.seat-bar-rep {
+  transition: width 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.seat-bar-dem {
+  background: var(--bar-dem);
+}
+
+.seat-bar-rep {
+  background: var(--bar-rep);
+}
+
+/* The races still in play: neutral, part of neither bloc. */
+.seat-bar-gap {
+  background: var(--rating-tossup);
+}
+
+.seat-bar-count {
+  position: absolute;
+  top: 14px;
+  transform: translateX(-50%);
+  margin: 0;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seat-bar-dem,
+  .seat-bar-gap,
+  .seat-bar-rep {
+    transition: none;
+  }
+}
+
+/* ---------- Source segments (inside the map area) ---------- */
+
+/* Centered on the map area, aligned to its top: all three providers at equal
+   weight, each with its kind disclaimer. The map is its background — no band
+   of its own. */
+.seg-control {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  padding: 3px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-2) 92%, transparent);
+  backdrop-filter: blur(8px);
+  transition: opacity 250ms ease-out;
+}
+
+.seg {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 124px;
+  padding: 7px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 140ms ease-out, background 140ms ease-out;
+}
+
+/* Brand over kind: the logo identifies the provider, the line under it says
+   what kind of number that provider publishes. */
+.seg-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 17px;
+  opacity: 0.72;
+  transition: opacity 140ms ease-out;
+}
+
+.seg.is-active .seg-brand,
+.seg:hover .seg-brand {
+  opacity: 1;
+}
+
+.seg-kind {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--ink-soft) 82%, transparent);
+  white-space: nowrap;
+}
+
+.seg:hover {
+  color: var(--ink);
+}
+
+/* Active chip lifts: one step lighter than the track in dark, the page
+   ground in light (see the theme layer). */
+.seg.is-active {
+  background: var(--surface-hover);
+  color: var(--ink);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--surface-dim) 60%, transparent);
+}
+
+.seg.is-active .seg-kind {
+  color: var(--ink-soft);
+}
+
+:root[data-theme='light'] .seg.is-active {
+  background: var(--surface-dim);
+}
+
+/* Results mode: static attribution, same slot. */
+.seg-results {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+/* The zoomed frame belongs to the state and its panel. */
+.map-card.is-zoomed .seg-control,
+.map-card.is-zoomed .seg-results {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 1080px) {
+  .seg {
+    min-width: 104px;
+    padding: 6px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seg,
+  .seg-brand,
+  .seg-control {
+    transition: none;
+  }
+}
+
+/* Phone: no room to share the map's top band — the control comes out of the
+   overlay and stacks above the map, full width. */
+@media (max-width: 700px) {
+  .seg-control,
+  .seg-results {
+    position: static;
+    transform: none;
+    margin: 12px 14px 0;
+    backdrop-filter: none;
+  }
+
+  .seg {
+    min-width: 0;
+    flex: 1;
+    padding: 6px 8px;
+  }
+
+  .seg-kind {
+    letter-spacing: 0;
+  }
+
+  .map-card.is-zoomed .seg-control,
+  .map-card.is-zoomed .seg-results {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Legend inside the map card, under the map — kept off the map's bottom
+   edge so the read scale doesn't hang on the geography. */
+.map-card .legend-strip {
+  margin: 0;
+  padding: 12px 32px 30px;
+}
+
+@media (max-width: 700px) {
+  .map-card .legend-strip {
+    padding: 8px 16px 18px;
+  }
+}
+
+/* ---------- Site footer (dailywire.com pattern) ---------- */
+
+/* Page background token — the site's near-black — so the footer reads as
+   the end of the page, not another card. */
+/* The page already pads its own tail — the footer starts right after it. */
+.site-footer {
+  background: var(--surface-dim);
+  border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.footer-rail {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 48px 32px 32px;
+}
+
+.footer-top {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) auto;
+  gap: 40px;
+  align-items: start;
+}
+
+.footer-brand .dw-logo {
+  width: 168px;
+  height: auto;
+  color: var(--ink);
+}
+
+.footer-links {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 32px;
+}
+
+.footer-col {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+/* The long "about" group runs in columns rather than one tall stack. */
+.footer-col--secondary {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px 24px;
+}
+
+.footer-col--primary a {
+  font-weight: 600;
+}
+
+.footer-col a,
+.footer-legal a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 140ms ease-out;
+}
+
+.footer-col a:hover,
+.footer-legal a:hover {
+  color: var(--ink);
+}
+
+/* App download: bordered card, badges + QR placeholder. */
+.footer-app {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 12px;
+}
+
+.footer-badges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.store-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid color-mix(in srgb, var(--ink) 24%, transparent);
+  border-radius: 8px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 140ms ease-out, background 140ms ease-out;
+}
+
+.store-badge:hover {
+  background: var(--surface);
+  border-color: var(--selection);
+}
+
+.store-badge-copy {
+  display: grid;
+  line-height: 1.15;
+}
+
+.store-badge-copy small {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.store-badge-copy strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.footer-qr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+}
+
+.footer-qr svg {
+  flex: none;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.footer-qr p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+  max-width: 120px;
+}
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.footer-social {
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid color-mix(in srgb, var(--ink) 24%, transparent);
+  border-radius: 999px;
+  color: var(--ink);
+  transition: border-color 140ms ease-out, background 140ms ease-out;
+}
+
+.footer-social a:hover {
+  background: var(--surface);
+  border-color: var(--selection);
+}
+
+.footer-copy {
+  margin: 0;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.footer-legal {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 960px) {
+  .footer-top {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .footer-links {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .footer-rail {
+    padding: 32px 16px 24px;
+  }
+
+  .footer-col--secondary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footer-bottom {
+    margin-top: 28px;
+  }
+
+  .footer-copy {
+    margin-left: 0;
+  }
+}
+
+/* ---------- Phase switcher (demo chrome) ---------- */
+
+/* The roadmap made demonstrable: which delivery phase the prototype is
+   showing. Sits with the other demo controls, never inside the framed
+   mobile copy. */
+.phase-switcher {
+  position: fixed;
+  right: 24px;
+  bottom: 180px;
+  z-index: 640;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.phase-chips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.phase-chip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Names the phase on hover/focus and links out to the PRD it answers to.
+   Opens upward and right-aligned — the switcher lives in the bottom-right
+   corner, so there is only one direction with room. */
+.phase-card {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: -8px;
+  z-index: 10;
+  width: 248px;
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-dim) 96%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--surface-dim) 55%, transparent);
+  text-align: left;
+  animation: phase-card-in 140ms ease-out;
+}
+
+@keyframes phase-card-in {
+  from {
+    filter: opacity(0);
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phase-card {
+    animation: none;
+  }
+}
+
+.phase-card-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
+}
+
+.phase-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.phase-card-job {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-subtle);
+}
+
+.phase-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-hover);
+  text-decoration: none;
+}
+
+.phase-card-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+:root[data-theme='light'] .phase-card-link {
+  color: var(--brand-pressed);
+}
+
+.phase-switcher-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
+  padding-right: 2px;
+}
+
+.phase-chip {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 140ms ease-out, color 140ms ease-out;
+}
+
+.phase-chip:hover {
+  color: var(--ink);
+}
+
+.phase-chip.is-active {
+  background: var(--brand-pressed);
+  color: var(--ink);
+}
+
+/* The comparison without the control (phases where the picker has no place). */
+.source-card.is-static {
+  cursor: default;
+  list-style: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phase-chip {
+    transition: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .phase-switcher {
+    display: none;
   }
 }

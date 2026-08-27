@@ -54,3 +54,19 @@ export function sourceLabel(sourceId: string): string {
 export function sourceAttribution(sourceId: string): string {
   return getSource(sourceId)?.attribution ?? 'Unknown source';
 }
+
+/**
+ * WHAT KIND OF NUMBER THIS IS — the disclaimer that rides with every source
+ * control. A polling average and a market price are not the same measurement
+ * (points vs implied probability), and the reader has to know which one they
+ * just switched the map to before they read a single number off it.
+ */
+export const KIND_LABEL: Record<SourceKind, string> = {
+  poll: 'Polling Data',
+  market: 'Prediction Market',
+};
+
+export function sourceKind(sourceId: string): string {
+  const kind = getSource(sourceId)?.kind;
+  return kind ? KIND_LABEL[kind] : '';
+}

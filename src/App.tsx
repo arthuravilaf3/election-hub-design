@@ -1,75 +1,210 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DWNav } from './components/DWNav';
 import { PromoBar } from './components/PromoBar';
-import { Hero } from './components/Hero';
-import { ElectionMap } from './components/ElectionMap';
+import { RaceHeader, CompactHeader } from './components/RaceHeader';
+import { MapCard } from './components/MapCard';
 import { DevToolbar } from './components/DevToolbar';
+import { MobilePreview, IS_PREVIEW_FRAME } from './components/MobilePreview';
+import { ThemeToggle } from './components/ThemeToggle';
+import { PhaseSwitcher } from './components/PhaseSwitcher';
 import { CutoverBanner } from './components/CutoverBanner';
-import { Dock } from './components/Dock';
-import { Legend } from './components/Legend';
+import { CoverageFeed } from './components/CoverageFeed';
+import { PlanBanner } from './components/PlanBanner';
+import { SiteFooter } from './components/SiteFooter';
 import { RacePanel } from './components/RacePanel';
 import { useElectionData } from './state/useElectionData';
 import { activeRaces } from './state/electionReducer';
 import { emitMapEvent, useMessageApi } from './hooks/useMessageApi';
+import { useScrollLock } from './hooks/useScrollLock';
 import { isLive } from './data/encoding';
-import { heroFor } from './data/hero';
+import { track } from './data/analytics';
+import { picksForChamber } from './data/trust';
+import { featuresFor, initialPhase, type Phase } from './data/phases';
+import { forecastFor } from './data/hero';
 import { summarize } from './data/summary';
+import { sourceLabel } from './data/sources';
 import { HOUSE_DISTRICT_COUNT } from './data/mockRaces';
 import { STATE_SHAPES } from './data/states';
+import type { Chamber } from './data/types';
 
 const POLL_CLOSING_INTERVAL_MS = 900;
 
 /**
- * Scroll chrome: the promo bar hides while scrolling DOWN and returns on
- * scroll UP; the DW nav never moves. (The compact title was removed Aug 2026.)
+ * Sticky chrome: only the compact title PINS (once the hero is out of view),
+ * and it stays for the whole ride through the map section — it leaves when
+ * the section's END (where the fixed race selector stops being fixed)
+ * reaches the title's own band at the top and pushes it out. The previous
+ * rule (hide the moment the dock un-sticks at the viewport BOTTOM) left no
+ * scroll window at all on tall viewports — the title never appeared.
+ * Nav never moves; promo bar scrolls normally.
  *
- * The thresholds carry hysteresis WIDER than the promo bar's own height:
- * hiding it shifts layout, and (via scroll anchoring/clamping) can nudge
- * scrollY, which naive thresholds read as opposite-direction scroll — a
- * visible open/close oscillation. Accumulated-delta detection kills the loop.
+ * The hero thresholds carry hysteresis WIDER than the compact bar's own
+ * height: showing it can shift layout/scroll clamping, which naive
+ * thresholds read as opposite-direction scroll — an open/close oscillation.
+ * The section-bottom check needs none: the overlay never changes document
+ * height.
  */
-function useScrollChrome() {
-  const [chromeHidden, setChromeHidden] = useState(false);
+const CHROME_BOTTOM_PX = 156; // nav (64) + compact band (92: title + tabs)
+
+function useCompactVisible(sectionRef: React.RefObject<HTMLElement | null>) {
+  const [visible, setVisible] = useState(false);
+  const pastTitle = useRef(false);
 
   useEffect(() => {
-    let lastY = window.scrollY;
-    let acc = 0;
     const onScroll = () => {
-      const y = window.scrollY;
-      const dy = y - lastY;
-      lastY = y;
-      acc = Math.sign(dy) === Math.sign(acc) ? acc + dy : dy;
-      // Direction flips only after 24px of consistent travel.
-      if (acc > 24 && y > 120) setChromeHidden(true);
-      else if (acc < -24 || y < 80) setChromeHidden(false);
+      // The compact title takes over the moment the page title slides under
+      // the nav — measured off the element itself, not a fixed offset. No
+      // hysteresis needed: the overlay never changes document height.
+      const titleEl = document.querySelector('.race-title');
+      pastTitle.current = titleEl
+        ? titleEl.getBoundingClientRect().bottom < 64
+        : window.scrollY > 420;
+      const sectionBottom =
+        sectionRef.current?.getBoundingClientRect().bottom ?? Infinity;
+      setVisible(pastTitle.current && sectionBottom > CHROME_BOTTOM_PX);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    // Resize moves both innerHeight and the section bottom without a scroll.
+    window.addEventListener('resize', onScroll);
+    onScroll();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [sectionRef]);
 
-  return chromeHidden;
+  return visible;
 }
 
 export default function App() {
   const { state, dispatch } = useElectionData();
   const [devOpen, setDevOpen] = useState(false);
-  const chromeHidden = useScrollChrome();
+  /* Which delivery phase the prototype is showing. One map decides what a
+     phase contains (data/phases.ts); every gate below reads off it. */
+  const [phase, setPhase] = useState<Phase>(initialPhase);
+  const features = featuresFor(phase);
+  const mapSectionRef = useRef<HTMLElement>(null);
+  const pastTitle = useCompactVisible(mapSectionRef);
   useMessageApi(state, dispatch);
 
   const races = activeRaces(state);
   const anyLive = Object.values(races).some(isLive);
-  const anyResults = Object.values(races).some((r) => r.mode === 'results');
+  const anyResults =
+    features.results && Object.values(races).some((r) => r.mode === 'results');
 
   const summary = useMemo(
     () => summarize(races, state.chamber, state.sourceId, HOUSE_DISTRICT_COUNT),
     [races, state.chamber, state.sourceId]
   );
-  const hero = useMemo(
-    () => heroFor(races, state.chamber, state.sourceId, summary.seatsUp),
+  const forecast = useMemo(
+    () => forecastFor(races, state.chamber, state.sourceId, summary.seatsUp),
     [races, state.chamber, state.sourceId, summary.seatsUp]
   );
+  // Whoever the certified feed is, once results are live.
+  const resultsSource = Object.values(races).find((r) => r.results?.source)?.results?.source;
+  const called = summary.calledDem + summary.calledRep;
+  // The headline the tabs drive, and the line that says whose numbers it is.
+  const statement = anyResults
+    ? `${called} of ${Object.keys(races).length} races called.`
+    : forecast.title;
+  const byline = anyResults
+    ? `per ${resultsSource ?? 'the certified feed'} · updating live`
+    : `per ${sourceLabel(state.sourceId)}${forecast.updated ? ` · updated ${forecast.updated}` : ''}`;
 
   const zoomedRace = state.zoomedId ? races[state.zoomedId] : undefined;
+
+  /* Trust picks for the chamber on screen: stateId -> sourceId. The map
+     resolves each state as pick-first, global-source second; the aggregate
+     totals in the eyebrow deliberately stay on the global source only —
+     mixing providers inside one sum would make the number mean nothing.
+     [ASSUMPTION flagged for product review.] */
+  const trustPicks = useMemo(
+    () => (features.trustPicks ? picksForChamber(state.trust, state.chamber) : {}),
+    [state.trust, state.chamber, features.trustPicks]
+  );
+  const trustedForZoomed = state.zoomedId ? trustPicks[state.zoomedId] : undefined;
+
+  const setTrust = (sourceId: string) => {
+    const stateId = state.zoomedId;
+    if (!stateId) return;
+    const previous = trustPicks[stateId];
+    dispatch({ type: 'SET_TRUST', stateId, sourceId });
+    if (previous === sourceId) {
+      track('trust_pick_cleared', { state: stateId, race: state.chamber, source: sourceId });
+    } else {
+      track('trust_pick_set', {
+        state: stateId,
+        race: state.chamber,
+        source: sourceId,
+        previous: previous ?? null,
+      });
+    }
+  };
+
+  const resetTrust = () => {
+    const stateId = state.zoomedId;
+    if (!stateId) return;
+    const previous = trustPicks[stateId];
+    dispatch({ type: 'CLEAR_TRUST', stateId });
+    track('trust_pick_reset', { state: stateId, race: state.chamber, source: previous ?? null });
+  };
+
+  /* Drawer open = modal: the page behind stops scrolling (the drawer's own
+     content still does), so reading the panel is never disturbed.
+     Freezing is only safe once the panel is actually ON SCREEN — it is
+     anchored inside the map card, so opening it while the card is half
+     scrolled past would strand its header above the viewport with no way to
+     scroll up to it. So: bring the card into view first, then freeze — and
+     if the panel still can't fit (short window), leave scrolling alone. */
+  const [modalReady, setModalReady] = useState(false);
+  useScrollLock(!!zoomedRace && modalReady);
+  useEffect(() => {
+    if (!state.zoomedId) {
+      setModalReady(false);
+      return;
+    }
+    const NAV_H = 64;
+    const fitsInView = (el: Element | null) => {
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      return r.top >= NAV_H - 1 && r.bottom <= window.innerHeight + 1;
+    };
+    const drawer = () => document.querySelector('.drawer');
+    if (fitsInView(drawer())) {
+      setModalReady(true);
+      return;
+    }
+    const card = document.querySelector('.map-card');
+    if (!card || card.getBoundingClientRect().height > window.innerHeight - NAV_H) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    card.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+    const t = window.setTimeout(() => setModalReady(fitsInView(drawer())), reduced ? 0 : 560);
+    return () => window.clearTimeout(t);
+  }, [state.zoomedId]);
+  /* A scroll gesture is never trapped: while the panel holds the page still,
+     wheeling or dragging ANYWHERE OUTSIDE it closes the panel and hands the
+     scroll back. Inside the panel the gesture belongs to its own content.
+     Without this, a click on a state froze the page until the reader found
+     the close button — and only on viewports tall enough for the lock to
+     engage, which made it look like a bug in the map. */
+  useEffect(() => {
+    // Not gated on the lock: on short viewports the page never freezes, and
+    // the gesture should still mean the same thing everywhere.
+    if (!zoomedRace) return;
+    const NOISE = 8; // trackpad jitter is not scroll intent
+    const release = (e: Event) => {
+      if ((e.target as Element | null)?.closest?.('.drawer')) return;
+      if (e.type === 'wheel' && Math.abs((e as WheelEvent).deltaY) < NOISE) return;
+      dispatch({ type: 'CLEAR_ZOOM' });
+    };
+    window.addEventListener('wheel', release, { passive: true });
+    window.addEventListener('touchmove', release, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', release);
+      window.removeEventListener('touchmove', release);
+    };
+  }, [zoomedRace, dispatch]);
+
   const zoomedName = state.zoomedId
     ? STATE_SHAPES.find((s) => s.id === state.zoomedId)?.name ?? state.zoomedId
     : '';
@@ -91,10 +226,47 @@ export default function App() {
     [state.zoomedId, state.ballot]
   );
 
+  /* One entry point for every race switch — the header tabs and the panel
+     tabs are the same component and now the same handler, so behavior and
+     analytics cannot diverge. */
+  const selectChamber = (chamber: Chamber, via: 'header' | 'panel') => {
+    if (chamber === state.chamber) return;
+    track('race_change', { race: chamber, from: state.chamber, via });
+    dispatch({ type: 'SET_CHAMBER', chamber });
+  };
+
   const navigateState = (stateId: string) => {
     dispatch({ type: 'ZOOM_STATE', stateId });
     emitMapEvent('usmap-select', { stateId, chamber: state.chamber });
   };
+
+  // Race-tag hovercards hand off here: switch to the tag's chamber, bring
+  // the map into view, THEN zoom the state. Order matters now that the
+  // drawer locks page scroll — opening it mid-flight would freeze the smooth
+  // scroll halfway to the map.
+  const openMapTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(openMapTimer.current), []);
+  useEffect(() => {
+    const onOpenMap = (e: Event) => {
+      const { stateId, chamber } = (e as CustomEvent<{ stateId?: string; chamber?: Chamber }>)
+        .detail ?? {};
+      if (!stateId) return;
+      if (chamber && chamber !== state.chamber) dispatch({ type: 'SET_CHAMBER', chamber });
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document
+        .querySelector('.map-card')
+        ?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+      const open = () => {
+        dispatch({ type: 'ZOOM_STATE', stateId });
+        emitMapEvent('usmap-select', { stateId, chamber: chamber ?? state.chamber });
+      };
+      window.clearTimeout(openMapTimer.current);
+      if (reduced) open();
+      else openMapTimer.current = window.setTimeout(open, 520);
+    };
+    window.addEventListener('dw-open-map', onOpenMap);
+    return () => window.removeEventListener('dw-open-map', onOpenMap);
+  }, [state.chamber, dispatch]);
 
   const handleSelect = (stateId: string) => {
     dispatch({ type: 'SELECT', stateId });
@@ -134,16 +306,23 @@ export default function App() {
           compact header live inside a landmark for AT users. */}
       <header className="site-chrome">
         <DWNav />
-        {/* Absolutely positioned under the nav: hiding/showing these bars
-            must never change the DOCUMENT height — height changes at the
-            scroll extremes get clamp-compensated by the browser, which reads
-            back as opposite-direction scroll and oscillates the chrome. */}
+        {/* Absolutely positioned under the nav (out of document flow):
+            showing/hiding the compact title must never change page height —
+            height changes get clamp-compensated by the browser and read back
+            as opposite-direction scroll (oscillation). */}
         <div className="chrome-overlays">
-          <div className={`chrome-collapse${chromeHidden ? ' is-collapsed' : ''}`}>
-            <PromoBar />
+          <div className={`chrome-collapse chrome-collapse--tall${!pastTitle ? ' is-collapsed' : ''}`}>
+            <CompactHeader
+              title={statement}
+              chamber={state.chamber}
+              onChamber={(chamber) => selectChamber(chamber, 'header')}
+            />
           </div>
         </div>
       </header>
+
+      {/* Normal flow: scrolls away with the page like any content. */}
+      <PromoBar />
 
       <div className={`app${devOpen ? ' app--dev-open' : ''}`}>
         <main className="app-main">
@@ -161,35 +340,41 @@ export default function App() {
             <CutoverBanner text={state.banner} onDismiss={() => dispatch({ type: 'CLEAR_BANNER' })} />
           )}
 
-          <Hero data={hero} />
+          {/* THE MAP SECTION: tabs, the headline they drive and the seat
+              bar, then the card — which owns the map and the source that
+              paints it. */}
+          <section className="map-section" aria-label="Election map" ref={mapSectionRef}>
+          <RaceHeader
+            chamber={state.chamber}
+            statement={statement}
+            byline={byline}
+            forecast={forecast}
+            resultsMode={anyResults}
+            called={called}
+            onChamber={(chamber) => selectChamber(chamber, 'header')}
+          />
 
-          <div className="map-card">
-            <a
-              className="game-chip"
-              href="#prediction-game"
-              aria-label="Play the Perfect Prediction Map game"
-            >
-              <span aria-hidden="true">🔮</span>
-            </a>
-
-            <div className="map-and-panel">
-              <ElectionMap
-                races={races}
-                chamber={state.chamber}
-                sourceId={state.sourceId}
-                selectedId={state.selectedId}
-                zoomedId={state.zoomedId}
-                staggering={state.staggering}
-                flash={state.flash}
-                onSelect={handleSelect}
-                onZoom={(stateId) => {
-                  dispatch({ type: 'ZOOM_STATE', stateId });
-                  emitMapEvent('usmap-select', { stateId, chamber: state.chamber });
-                }}
-                onClearZoom={() => dispatch({ type: 'CLEAR_ZOOM' })}
-              />
-
-              {zoomedRace && prevState && nextState && (
+          <MapCard
+            races={races}
+            chamber={state.chamber}
+            sourceId={state.sourceId}
+            trust={trustPicks}
+            selectedId={state.selectedId}
+            zoomedId={state.zoomedId}
+            staggering={state.staggering}
+            flash={state.flash}
+            resultsMode={anyResults}
+            resultsSource={resultsSource}
+            onSource={(sourceId) => dispatch({ type: 'SET_SOURCE', sourceId })}
+            onSelect={handleSelect}
+            onZoom={(stateId) => {
+              dispatch({ type: 'ZOOM_STATE', stateId });
+              emitMapEvent('usmap-select', { stateId, chamber: state.chamber });
+            }}
+            onClearZoom={() => dispatch({ type: 'CLEAR_ZOOM' })}
+            showCounties={features.zoomDepth}
+            panel={
+              zoomedRace && prevState && nextState ? (
                 <RacePanel
                   key={zoomedRace.id}
                   stateName={zoomedName}
@@ -199,30 +384,31 @@ export default function App() {
                   availability={availability}
                   prev={prevState}
                   next={nextState}
-                  onChamber={(chamber) => dispatch({ type: 'SET_CHAMBER', chamber })}
+                  trustedSourceId={trustedForZoomed}
+                  showTrustPicker={features.trustPicks}
+                  showFollow={features.followState}
+                  showDistricts={features.zoomDepth}
+                  onChamber={(chamber) => selectChamber(chamber, 'panel')}
                   onNavigate={navigateState}
                   onClose={() => dispatch({ type: 'CLEAR_ZOOM' })}
+                  onTrust={setTrust}
+                  onResetTrust={resetTrust}
                 />
-              )}
-            </div>
-          </div>
+              ) : null
+            }
+          />
 
-          <Legend mode={anyResults ? 'results' : 'prediction'} />
+          </section>
 
-          {/* Floating dock: chambers + source dropdown, fixed to the viewport.
-              Inside <main> so it stays within a landmark. Hidden while the
-              drawer is open — the drawer's tabs take over. */}
-          <div
-            className={`dock-row${devOpen ? ' is-raised' : ''}${zoomedRace ? ' is-dismissed' : ''}`}
-          >
-            <Dock
-              chamber={state.chamber}
-              sourceId={state.sourceId}
-              sourcesDisabled={anyResults}
-              onChamber={(chamber) => dispatch({ type: 'SET_CHAMBER', chamber })}
-              onSource={(sourceId) => dispatch({ type: 'SET_SOURCE', sourceId })}
-            />
-          </div>
+          {/* The boundary between map and feed is now editorial, not chromatic:
+              the plan banner sits where the surface-step used to be. */}
+          <PlanBanner />
+
+          <CoverageFeed
+            ballot={state.ballot}
+            sourceId={state.sourceId}
+            showRaceTags={features.raceTags}
+          />
 
           {/* Race calls, cutover notices and control changes are announced politely. */}
           <div aria-live="polite" className="visually-hidden">
@@ -230,14 +416,23 @@ export default function App() {
           </div>
         </main>
 
-        <DevToolbar
-          state={state}
-          dispatch={dispatch}
-          onRunPollClosings={runPollClosings}
-          open={devOpen}
-          onToggle={setDevOpen}
-        />
+        {/* Preview chrome hides inside the framed copy. */}
+        {!IS_PREVIEW_FRAME && features.results && (
+          <DevToolbar
+            state={state}
+            dispatch={dispatch}
+            onRunPollClosings={runPollClosings}
+            open={devOpen}
+            onToggle={setDevOpen}
+          />
+        )}
+        <MobilePreview />
+        <ThemeToggle />
+        <PhaseSwitcher phase={phase} onPhase={setPhase} />
       </div>
+
+      {/* Full-bleed: the footer runs edge to edge with its own inner rail. */}
+      <SiteFooter />
     </>
   );
 }

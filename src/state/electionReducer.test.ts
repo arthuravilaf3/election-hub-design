@@ -6,6 +6,8 @@ import {
   initialElectionState,
   type ElectionState,
 } from './electionReducer';
+import { fillFor, hasNoRead, readFor } from '../data/encoding';
+import { picksForChamber } from '../data/trust';
 import type { RaceStatus } from '../data/types';
 
 /** Results mode with the SENATE active — the chamber whose seeds cover every
@@ -45,15 +47,73 @@ describe('ballot shape', () => {
     }
   });
 
-  it('every race carries a read from all three providers', () => {
+  it('every race carries the polling read; market gaps are explicit, never filled', () => {
     const s = initialElectionState();
     for (const race of Object.values(s.ballot.senate)) {
-      expect(race.reads.map((r) => r.sourceId).sort()).toEqual([
-        'dw-poll-avg',
-        'kalshi',
-        'polymarket',
-      ]);
+      expect(race.reads.some((r) => r.sourceId === 'dw-poll-avg')).toBe(true);
+      expect(race.reads.length).toBeLessThanOrEqual(3);
     }
+    // Markets list what has volume; some races have no market at all. The
+    // hole is data — it drives the "no data from this source" state.
+    expect(s.ballot.senate.WV.reads.map((r) => r.sourceId)).not.toContain('kalshi');
+    expect(s.ballot.senate.ID.reads.map((r) => r.sourceId)).not.toContain('polymarket');
+    expect(hasNoRead(s.ballot.senate.WV, 'kalshi')).toBe(true);
+    expect(hasNoRead(s.ballot.senate.WV, 'dw-poll-avg')).toBe(false);
+  });
+});
+
+describe('trust picks (which read do you trust)', () => {
+  function zoomedSenate(stateId = 'GA') {
+    let s = electionReducer(initialElectionState(), { type: 'SET_CHAMBER', chamber: 'senate' });
+    s = { ...s, trust: {} }; // ignore anything a previous session persisted
+    s = electionReducer(s, { type: 'ZOOM_STATE', stateId });
+    return s;
+  }
+
+  it('scopes a pick to one state AND one chamber', () => {
+    let s = zoomedSenate('GA');
+    s = electionReducer(s, { type: 'SET_TRUST', stateId: 'GA', sourceId: 'kalshi' });
+    expect(picksForChamber(s.trust, 'senate').GA).toBe('kalshi');
+    expect(picksForChamber(s.trust, 'governor').GA).toBeUndefined();
+    expect(picksForChamber(s.trust, 'senate').TX).toBeUndefined();
+  });
+
+  it('re-picking the current source clears the pick (radio toggle)', () => {
+    let s = zoomedSenate();
+    s = electionReducer(s, { type: 'SET_TRUST', stateId: 'GA', sourceId: 'kalshi' });
+    s = electionReducer(s, { type: 'SET_TRUST', stateId: 'GA', sourceId: 'kalshi' });
+    expect(picksForChamber(s.trust, 'senate').GA).toBeUndefined();
+  });
+
+  it('moves the pick between sources', () => {
+    let s = zoomedSenate();
+    s = electionReducer(s, { type: 'SET_TRUST', stateId: 'GA', sourceId: 'kalshi' });
+    s = electionReducer(s, { type: 'SET_TRUST', stateId: 'GA', sourceId: 'polymarket' });
+    expect(picksForChamber(s.trust, 'senate').GA).toBe('polymarket');
+  });
+
+  it('CLEAR_TRUST resets one race back to the global source', () => {
+    let s = zoomedSenate();
+    s = electionReducer(s, { type: 'SET_TRUST', stateId: 'GA', sourceId: 'kalshi' });
+    s = electionReducer(s, { type: 'CLEAR_TRUST', stateId: 'GA' });
+    expect(picksForChamber(s.trust, 'senate').GA).toBeUndefined();
+  });
+
+  it('switching the global source leaves picks intact', () => {
+    let s = zoomedSenate();
+    s = electionReducer(s, { type: 'SET_TRUST', stateId: 'GA', sourceId: 'kalshi' });
+    s = electionReducer(s, { type: 'SET_SOURCE', sourceId: 'polymarket' });
+    expect(s.sourceId).toBe('polymarket');
+    expect(picksForChamber(s.trust, 'senate').GA).toBe('kalshi');
+  });
+
+  it('a pick at a source with no data stays empty — never a silent fallback', () => {
+    let s = zoomedSenate('WV');
+    s = electionReducer(s, { type: 'SET_TRUST', stateId: 'WV', sourceId: 'kalshi' });
+    const trusted = picksForChamber(s.trust, 'senate').WV;
+    expect(trusted).toBe('kalshi');
+    expect(readFor(s.ballot.senate.WV, trusted)).toBeUndefined();
+    expect(fillFor(s.ballot.senate.WV, trusted)).toBe('var(--no-read)');
   });
 });
 

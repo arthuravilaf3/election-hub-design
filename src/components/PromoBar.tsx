@@ -1,10 +1,9 @@
-// The purple Prediction Game promo bar (Figma: #9527AE, 36px). Lives in the
-// sticky chrome; the App hides it while scrolling down and reveals it on
-// scroll up. It is promo chrome — it must never block the page (no sticky
-// focus, no modal behavior).
+// The purple Prediction Game promo bar (Figma: #9527AE, 36px). Sits in
+// NORMAL page flow below the nav and scrolls away with the content (design
+// decision Aug 2026 — no hide/show scroll behavior).
 export function PromoBar() {
   return (
-    <div className="promo-bar">
+    <aside className="promo-bar" aria-label="Prediction game promotion">
       <p className="promo-copy">
         <span className="promo-dot" aria-hidden="true" />
         <strong>Do you have a crystal ball?</strong> Build your perfect prediction map
@@ -21,6 +20,6 @@ export function PromoBar() {
           />
         </svg>
       </a>
-    </div>
+    </aside>
   );
 }
