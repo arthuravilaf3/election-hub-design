@@ -162,6 +162,24 @@ await page.mouse.wheel(0, 120);
 await page.waitForTimeout(700);
 check('wheel outside drawer clears zoom', await page.evaluate(() => !document.querySelector('.drawer')), true);
 
+// ---- Sources compared: the three cards share one set of columns ---------
+await page.click('.state-shape[data-state=TX]');
+await page.waitForTimeout(900);
+const cols = await page.evaluate(() => {
+  const cards = [...document.querySelectorAll('.source-card')];
+  if (cards.length < 3) return null;
+  const col = (i) => cards.map((c) => Math.round(c.children[i].getBoundingClientRect().left));
+  const same = (a) => a.every((v) => v === a[0]);
+  return {
+    aligned: same(col(0)) && same(col(1)) && same(col(2)),
+    overflow: cards.some((c) => c.scrollWidth > c.clientWidth),
+  };
+});
+check('source cards share columns', cols?.aligned, true);
+check('source cards do not overflow', cols?.overflow, false);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(600);
+
 // ---- message API --------------------------------------------------------
 const reply = await page.evaluate(
   () =>

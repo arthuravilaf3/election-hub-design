@@ -1492,11 +1492,22 @@ body.is-scroll-locked .promo-bar {
 
 /* Each comparison card IS the trust control (role=radio). Same row shape as
    before — the card only gained a right-hand slot and a picked state. */
+/*
+ * The provider column is PINNED, not `auto`. Each card is its own grid, so an
+ * auto column sized itself from its own text — "Polling Data" is narrower
+ * than "Prediction Market", so the read started at a different x on every row
+ * and the block read as broken. 108px is the widest of the three kind labels.
+ *
+ * (Subgrid off the parent equalises the widths too, but the parent's tracks
+ * are sized to the parent's content box while each card also carries 12px of
+ * side padding — the tracks then overflow the card and the dot collides with
+ * the label.)
+ */
 .source-card {
   font: inherit;
   text-align: left;
   display: grid;
-  grid-template-columns: 10px auto minmax(0, 1fr) auto;
+  grid-template-columns: 10px 108px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
