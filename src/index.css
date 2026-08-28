@@ -219,6 +219,9 @@ button,
   justify-content: center;
   border-radius: 999px;
   background: var(--promo);
+  /* Literal, deliberately: --promo does NOT flip with the theme, so the type
+     on it must stay light in both. var(--ink) would go near-black on purple
+     in light mode. */
   color: #fafafa;
   font-size: 11px;
   font-weight: 600;
@@ -1887,14 +1890,17 @@ body.is-scroll-locked .promo-bar {
   padding: 0 18px;
   border: 1px solid transparent;
   border-radius: 10px;
-  background: #fafafa;
-  color: #0a0909;
+  /* Inverted pill: reads as "filled" against whatever surface it sits on,
+     and flips with the theme. Was a hardcoded #fafafa/#0a0909, which left a
+     near-white button on the light drawer's near-white panel. */
+  background: var(--ink);
+  color: var(--surface-dim);
   cursor: pointer;
   transition: background 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out;
 }
 
 .btn-follow:hover {
-  background: #e5e5e5;
+  background: color-mix(in srgb, var(--ink) 88%, var(--surface-dim));
 }
 
 .btn-follow.is-following {
@@ -3080,13 +3086,21 @@ body.is-scroll-locked .promo-bar {
   flex-wrap: wrap;
 }
 
-/* The primary button borrows .btn-follow's fill, but NOT its size — that one
-   is the drawer's Follow control and keeps its own 36px spec. */
+/* The primary button borrows .btn-follow's shape, but NOT its size — that one
+   is the drawer's Follow control and keeps its own 36px spec — and not its
+   theme inversion either: this sits on the brand gradient, which does not
+   flip, so the button stays light in both themes. */
 .plan-actions .btn-follow {
   height: 46px;
   padding: 0 32px;
   border-radius: 4px;
   font-size: 14px;
+  background: #fafafa;
+  color: #0a0909;
+}
+
+.plan-actions .btn-follow:hover {
+  background: #e5e5e5;
 }
 
 .plan-btn-secondary {
@@ -3573,8 +3587,12 @@ body.is-scroll-locked .promo-bar {
   /* Map: near full-bleed inside a tighter card; the source control stacks
      ABOVE the map in normal flow (no room to share the top band). */
   .map-card {
-    margin-top: 16px;
-    border-radius: 16px;
+    border-radius: 8px;
+  }
+
+  .map-block {
+    margin-top: 40px;
+    gap: 16px;
   }
 
   .map-wrap {
@@ -3586,12 +3604,32 @@ body.is-scroll-locked .promo-bar {
     gap: 16px;
   }
 
-  .seat-bar {
-    gap: 10px;
+  /* The three-up row is too wide for a phone. Keep the two blocs on the
+     ends where the bar puts them and drop the contested middle to its own
+     centered line, rather than letting it wrap somewhere arbitrary. */
+  .seat-bar-labels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 4px;
   }
 
-  .seat-bar-end {
+  .seat-bar-label {
     font-size: 13px;
+  }
+
+  .seat-bar-label:nth-child(1) {
+    order: 1;
+  }
+
+  .seat-bar-label:nth-child(3) {
+    order: 2;
+    text-align: right;
+  }
+
+  .seat-bar-label:nth-child(2) {
+    order: 3;
+    grid-column: 1 / -1;
+    text-align: center;
   }
 
   /* Drawer -> bottom sheet: fixed over the page, content still scrolls
@@ -3818,9 +3856,22 @@ body.is-scroll-locked .promo-bar {
 
 /* Light mode keeps the same neutral step (the token flips with the theme). */
 
-/* White-on-white hairlines: floating chrome borders come from ink now. */
+/* The drawer's deep shadow is tuned for a dark card; on a light one it reads
+   as grime. Lighter, tighter, plus a hairline to hold the edge. */
 :root[data-theme='light'] .drawer {
-  border-color: color-mix(in srgb, var(--ink) 12%, transparent);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+/* The seat-bar figures use the LIGHT end of each ramp on the dark page; on
+   white those are ~1.7:1. Swap to the dark end, which the light canvas can
+   carry — the bar itself is unchanged, this is type only. */
+:root[data-theme='light'] .seat-bar-num--dem {
+  color: var(--rating-safe-dem);
+}
+
+:root[data-theme='light'] .seat-bar-num--rep {
+  color: var(--rating-safe-rep);
 }
 
 /* Theme toggle FAB — stacked above the mobile-preview toggle. */
@@ -3985,8 +4036,9 @@ body.is-scroll-locked .promo-bar {
   opacity: 1;
 }
 
+/* 10px per the comp (was 9). */
 .seg-kind {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: color-mix(in srgb, var(--ink-soft) 82%, transparent);
@@ -4011,6 +4063,13 @@ body.is-scroll-locked .promo-bar {
 
 :root[data-theme='light'] .seg.is-active {
   background: var(--surface-dim);
+}
+
+/* Pre-existing light-mode AA failure: --ink-soft at 82% lands on #848484
+   over the control's #ebebeb — 3.1:1 at 10px, where 4.5 is required. The
+   dark theme's treatment is fine; only light needs the darker tone. */
+:root[data-theme='light'] .seg-kind {
+  color: var(--ink-subtle);
 }
 
 /* Results mode: static attribution, same slot. */
