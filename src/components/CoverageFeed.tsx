@@ -371,7 +371,7 @@ export function CoverageFeed({ ballot, sourceId, showRaceTags = true }: Coverage
 
   /* ---- impressions (once per item / ad) ---- */
   const seen = useRef(new Set<string>());
-  const feedRef = useRef<HTMLDivElement>(null);
+  const feedRef = useRef<HTMLElement>(null);
   useEffect(() => {
     const root = feedRef.current;
     if (!root) return;
@@ -504,8 +504,8 @@ export function CoverageFeed({ ballot, sourceId, showRaceTags = true }: Coverage
   }, [visible, shortsGrid]);
 
   return (
-    <section className="feed-section" aria-label="All election coverage">
-      <div className="feed-rail" ref={feedRef}>
+    <section className="feed-section" aria-label="All election coverage" ref={feedRef}>
+      <div className="feed-rail">
         <header className="feed-head">
           <h2>All Election Coverage</h2>
         </header>
@@ -891,6 +891,20 @@ export function CoverageFeed({ ballot, sourceId, showRaceTags = true }: Coverage
           </div>
         )}
       </div>
+
+      {/* The comp's second column. Above 1080 this rail carries the ad
+          inventory and the in-feed slots stand down (see index.css) — running
+          both would double it. Ad-free tiers get neither (PRD tenet 4). */}
+      {!IS_AD_FREE && (
+        <aside className="feed-ad-rail" aria-label="Advertisement">
+          {/* The column stretches so its left rule runs the full height of
+              the stream; only this inner block sticks. */}
+          <div className="feed-ad-rail-inner">
+            <p className="feed-ad-rail-label">ADVERTISEMENT</p>
+            <div className="feed-ad-rail-slot" data-impression="ad-rail" />
+          </div>
+        </aside>
+      )}
     </section>
   );
 }

@@ -53,8 +53,10 @@ body {
 .app {
   max-width: var(--rail);
   margin: 0 auto;
-  /* Bottom padding clears the fixed promo bar as well as the page tail. */
-  padding: 48px var(--rail-pad) calc(80px + var(--promo-bar-h));
+  /* Just the page tail — the fixed bar's clearance is reserved once, on
+     <body>, because the footer sits outside this rail. Reserving it here too
+     opened a second gap between the feed and the footer. */
+  padding: 48px var(--rail-pad) 80px;
 }
 
 /* With the dev toolbar expanded, the bottom chrome is much taller — give the
@@ -72,9 +74,7 @@ body {
   display: none;
 }
 
-/* Normal page scroll; the full-bleed map uses 100vw, so kill the sliver of
-   horizontal overflow the scrollbar gutter would otherwise create.
-   overflow-anchor: none — the collapsing sticky chrome changes page height,
+/* overflow-anchor: none — the collapsing sticky chrome changes page height,
    and scroll anchoring would "compensate" by mutating scrollY, which the
    scroll-direction handler reads as opposite-direction scroll: a feedback
    loop that visibly oscillates the promo bar. Anchoring off ends the loop. */
@@ -92,7 +92,6 @@ body.is-scroll-locked {
 }
 
 body {
-  overflow-x: hidden;
   /* The footer is outside .app, so the fixed bar's clearance has to be
      reserved on the document itself or the bar covers the legal links. */
   padding-bottom: var(--promo-bar-h);
@@ -2011,26 +2010,69 @@ body.is-scroll-locked .promo-bar {
 
 /* ---------- Coverage feed ---------- */
 
-/* Full-bleed band one surface step above the page, with generous distance
-   from the map section so the territory change reads at speed. */
+/* Redesign Aug 2026: the feed left its full-bleed band and came inside the
+   page rail as TWO columns — the stream, and an ad rail behind a hairline.
+   The band is gone with the bleed; the separation from the map was always
+   editorial (the plan banner), never chromatic.
+
+   The 388px column is 304 of ad plus the 84 of padding that carries the
+   divider, so the rule lands at exactly the comp's x and the stream column
+   comes out at 808. */
 .feed-section {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
   margin-top: 72px;
-  /* Same family as the page — the separation is editorial (the plan banner),
-     not chromatic. The gradient adds quiet depth toward the bottom. */
-  background: linear-gradient(
-    180deg,
-    var(--surface-dim) 0%,
-    color-mix(in srgb, var(--surface) 55%, var(--surface-dim)) 100%
-  );
-  padding: 48px 0 64px;
+  padding: 0 16px 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 388px;
+  column-gap: 84px;
 }
 
 .feed-rail {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 32px;
+  min-width: 0;
+}
+
+.feed-ad-rail {
+  border-left: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  padding-left: 84px;
+}
+
+/* Sticky is safe now: removing the 100vw bleed also removed the
+   `body { overflow-x: hidden }` that existed to hide its scrollbar sliver,
+   and an overflow on an ancestor is what silently kills sticky. */
+.feed-ad-rail-inner {
+  position: sticky;
+  top: 88px; /* 64px nav + 24 */
+}
+
+.feed-ad-rail-label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ink-subtlest);
+  text-align: center;
+}
+
+.feed-ad-rail-slot {
+  height: 552px;
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+/* One inventory, not two: above this width the rail carries the ads and the
+   in-feed slots stand down. display:none elements never intersect, so the
+   impression observer reports zero for them on its own — no faked telemetry. */
+@media (min-width: 1080px) {
+  .feed-ad {
+    display: none;
+  }
+}
+
+@media (max-width: 1079px) {
+  .feed-section {
+    display: block;
+  }
+
+  .feed-ad-rail {
+    display: none;
+  }
 }
 
 .feed-head {
