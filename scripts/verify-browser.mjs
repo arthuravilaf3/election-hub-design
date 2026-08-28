@@ -6,7 +6,7 @@ import { chromium } from 'playwright';
 
 // The harness exercises the FULL prototype: last phase, plus the trusted-
 // source picker that has no phase yet (see src/data/phases.ts).
-const BASE = 'http://localhost:5173/?phase=4&trust=1';
+const BASE = process.env.HUB_URL ?? 'http://localhost:5174/?phase=4&trust=1';
 const SHOT = (name) => `/tmp/usmap-${name}.png`;
 
 const browser = await chromium.launch({ channel: 'chrome' });

@@ -25,6 +25,17 @@
      DS's own subtlest (#8f8f8f). */
   --ink-subtle: #dfdfdf; /* text/neutral/subtle/default -> color/gray/200 */
   --ink-subtlest: #8f8f8f; /* text/neutral/subtlest/default -> color/gray/400 */
+
+  /* ---- Layout metrics (redesign Aug 2026, from the DW WIP Q3 frames) ----
+     The Figma frame is 1440 with 64px side padding, so the content rail is
+     1312. Every rail on the page (nav, main, footer) uses these two numbers
+     so the page shares one left edge. */
+  --rail: 1440px;
+  --rail-pad: 64px;
+
+  /* Height of the fixed bottom promo bar. Read by the page tail, the dev
+     chrome and the three FABs, so the bar's height is stated ONCE. */
+  --promo-bar-h: 113px;
 }
 
 body {
@@ -40,16 +51,16 @@ body {
    the production site, same rail the nav uses, so the page content and the
    nav links share a left edge. */
 .app {
-  max-width: 1400px;
+  max-width: var(--rail);
   margin: 0 auto;
-  /* promo bar is in normal flow now — no overlay clearance needed */
-  padding: 24px 32px 80px;
+  /* Bottom padding clears the fixed promo bar as well as the page tail. */
+  padding: 48px var(--rail-pad) calc(80px + var(--promo-bar-h));
 }
 
 /* With the dev toolbar expanded, the bottom chrome is much taller — give the
    page enough tail that every control can scroll clear of it. */
 .app--dev-open {
-  padding-bottom: 320px;
+  padding-bottom: calc(320px + var(--promo-bar-h));
 }
 
 /* Normal page scroll; the full-bleed map uses 100vw, so kill the sliver of
@@ -73,6 +84,9 @@ body.is-scroll-locked {
 
 body {
   overflow-x: hidden;
+  /* The footer is outside .app, so the fixed bar's clearance has to be
+     reserved on the document itself or the bar covers the legal links. */
+  padding-bottom: var(--promo-bar-h);
 }
 
 /* Anything scrolled into view (keyboard focus, programmatic) must land clear
@@ -82,7 +96,7 @@ input,
 button,
 .state-shape {
   scroll-margin-top: 92px;
-  scroll-margin-bottom: 220px;
+  scroll-margin-bottom: calc(var(--promo-bar-h) + 120px);
 }
 
 /* ---------- Daily Wire site nav (copied from dailywire.com) ---------- */
@@ -107,7 +121,9 @@ button,
 
 .dw-nav {
   height: 64px;
-  padding: 14px 64px;
+  max-width: var(--rail);
+  margin: 0 auto;
+  padding: 14px var(--rail-pad);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -518,7 +534,7 @@ button,
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: var(--promo-bar-h);
   display: flex;
   flex-wrap: wrap;
   gap: 24px;
@@ -533,7 +549,7 @@ button,
 .dev-toolbar--collapsed {
   left: auto;
   right: 16px;
-  bottom: 16px;
+  bottom: calc(var(--promo-bar-h) + 16px);
   padding: 0;
   background: transparent;
   border: 0;
@@ -739,49 +755,111 @@ button,
   }
 }
 
-/* ---------- Purple promo bar ---------- */
+/* ---------- Prediction game promo bar (fixed, bottom) ---------- */
 
+/* Redesign Aug 2026: this left the top of the page and became a bar pinned
+   to the bottom of the viewport. Height is declared once as --promo-bar-h;
+   the page tail, the dev chrome and the three FABs all clear it from that
+   one number.
+
+   z-index 500 places it above the page and the dev toolbar (30) but BELOW
+   the mobile drawer's bottom sheet (600) and the FABs (640) — the sheet has
+   to cover it, and the dev chrome has to stay clickable. */
 .promo-bar {
-  height: 36px;
-  background: var(--promo);
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 500;
+  height: var(--promo-bar-h);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 64px 0 134px;
-  color: #fafafa;
+  gap: 24px;
+  padding: 32px var(--rail-pad);
+  background: var(--surface);
+  border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink);
+}
+
+/* body.is-scroll-locked sets overflow:hidden, which removes the scrollbar and
+   widens the initial containing block — a FIXED full-width element grows with
+   it and jumps sideways. The sticky nav is immune (it inherits body's
+   padding); this bar is not, so it compensates with the same gutter.
+   Invisible on macOS overlay scrollbars — the gutter is 0 there. */
+body.is-scroll-locked .promo-bar {
+  padding-right: calc(var(--rail-pad) + var(--scroll-lock-gutter, 0px));
+}
+
+/* Decorative miniature of the map the CTA sells. */
+.promo-tiles {
+  flex: none;
+  width: 49px;
+  height: 49px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.promo-tile {
+  border-radius: 2px;
+}
+
+.promo-tile--rep {
+  background: var(--rating-likely-rep);
+}
+
+.promo-tile--lean-rep {
+  background: var(--rating-lean-rep);
+}
+
+.promo-tile--dem {
+  background: var(--rating-likely-dem);
+}
+
+.promo-tile--lean-dem {
+  background: var(--rating-lean-dem);
 }
 
 .promo-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.promo-title {
   margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.promo-sub {
+  margin: 8px 0 0;
   font-size: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.promo-copy strong {
-  font-weight: 700;
-}
-
-.promo-dot {
-  width: 13px;
-  height: 13px;
-  border-radius: 999px;
-  background: #fafafa;
-  flex: none;
+  color: var(--ink-subtlest);
 }
 
 .promo-cta {
+  flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #fafafa;
+  justify-content: center;
+  width: 126px;
+  height: 46px;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--surface-dim);
+  font-size: 14px;
+  font-weight: 600;
   text-decoration: none;
+  transition: background 140ms ease-out;
 }
 
 .promo-cta:hover {
-  text-decoration: underline;
+  background: color-mix(in srgb, var(--ink) 88%, var(--surface-dim));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promo-cta {
+    transition: none;
+  }
 }
 
 /* ---------- Race header (above the card) ---------- */
@@ -3201,21 +3279,38 @@ button,
     display: none;
   }
 
-  .promo-bar {
-    padding: 8px 14px;
+  /* Must live on :root, not on .promo-bar — body, .app, the dev chrome and
+     the three FABs all read this to clear the bar. */
+  :root {
+    --promo-bar-h: 76px;
   }
 
-  .promo-copy {
-    font-size: 12px;
-    white-space: nowrap;
+  /* The bar keeps its fixed bottom slot but loses the tile and the second
+     copy line — one line and the CTA are what fit. Height is re-declared so
+     every clearance that reads --promo-bar-h follows it down. */
+  .promo-bar {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .promo-tiles,
+  .promo-sub {
+    display: none;
+  }
+
+  .promo-title {
+    font-size: 13px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0; /* flex child: without this the ellipsis never triggers */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   .promo-cta {
     white-space: nowrap;
-    flex: none;
+    width: auto;
+    padding: 0 20px;
+    height: 40px;
   }
 
   .race-header {
@@ -3395,7 +3490,7 @@ button,
 .mobile-toggle {
   position: fixed;
   right: 24px;
-  bottom: 76px;
+  bottom: calc(var(--promo-bar-h) + 16px);
   z-index: 640;
   width: 44px;
   height: 44px;
@@ -3508,7 +3603,7 @@ button,
 .theme-toggle {
   position: fixed;
   right: 24px;
-  bottom: 128px;
+  bottom: calc(var(--promo-bar-h) + 68px);
   z-index: 640;
   width: 44px;
   height: 44px;
@@ -3788,9 +3883,9 @@ button,
 }
 
 .footer-rail {
-  max-width: 1400px;
+  max-width: var(--rail);
   margin: 0 auto;
-  padding: 48px 32px 32px;
+  padding: 48px var(--rail-pad) 32px;
 }
 
 .footer-top {
@@ -3999,7 +4094,7 @@ button,
 .phase-switcher {
   position: fixed;
   right: 24px;
-  bottom: 180px;
+  bottom: calc(var(--promo-bar-h) + 120px);
   z-index: 640;
   display: flex;
   align-items: center;

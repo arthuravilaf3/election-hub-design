@@ -321,9 +321,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Normal flow: scrolls away with the page like any content. */}
-      <PromoBar />
-
       <div className={`app${devOpen ? ' app--dev-open' : ''}`}>
         <main className="app-main">
           {anyLive && (
@@ -433,6 +430,11 @@ export default function App() {
 
       {/* Full-bleed: the footer runs edge to edge with its own inner rail. */}
       <SiteFooter />
+
+      {/* Fixed to the bottom of the viewport, so flow order is only about
+          reading order: last in the DOM keeps it out of the main content and
+          away from the compact header's stacking neighborhood. */}
+      <PromoBar />
     </>
   );
 }
