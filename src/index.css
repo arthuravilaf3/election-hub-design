@@ -374,7 +374,7 @@ button,
      every camera target. 1312 - 2*6% = 1154 wide map, x 610/975 = 722 tall,
      + 120 + 52 = 894. */
   padding: 120px clamp(32px, 6%, 80px) 52px;
-  transition: padding 550ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: padding var(--camera-ms) cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .map-wrap.is-zoomed {
@@ -1179,24 +1179,27 @@ body.is-scroll-locked .promo-bar {
 
 .drawer {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  width: min(565px, 46%);
+  /* Inset and width come from data/layout.ts via the card, so the camera's
+     measured region and this box can never disagree. The min() keeps the
+     graceful degradation on mid widths. */
+  top: var(--drawer-inset);
+  right: var(--drawer-inset);
+  width: min(var(--drawer-w), 46%);
   /* Every drawer/modal is the SAME height — the maximum available — so
      switching surfaces never resizes the panel. Content scrolls inside;
      the prev/next nav pins to the bottom via margin-top auto. */
-  height: calc(100% - 32px);
+  height: calc(100% - 2 * var(--drawer-inset));
   display: flex;
   flex-direction: column;
   /* The frame never scrolls — .drawer-scroll inside does, so the header,
      tabs and the prev/next STATE navigation stay fixed in the modal. */
   overflow: hidden;
   z-index: 5;
-  background: color-mix(in srgb, var(--surface-dim) 96%, transparent);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 24px;
-  padding: 24px 28px 28px;
+  /* Flat surface + a deep soft shadow, per the comp: the map behind is
+     already blurred by the camera, so a second translucent blur muddied it. */
+  background: var(--surface);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  border-radius: 12px;
   animation: drawer-in 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1213,12 +1216,14 @@ body.is-scroll-locked .promo-bar {
   }
 }
 
-@media (max-width: 760px) {
+/* 700, not 760: ElectionMap's narrowMap check is matchMedia('(max-width:
+   700px)'), and between 701 and 760 the camera was still reserving a region
+   for a drawer that had already dropped into normal flow. */
+@media (max-width: 700px) {
   .drawer {
     position: static;
     width: auto;
     height: auto;
-    backdrop-filter: none;
   }
 }
 
@@ -3219,7 +3224,7 @@ body.is-scroll-locked .promo-bar {
    wait for landing (their raster cost is the expensive part). */
 .county-layer {
   pointer-events: none;
-  animation: county-in 550ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: county-in var(--camera-ms) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .county-labels {

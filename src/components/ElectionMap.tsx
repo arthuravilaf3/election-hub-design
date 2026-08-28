@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { animate } from 'motion/mini';
 import { MAP_VIEWBOX, STATE_SHAPES } from '../data/states';
+import { CAMERA_MS, ZOOM_REGION_W } from '../data/layout';
 import { buildCounties, type CountyCell } from '../data/counties';
 import {
   countingStep,
@@ -59,13 +60,34 @@ interface ElectionMapProps {
 }
 
 const [, , VIEW_W, VIEW_H] = MAP_VIEWBOX.split(' ').map(Number);
-// The drawer covers the right ~46% of the frame, so the zoomed state must fit
-// ENTIRELY in the left region — silhouette fully visible beside the drawer.
-const ZOOM_REGION_W = 0.52; // fraction of the frame left of the drawer
 const ZOOM_FILL = 0.78; // fraction of that region the state fills
 const MAX_ZOOM = 7;
-const CAMERA_MS = 550;
 const REST_BLUR_PX = 2.5;
+
+/**
+ * How much of the frame is left of the drawer — the region the zoomed state
+ * has to fit inside, silhouette fully visible beside the panel.
+ *
+ * MEASURED, not declared. This used to be the literal 0.52, hand-matched to
+ * `.drawer { width: min(565px, 46%) }` in the stylesheet; the two could drift
+ * apart with any width or breakpoint change and the state would slide under
+ * the panel. The drawer is absolutely positioned inside `.map-and-panel`, so
+ * its offsetLeft IS the left region's width in px.
+ *
+ * Falls back to the declared fraction when the panel is not mounted, and
+ * returns the whole frame when the drawer is not in the frame's flow at all
+ * (mobile: it is a fixed bottom sheet, so the map keeps the full width).
+ */
+function measureRegionW(svg: SVGSVGElement | null): number {
+  const frame = svg?.closest('.map-and-panel') as HTMLElement | null;
+  if (!frame) return ZOOM_REGION_W;
+  const drawer = frame.querySelector('.drawer') as HTMLElement | null;
+  if (!drawer) return ZOOM_REGION_W;
+  if (drawer.offsetParent !== frame) return 1;
+  const frameW = frame.clientWidth;
+  if (!frameW) return ZOOM_REGION_W;
+  return Math.min(1, Math.max(0.2, drawer.offsetLeft / frameW));
+}
 
 /* County choropleth: same encoding as the state map, one level down. Each
    county's read jitters deterministically around the STATE's read — a mock
@@ -218,6 +240,8 @@ export function ElectionMap({
   // Fly the camera. useLayoutEffect so the target geometry is measured after
   // the focused state has moved into its own group.
   const wasZoomedRef = useRef(false);
+  // Mirrors the measured region so render-time math matches the camera's.
+  const [regionW, setRegionW] = useState(ZOOM_REGION_W);
   useLayoutEffect(() => {
     const camera = cameraRef.current;
     const rest = restRef.current;
@@ -239,7 +263,10 @@ export function ElectionMap({
         const box = target.getBBox();
         // Fit the whole silhouette inside the region left of the drawer
         // (full width on mobile — the sheet rises from the bottom).
-        const regionW = narrowMap ? 1 : ZOOM_REGION_W;
+        const regionW = narrowMap ? 1 : measureRegionW(camera.ownerSVGElement);
+        // Render-time consumers (the county label counter-scale) need the
+        // same number; they cannot measure during render.
+        setRegionW(regionW);
         const scale = Math.min(
           MAX_ZOOM,
           Math.min(
@@ -399,7 +426,7 @@ export function ElectionMap({
       ? Math.min(
           MAX_ZOOM,
           Math.min(
-            (VIEW_W * (narrowMap ? 1 : ZOOM_REGION_W) * ZOOM_FILL) / zoomedBox.w,
+            (VIEW_W * (narrowMap ? 1 : regionW) * ZOOM_FILL) / zoomedBox.w,
             (VIEW_H * ZOOM_FILL) / zoomedBox.h
           )
         )

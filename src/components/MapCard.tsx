@@ -13,6 +13,7 @@ import { ElectionMap } from './ElectionMap';
 import { Legend } from './Legend';
 import { SourceSegments } from './SourceSegments';
 import type { Chamber, StateRace } from '../data/types';
+import { CAMERA_MS, DRAWER_INSET, DRAWER_W } from '../data/layout';
 
 interface MapCardProps {
   races: Record<string, StateRace>;
@@ -56,7 +57,18 @@ export function MapCard({
 }: MapCardProps) {
   return (
     <div className="map-block">
-      <div className={`map-card${zoomedId ? ' is-zoomed' : ''}`}>
+      {/* The card publishes the shared layout metrics, so the stylesheet
+          consumes the TS constants instead of mirroring them. */}
+      <div
+        className={`map-card${zoomedId ? ' is-zoomed' : ''}`}
+        style={
+          {
+            '--drawer-w': `${DRAWER_W}px`,
+            '--drawer-inset': `${DRAWER_INSET}px`,
+            '--camera-ms': `${CAMERA_MS}ms`,
+          } as React.CSSProperties
+        }
+      >
       {/* Whose data — over the map, because the map is what it changes. It
           steps aside while a state is zoomed: that frame belongs to the
           state and its panel. */}
