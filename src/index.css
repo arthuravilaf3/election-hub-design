@@ -63,6 +63,15 @@ body {
   padding-bottom: calc(320px + var(--promo-bar-h));
 }
 
+/* The drawer is a modal, and the dev FABs are fixed to the viewport's bottom
+   right — exactly where the panel's next-state button lands. Dev chrome has
+   no business sitting on top of a modal, so it steps out while one is open. */
+.app--zoomed .mobile-toggle,
+.app--zoomed .theme-toggle,
+.app--zoomed .phase-switcher {
+  display: none;
+}
+
 /* Normal page scroll; the full-bleed map uses 100vw, so kill the sliver of
    horizontal overflow the scrollbar gutter would otherwise create.
    overflow-anchor: none — the collapsing sticky chrome changes page height,
@@ -1231,40 +1240,164 @@ body.is-scroll-locked .promo-bar {
   flex: none;
 }
 
-.drawer-head {
+/* Sticky top bar. "Sticky" needs no positioning: .drawer is a fixed-height
+   flex column, this is flex:none at the top and .drawer-nav pins to the
+   bottom with margin-top:auto — only .drawer-scroll between them moves. */
+.drawer-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
+  height: 80px;
+  padding: 0 24px;
+  background: var(--surface);
 }
 
-.drawer-head h2 {
+/* Where you are. The chamber is a LABEL here, not a control — switching
+   races is the page header's job. */
+.drawer-breadcrumb {
   margin: 0;
-  font-size: 24px;
-  line-height: 32px;
-  font-weight: 600;
-}
-
-.drawer-actions {
-  display: flex;
-  gap: 4px;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink);
 }
 
 .drawer-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  flex: none;
+  width: 32px;
+  height: 32px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 999px;
   background: transparent;
   color: var(--ink);
   cursor: pointer;
+  transition: background 140ms ease-out;
 }
 
 .drawer-icon-btn:hover {
-  background: var(--surface);
+  background: var(--surface-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-icon-btn {
+    transition: none;
+  }
+}
+
+/* Flag + Follow + share, then the title block. */
+.drawer-headblock {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 24px 20px;
+}
+
+.drawer-headrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.drawer-flag {
+  flex: none;
+  width: 54px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.drawer-titleblock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-title {
+  margin: 0;
+  font-size: 32px;
+  line-height: 38px;
+  font-weight: 500;
+}
+
+.drawer-subtitle {
+  margin: 0;
+  font-size: 16px;
+  color: var(--ink-subtlest);
+}
+
+/* The local reading toggle — which provider's numbers this panel shows. */
+.drawer-sources {
+  display: flex;
+  gap: 24px;
+  padding: 0 24px;
+}
+
+.drawer-src {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  font: inherit;
+  font-size: 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-subtlest);
+  cursor: pointer;
+  transition: color 140ms ease-out;
+}
+
+.drawer-src:hover {
+  color: var(--ink);
+}
+
+.drawer-src.is-active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.drawer-src-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-src {
+    transition: none;
+  }
+}
+
+/* Each section is its own padded block, separated by a rule. */
+.drawer-block {
+  padding: 24px;
+}
+
+.drawer-block-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.drawer-meta {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-subtle);
+}
+
+.drawer-meta-dot {
+  color: var(--ink-subtlest);
+  padding: 0 4px;
+}
+
+.drawer-divider {
+  margin: 0 16px;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
 /* THE race tabs — one definition, used by the map header and the state
@@ -1298,11 +1431,6 @@ body.is-scroll-locked .promo-bar {
   border-bottom-color: var(--ink);
 }
 
-/* Panel: sits under the state title. */
-.race-tabs--panel {
-  margin-top: 16px;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .race-tab {
     transition: none;
@@ -1310,8 +1438,8 @@ body.is-scroll-locked .promo-bar {
 }
 
 .drawer-sec {
-  margin: 20px 0 12px;
-  font-size: 18px;
+  margin: 0;
+  font-size: 20px;
   line-height: 24px;
   font-weight: 600;
 }
@@ -1710,18 +1838,20 @@ body.is-scroll-locked .promo-bar {
 /* Prev/next state, drawer bottom corners. */
 .drawer-nav {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-top: auto; /* pins to the drawer's bottom (fixed-height panel) */
-  padding-top: 20px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  height: 65px;
+  padding: 0 24px;
+  background: var(--surface);
+  border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 .drawer-nav-btn {
   font: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -3266,8 +3396,8 @@ body.is-scroll-locked .promo-bar {
   /* Reaching the end of the panel must not hand the scroll to the page —
      belt and braces alongside the page-level lock (useScrollLock). */
   overscroll-behavior: contain;
-  margin: 0 -28px;
-  padding: 0 28px 8px;
+  /* The frame carries no side padding any more — each block inside owns its
+     own 24px — so the old negative-margin bleed is gone with it. */
 }
 
 /* ---------- Feed polish round (Aug 2026) ---------- */
@@ -3542,7 +3672,7 @@ body.is-scroll-locked .promo-bar {
 .mobile-toggle {
   position: fixed;
   right: 24px;
-  bottom: calc(var(--promo-bar-h) + 16px);
+  bottom: calc(var(--promo-bar-h) + 76px);
   z-index: 640;
   width: 44px;
   height: 44px;
@@ -3655,7 +3785,7 @@ body.is-scroll-locked .promo-bar {
 .theme-toggle {
   position: fixed;
   right: 24px;
-  bottom: calc(var(--promo-bar-h) + 68px);
+  bottom: calc(var(--promo-bar-h) + 128px);
   z-index: 640;
   width: 44px;
   height: 44px;
@@ -4122,7 +4252,7 @@ body.is-scroll-locked .promo-bar {
 .phase-switcher {
   position: fixed;
   right: 24px;
-  bottom: calc(var(--promo-bar-h) + 120px);
+  bottom: calc(var(--promo-bar-h) + 180px);
   z-index: 640;
   display: flex;
   align-items: center;

@@ -1,37 +1,65 @@
-// Shared drawer chrome (Aug 2026): the chamber tabs under the title, and the
-// prev/next state navigation pinned to the drawer's bottom corners.
+// Shared drawer chrome (redesign Aug 2026): the source row under the title,
+// and the prev/next state navigation pinned to the drawer's bottom corners.
+//
+// The chamber tabs that used to sit here are gone — the redesign moves the
+// chamber into the top bar's breadcrumb as a label, and gives this row to the
+// source instead. Switching races is the page header's job now.
 //
 // Arrows are the design system's Tabler icons (the DS icon set — the promo
 // bar's arrow is `tabler-icon-arrow-right`), drawn with Tabler's official
 // paths.
-import type { Chamber } from '../data/types';
-import { RaceTabs } from './RaceTabs';
+import { SOURCES, sourceLabel } from '../data/sources';
+import { fillFor } from '../data/encoding';
+import type { StateRace } from '../data/types';
 
 export interface StateRef {
   id: string;
   name: string;
 }
 
-interface ChamberTabsProps {
-  chamber: Chamber;
-  /** Whether the zoomed state has a race in each chamber — absent = disabled tab. */
-  availability: Record<Chamber, boolean>;
-  onChamber: (chamber: Chamber) => void;
+interface SourceTabsProps {
+  race: StateRace;
+  /** Which read the drawer is currently showing. */
+  value: string;
+  onChange: (sourceId: string) => void;
 }
 
-/** The panel's race tabs — the SAME component the map header uses, so the two
- *  cannot drift; the panel only adds per-state availability. */
-export function ChamberTabs({ chamber, availability, onChamber }: ChamberTabsProps) {
+/**
+ * Which provider's read this panel is showing. LOCAL to the drawer: it does
+ * NOT repaint the map and it is NOT the trust pick — the map keeps the global
+ * source, and "Sources compared" below still shows all three side by side, so
+ * no single provider gets to look like the truth (hub tenet 2).
+ *
+ * A radiogroup, not a tablist: the row switches values inside one view rather
+ * than swapping panels, and tab semantics would need tabpanel plumbing that
+ * would be a lie about the structure below.
+ */
+export function SourceTabs({ race, value, onChange }: SourceTabsProps) {
   return (
-    <RaceTabs
-      chamber={chamber}
-      availability={availability}
-      controls="drawer-body"
-      idPrefix="panel-race-tab"
-      label="Race"
-      className="race-tabs--panel"
-      onChamber={onChamber}
-    />
+    <div className="drawer-sources" role="radiogroup" aria-label="Reading from">
+      {SOURCES.map((src) => {
+        const active = src.id === value;
+        return (
+          <button
+            key={src.id}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            className={`drawer-src${active ? ' is-active' : ''}`}
+            onClick={() => onChange(src.id)}
+          >
+            {/* The dot is this provider's own read of THIS race — the row
+                previews the disagreement before you switch to it. */}
+            <span
+              className="drawer-src-dot"
+              style={{ background: fillFor(race, src.id) }}
+              aria-hidden="true"
+            />
+            {sourceLabel(src.id)}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

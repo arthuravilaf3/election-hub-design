@@ -92,18 +92,25 @@ console.log(
     await page.evaluate(() => {
       const card = document.querySelector('.map-card');
       const sec = document.querySelector('.map-section');
-      const order = [...sec.querySelectorAll('.race-tabs--header, .race-title, .seat-bar, .map-card')].map(
+      // Redesign order: title first, then the tabs, then the bar.
+      const order = [...sec.querySelectorAll('.race-title, .race-tabs--header, .seat-bar, .map-card')].map(
         (e) => e.className.split(' ')[0]
       );
       return {
         order,
         titleTag: document.querySelector('.race-title')?.tagName,
         h1Hidden: getComputedStyle(document.querySelector('h1')).position === 'absolute',
-        seatBarEnds: [...document.querySelectorAll('.seat-bar-end')].map((e) => e.textContent.trim()),
-        seatBarCount: document.querySelector('.seat-bar-count')?.textContent,
+        seatBarLabels: [...document.querySelectorAll('.seat-bar-label')].map((e) =>
+          e.textContent.trim()
+        ),
+        // The label row is decorative — the track's own aria-label is the
+        // non-visual equivalent and still carries "N seats up".
+        labelsHidden: document.querySelector('.seat-bar-labels')?.getAttribute('aria-hidden'),
         barAlt: document.querySelector('.seat-bar-track')?.getAttribute('aria-label'),
         barOutsideCard: !card.contains(document.querySelector('.seat-bar')),
         segInsideCard: card.contains(document.querySelector('.seg-control')),
+        // The legend left the card in the redesign.
+        legendOutsideCard: !card.contains(document.querySelector('.legend-strip')),
         staticTitleGone: !document.querySelector('.page-title, .page-dek'),
       };
     })
@@ -132,7 +139,7 @@ await page.waitForTimeout(900);
 const postSwitch = await page.evaluate(() => ({
   statement: document.querySelector('.race-title')?.textContent,
   byline: document.querySelector('.race-byline')?.textContent,
-  seats: [...document.querySelectorAll('.seat-bar-end')].map((e) => e.textContent.trim()).join(' / '),
+  seats: [...document.querySelectorAll('.seat-bar-label')].map((e) => e.textContent.trim()).join(' / '),
   source: document.querySelector('.seg.is-active .seg-brand')?.textContent.trim(),
   syncWindow: {
     statement: getComputedStyle(document.querySelector('.race-statement')).animationDuration,
@@ -218,13 +225,20 @@ const drawer = await page.evaluate(() => {
     blur: document.querySelector('.map-rest').style.filter,
     bars: [...document.querySelectorAll('.cand-fill')].map((el) => el.style.width),
     pcts: [...document.querySelectorAll('.cand-pct')].map((el) => el.textContent),
-    tabs: [...document.querySelectorAll('.race-tabs--panel .race-tab')].length,
+    // Redesign: the panel's tab row is the SOURCE row now, not chambers.
+    sources: [...document.querySelectorAll('.drawer-src')].map((t) => t.textContent.trim()),
+    breadcrumb: document.querySelector('.drawer-breadcrumb')?.textContent.trim(),
+    flag: document.querySelector('.drawer-flag')?.naturalWidth > 0,
     photos: [...document.querySelectorAll('.cand-photo')].map((i) => i.naturalWidth > 0),
     counties: document.querySelectorAll('.county-cell').length > 0,
     mapFillsCard: Math.abs(svg.width - card.width) < 3,
   };
 });
-console.log('drawer:', JSON.stringify(drawer), '(tabs expected 3 chamber tabs, photos true, counties true, fills card)');
+console.log(
+  'drawer:',
+  JSON.stringify(drawer),
+  '(3 SOURCE tabs, breadcrumb chamber/state, flag + photos loaded, counties, fills card)'
+);
 // The page tabs stay (they are page chrome now); the source control steps
 // aside so the zoomed frame belongs to the state and its panel.
 console.log(
@@ -232,31 +246,33 @@ console.log(
   JSON.stringify(
     await page.evaluate(() => ({
       sourceControlHidden: getComputedStyle(document.querySelector('.seg-control')).opacity === '0',
-      panelTabs: document.querySelectorAll('.race-tabs--panel .race-tab').length,
-      sameStyle: (() => {
-        const pick = (el) => {
-          const c = getComputedStyle(el);
-          return [c.fontSize, c.fontWeight, c.padding, c.borderBottomWidth].join('|');
-        };
-        return (
-          pick(document.querySelector('.race-tabs--header .race-tab')) ===
-          pick(document.querySelector('.race-tabs--panel .race-tab'))
-        );
-      })(),
+      // The chamber tabs are GONE from the panel — the chamber is a label in
+      // the breadcrumb now, and this row belongs to the source.
+      chamberTabsInPanel: document.querySelectorAll('.drawer .race-tab').length,
+      sourceRow: document.querySelectorAll('.drawer-src').length,
+      sourceRowIsRadiogroup:
+        document.querySelector('.drawer-sources')?.getAttribute('role') === 'radiogroup',
     }))
   )
 );
-// GA has no curated House race: House tab disabled, Governor enabled.
+// The source row is a LOCAL reading toggle: it must not repaint the map.
+const beforePick = await page.evaluate(
+  () => document.querySelector('.state-shape[data-state="TX"]')?.style.fill
+);
+await page.locator('.drawer-src').nth(1).click();
+await page.waitForTimeout(400);
 console.log(
-  'tab states:',
+  'drawer source row (local only):',
   JSON.stringify(
-    await page.evaluate(() =>
-      [...document.querySelectorAll('.race-tabs--panel .race-tab')].map((t) => ({
-        label: t.textContent,
-        disabled: t.disabled,
-        active: t.className.includes('is-active'),
-      }))
-    )
+    await page.evaluate((before) => ({
+      checked: [...document.querySelectorAll('.drawer-src')].map(
+        (t) => `${t.textContent.trim()}:${t.getAttribute('aria-checked')}`
+      ),
+      meta: document.querySelector('.drawer-meta')?.textContent.trim(),
+      // The map keeps the GLOBAL source — this row never repaints it.
+      mapUnchanged: document.querySelector('.state-shape[data-state="TX"]')?.style.fill === before,
+      globalSegStillActive: document.querySelector('.seg.is-active .seg-brand')?.textContent.trim(),
+    }), beforePick)
   )
 );
 // Follow toggles primary -> secondary.
@@ -272,7 +288,7 @@ const nextName = await page.evaluate(
 );
 await page.locator('.drawer-nav-btn').nth(1).click();
 await page.waitForTimeout(900);
-const landed = await page.evaluate(() => document.querySelector('.drawer-head h2').textContent);
+const landed = await page.evaluate(() => document.querySelector('.drawer-breadcrumb').textContent);
 console.log('drawer nav: next said', JSON.stringify(nextName), '→ landed on', JSON.stringify(landed));
 await page.screenshot({ path: SHOT('4b-drawer-nav') });
 console.log(

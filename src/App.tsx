@@ -217,15 +217,6 @@ export default function App() {
   const nextState = zoomIndex >= 0 ? onBallot[(zoomIndex + 1) % onBallot.length] : null;
 
   // Which chambers hold a race in the zoomed state — drives the drawer tabs.
-  const availability = useMemo(
-    () => ({
-      house: !!(state.zoomedId && state.ballot.house[state.zoomedId]),
-      senate: !!(state.zoomedId && state.ballot.senate[state.zoomedId]),
-      governor: !!(state.zoomedId && state.ballot.governor[state.zoomedId]),
-    }),
-    [state.zoomedId, state.ballot]
-  );
-
   /* One entry point for every race switch — the header tabs and the panel
      tabs are the same component and now the same handler, so behavior and
      analytics cannot diverge. */
@@ -321,7 +312,9 @@ export default function App() {
         </div>
       </header>
 
-      <div className={`app${devOpen ? ' app--dev-open' : ''}`}>
+      <div
+        className={`app${devOpen ? ' app--dev-open' : ''}${zoomedRace ? ' app--zoomed' : ''}`}
+      >
         <main className="app-main">
           {anyLive && (
             <div className="live-row">
@@ -378,14 +371,12 @@ export default function App() {
                   race={zoomedRace}
                   sourceId={state.sourceId}
                   chamber={state.chamber}
-                  availability={availability}
                   prev={prevState}
                   next={nextState}
                   trustedSourceId={trustedForZoomed}
                   showTrustPicker={features.trustPicks}
                   showFollow={features.followState}
                   showDistricts={features.zoomDepth}
-                  onChamber={(chamber) => selectChamber(chamber, 'panel')}
                   onNavigate={navigateState}
                   onClose={() => dispatch({ type: 'CLEAR_ZOOM' })}
                   onTrust={setTrust}

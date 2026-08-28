@@ -1,15 +1,20 @@
 /**
- * The state drawer (redesign Aug 2026, "Tapping on Any State" frame):
- * header (state, share, close), Candidates with photo-bars that count up
- * from 0, the cross-source comparison, and — for the House — the state's
- * full delegation as 2-up district blocks.
- * (The source tab bar was dropped — the comparison below covers it.)
+ * The state drawer (redesign Aug 2026, "map-zoom" frame): a sticky top bar
+ * carrying the chamber/state breadcrumb and the close control, a scrolling
+ * body (flag + Follow + share, the title, the source row, Candidates with
+ * photo-bars that count up from 0, the cross-source comparison and — for the
+ * House — the state's delegation), and the prev/next state bar pinned to the
+ * bottom.
+ *
+ * The chamber tabs are gone: the chamber is now a LABEL in the breadcrumb,
+ * and the row it vacated belongs to the source. That source row is a local
+ * view toggle — it does not repaint the map and it is not the trust pick.
  *
  * TENET 2 GUARD: in results mode the drawer shows only results (status,
  * reporting, feed attribution) — no estimates beside a live count.
  */
 import { useEffect, useRef, useState } from 'react';
-import { ChamberTabs, DrawerNav, type StateRef } from './DrawerChrome';
+import { DrawerNav, SourceTabs, type StateRef } from './DrawerChrome';
 import {
   PARTY_LABEL,
   RATING_LABEL,
@@ -327,7 +332,6 @@ interface RacePanelProps {
   /** The global map source — what the "Default" chip points at. */
   sourceId: string;
   chamber: Chamber;
-  availability: Record<Chamber, boolean>;
   prev: StateRef;
   next: StateRef;
   /** This state+race's trusted source, if the reader declared one. */
@@ -336,7 +340,6 @@ interface RacePanelProps {
   showTrustPicker?: boolean;
   showFollow?: boolean;
   showDistricts?: boolean;
-  onChamber: (chamber: Chamber) => void;
   onNavigate: (stateId: string) => void;
   onClose: () => void;
   onTrust: (sourceId: string) => void;
@@ -348,14 +351,12 @@ export function RacePanel({
   race,
   sourceId,
   chamber,
-  availability,
   prev,
   next,
   trustedSourceId,
   showTrustPicker = true,
   showFollow = true,
   showDistricts = true,
-  onChamber,
   onNavigate,
   onClose,
   onTrust,
@@ -366,6 +367,13 @@ export function RacePanel({
   // PRD: anonymous follow first; a free account persists it — neither wired.
   const [following, setFollowing] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
+
+  /* Which provider's read this panel shows. Local to the drawer — the map
+     keeps the global source. Follows the global source when THAT changes, so
+     opening a state always starts on what the map is painting. */
+  const [viewSourceId, setViewSourceId] = useState(sourceId);
+  useEffect(() => setViewSourceId(sourceId), [sourceId]);
+  const viewRead = readFor(race, viewSourceId);
 
   /* The panel is a modal now (the page behind is frozen — see useScrollLock),
      so Tab must stay inside it: focus landing on the page behind would drag
@@ -413,89 +421,130 @@ export function RacePanel({
       aria-modal="true"
       aria-label={`${stateName} race detail`}
     >
-      <header className="drawer-head">
-        <h2>{stateName}</h2>
-        <div className="drawer-actions">
-          {/* Follow a State: one state, all of its races. */}
-          {showFollow && (
-            <button
-              type="button"
-              className={`btn-follow${following ? ' is-following' : ''}`}
-              aria-pressed={following}
-              onClick={() => setFollowing((v) => !v)}
-            >
-              {following ? 'Following' : 'Follow state'}
-            </button>
-          )}
-          <button type="button" className="drawer-icon-btn" aria-label={`Share ${stateName} race`}>
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-              <path
-                d="M9 11V2.5m0 0L5.5 6M9 2.5 12.5 6M3.5 9.5v4c0 .8.7 1.5 1.5 1.5h8c.8 0 1.5-.7 1.5-1.5v-4"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <button type="button" className="drawer-icon-btn" aria-label="Close" onClick={onClose}>
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-              <path
-                d="m4 4 10 10M14 4 4 14"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
+      {/* Sticky top bar: where you are, and the way out. */}
+      <header className="drawer-topbar">
+        <p className="drawer-breadcrumb">
+          {CHAMBER_LABEL[chamber]}
+          <span aria-hidden="true"> / </span>
+          {stateName}
+        </p>
+        <button type="button" className="drawer-icon-btn" aria-label="Close" onClick={onClose}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="m4 4 10 10M14 4 4 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+        </button>
       </header>
 
-      {/* DS tabs replace the floating dock while the drawer is open. */}
-      <ChamberTabs chamber={chamber} availability={availability} onChamber={onChamber} />
+      {/* Only the body scrolls — the top bar and the state navigation stay
+          fixed in the modal frame. */}
+      <div className="drawer-scroll">
+        <div className="drawer-headblock">
+          <div className="drawer-headrow">
+            <img className="drawer-flag" src={`/flags/${race.id}.png`} alt="" aria-hidden="true" />
+            {/* Follow a State: one state, all of its races. */}
+            {showFollow && (
+              <button
+                type="button"
+                className={`btn-follow${following ? ' is-following' : ''}`}
+                aria-pressed={following}
+                onClick={() => setFollowing((v) => !v)}
+              >
+                {following ? 'Following' : `Follow ${stateName}`}
+              </button>
+            )}
+            <button type="button" className="drawer-icon-btn" aria-label={`Share ${stateName} race`}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path
+                  d="M9 11V2.5m0 0L5.5 6M9 2.5 12.5 6M3.5 9.5v4c0 .8.7 1.5 1.5 1.5h8c.8 0 1.5-.7 1.5-1.5v-4"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
 
-      {/* Only the content scrolls — header, chamber tabs and the state
-          navigation stay fixed in the modal frame. */}
-      <div className="drawer-scroll" id="drawer-body" role="tabpanel" aria-labelledby={`panel-race-tab-${chamber}`}>
-      {isResults ? (
-        <>
-          <p className="race-panel-status">{statusLine(race, sourceId)}</p>
-          <p className="drawer-note">Source: {race.results?.source}</p>
-        </>
-      ) : (
-        <>
-          <h3 className="drawer-sec">Candidates ({race.candidates?.length ?? 0})</h3>
-          {race.candidates && <CandidateRows candidates={race.candidates} />}
-          <p className="drawer-note">
-            Support shares from the polling average. {CHAMBER_LABEL[race.chamber]} race, 2026.
-          </p>
+          <div className="drawer-titleblock">
+            <h2 className="drawer-title">
+              {stateName} · {CHAMBER_LABEL[race.chamber]}
+            </h2>
+            {!isResults && viewRead && (
+              <p className="drawer-subtitle">Rated {RATING_LABEL[ratingOf(viewRead)]}</p>
+            )}
+          </div>
+        </div>
 
-          <h3 className="drawer-sec">Sources compared</h3>
-          <TrustPicker
-            race={race}
-            stateName={stateName}
-            chamber={chamber}
-            globalSourceId={sourceId}
-            trustedSourceId={trustedSourceId}
-            pickable={showTrustPicker}
-            onTrust={onTrust}
-            onResetTrust={onResetTrust}
-          />
-          {/* PRD tenet 4: every comparison view carries a sourcing disclaimer. */}
-          <p className="drawer-note">
-            Estimates, not results — measured in different units (points vs implied
-            probability) and never combined.
-          </p>
+        {isResults ? (
+          <section className="drawer-block">
+            <p className="race-panel-status">{statusLine(race, sourceId)}</p>
+            <p className="drawer-note">Source: {race.results?.source}</p>
+          </section>
+        ) : (
+          <>
+            {/* Local reading toggle. Never repaints the map. */}
+            <SourceTabs race={race} value={viewSourceId} onChange={setViewSourceId} />
 
-          {/* House: the state's WHOLE delegation, two blocks per row. Long
-              delegations (California sends 52) stay behind an expander so
-              the panel still scans in one screen. */}
-          {showDistricts && race.districts && (
-            <DistrictGrid districts={race.districts} sourceId={sourceId} />
-          )}
+            <section className="drawer-block">
+              <div className="drawer-block-head">
+                <h3 className="drawer-sec">Candidates</h3>
+                {viewRead && (
+                  <p className="drawer-meta">
+                    {sourceKind(viewSourceId)}
+                    <span className="drawer-meta-dot" aria-hidden="true">
+                      ·
+                    </span>
+                    {readLine(viewRead)}
+                    <span className="drawer-meta-dot" aria-hidden="true">
+                      ·
+                    </span>
+                    {freshnessOf(viewRead).label}
+                  </p>
+                )}
+              </div>
+              {race.candidates && <CandidateRows candidates={race.candidates} />}
+              <p className="drawer-note">
+                Support shares from the polling average. {CHAMBER_LABEL[race.chamber]} race, 2026.
+              </p>
+            </section>
 
-        </>
-      )}
+            <hr className="drawer-divider" />
+
+            {/* Kept, against the comp, which collapses the three providers
+                into the row above. The side-by-side comparison IS hub tenet
+                2 — no single source may look like the truth — and the
+                disclaimer under it is tenet 4. */}
+            <section className="drawer-block">
+              <h3 className="drawer-sec">Sources compared</h3>
+              <TrustPicker
+                race={race}
+                stateName={stateName}
+                chamber={chamber}
+                globalSourceId={sourceId}
+                trustedSourceId={trustedSourceId}
+                pickable={showTrustPicker}
+                onTrust={onTrust}
+                onResetTrust={onResetTrust}
+              />
+              <p className="drawer-note">
+                Estimates, not results — measured in different units (points vs implied
+                probability) and never combined.
+              </p>
+            </section>
+
+            {/* House: the state's WHOLE delegation. Long delegations
+                (California sends 52) stay behind an expander so the panel
+                still scans in one screen. */}
+            {showDistricts && race.districts && (
+              <>
+                <hr className="drawer-divider" />
+                <section className="drawer-block">
+                  <DistrictGrid districts={race.districts} sourceId={viewSourceId} />
+                </section>
+              </>
+            )}
+          </>
+        )}
       </div>
 
       <DrawerNav prev={prev} next={next} onNavigate={onNavigate} />
