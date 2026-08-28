@@ -27,6 +27,13 @@ import {
 } from '../data/encoding';
 import { SOURCES, sourceKind, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
+
+/** Long form for the panel title — the comp names the body, not the tab. */
+const CHAMBER_TITLE: Record<Chamber, string> = {
+  senate: 'U.S. Senate',
+  house: 'U.S. House',
+  governor: 'Governor',
+};
 import { districtLabel } from '../data/districts';
 import type { Candidate, Chamber, District, StateRace } from '../data/types';
 
@@ -74,28 +81,27 @@ function CandidateRows({ candidates }: { candidates: Candidate[] }) {
   }, [key]);
 
   return (
-    <div className="cand-list">
+    <ul className="bar-list">
       {candidates.map((c) => (
-        <div className="cand-row" key={c.name}>
-          <div className="cand-track">
-            <div
-              className={`cand-fill cand-fill-${c.party}`}
-              style={{ width: `${c.pct * progress}%` }}
-            />
-            <span className={`cand-avatar cand-avatar-${c.party}`} aria-hidden="true">
+        <li className={`bar-row bar-row--${c.party}`} key={c.name}>
+          {/* The bar is the row's ground, not a track beside it: a party tint
+              at 15% whose width IS the share. */}
+          <span className="bar-fill" style={{ width: `${c.pct * progress}%` }} aria-hidden="true" />
+          <span className="bar-id">
+            <span className="cand-avatar" aria-hidden="true">
               <img className="cand-photo" src={photoFor(c.name)} alt="" />
             </span>
-          </div>
-          <div className="cand-value">
-            <span className="cand-name">{c.name}</span>
-            <span className="cand-pct">
-              {(c.pct * progress).toFixed(1)}
-              <span className="cand-pct-unit">%</span>
+            <span className="bar-lines">
+              <span className="bar-title">{c.name}</span>
+              <span className="bar-sub">
+                {c.party === 'ind' ? 'Independent' : PARTY_LABEL[c.party]}
+              </span>
             </span>
-          </div>
-        </div>
+          </span>
+          <span className="bar-value">{(c.pct * progress).toFixed(1)}%</span>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
@@ -270,10 +276,34 @@ function TrustPicker({
 const DISTRICTS_PREVIEW = 10;
 
 /**
- * The delegation, two blocks per row — a district reads as a small card
- * (seat, rating chip, its own read, who holds it), not a table row. Odd
- * counts leave the last cell at half width rather than stretching it, so
- * the grid never lies about how many seats there are.
+ * The provider's own figure for a district, in ITS unit — a market's implied
+ * probability for the leader, or a poll's margin in points. One source is
+ * selected at a time, so a view never puts the two side by side (tenet: the
+ * units are never combined).
+ *
+ * `fill` is what the bar encodes, 0-100. A market probability maps straight
+ * across; a margin saturates at 20 points, past which "competitive" has
+ * stopped meaning anything.
+ */
+function districtValue(read: ReturnType<typeof readFor>): { label: string; fill: number } {
+  if (!read) return { label: '—', fill: 0 };
+  if (read.kind === 'market') {
+    const dem = read.demOdds ?? 50;
+    const lead = Math.max(dem, 100 - dem);
+    return { label: `${Math.round(lead)}%`, fill: lead };
+  }
+  const margin = read.margin ?? 0;
+  const side = margin >= 0 ? 'D' : 'R';
+  return {
+    label: `${side}+${Math.abs(margin).toFixed(1)}`,
+    fill: Math.min(100, (Math.abs(margin) / 20) * 100),
+  };
+}
+
+/**
+ * The delegation as bar rows, one seat per row — same shape as the candidate
+ * rows above, so a district and a candidate read as the same kind of object.
+ * The bar's width is the provider's confidence in that seat.
  */
 function DistrictGrid({ districts, sourceId }: { districts: District[]; sourceId: string }) {
   const [expanded, setExpanded] = useState(false);
@@ -282,32 +312,32 @@ function DistrictGrid({ districts, sourceId }: { districts: District[]; sourceId
 
   return (
     <>
-      <h3 className="drawer-sec">Districts ({total})</h3>
-      <ul className="district-grid">
+      <ul className="bar-list district-list">
         {shown.map((d) => {
           const read = readFor(d, sourceId);
           const rating = read ? ratingOf(read) : 'tossup';
+          const lean = read ? leanOf(read) : 'tossup';
           const freshness = freshnessOf(read);
+          const value = districtValue(read);
           return (
-            <li key={d.id} className={`district-block${d.curated ? ' is-curated' : ''}`}>
-              <p className="district-block-head">
-                {/* The chip carries the FULL rating scale here (the seven
-                    Figma steps), not just the lean — same encoding as the
-                    map, so a block and its state agree. */}
-                <span className={`district-chip district-rating-${rating}`} aria-hidden="true" />
-                <span className="district-id">{districtLabel(d.id)}</span>
-                {d.curated && <span className="district-watch">Watchlist</span>}
-              </p>
-              <p className="district-rating">{RATING_LABEL[rating]}</p>
-              <p className="district-read">{read ? readLine(read) : 'Not rated'}</p>
-              <p className="district-meta">
-                {PARTY_LABEL[d.incumbent]} held
-                {' · '}
-                <span className={freshness.stale ? 'is-stale' : undefined}>
-                  {freshness.stale ? '⚠ ' : ''}
-                  {freshness.label}
+            <li
+              key={d.id}
+              className={`bar-row bar-row--${lean}${d.curated ? ' is-curated' : ''}`}
+            >
+              <span className="bar-fill" style={{ width: `${value.fill}%` }} aria-hidden="true" />
+              <span className="bar-id">
+                <span className="bar-lines">
+                  <span className="bar-title">
+                    {districtLabel(d.id)}
+                    {d.curated && <span className="district-watch">Watchlist</span>}
+                  </span>
+                  <span className="bar-sub">
+                    {RATING_LABEL[rating]} · {PARTY_LABEL[d.incumbent]} held
+                    {freshness.stale && <span className="is-stale"> · ⚠ {freshness.label}</span>}
+                  </span>
                 </span>
-              </p>
+              </span>
+              <span className="bar-value">{value.label}</span>
             </li>
           );
         })}
@@ -323,6 +353,32 @@ function DistrictGrid({ districts, sourceId }: { districts: District[]; sourceId
         </button>
       )}
     </>
+  );
+}
+
+/**
+ * A section heading with the provider line under it. Both Candidates and
+ * Districts carry it: every figure on this panel states whose it is and how
+ * old it is (hub tenet), and the two sections can be read independently.
+ */
+function BlockHead({ title, read, sourceId }: { title: string; read: ReturnType<typeof readFor>; sourceId: string }) {
+  const freshness = freshnessOf(read);
+  return (
+    <div className="drawer-block-head">
+      <h3 className="drawer-sec">{title}</h3>
+      {read && (
+        <p className="drawer-meta">
+          {sourceKind(sourceId)}
+          <span className="drawer-meta-dot" aria-hidden="true">·</span>
+          {readLine(read)}
+          <span className="drawer-meta-dot" aria-hidden="true">·</span>
+          <span className={freshness.stale ? 'is-stale' : undefined}>
+            {freshness.stale ? '⚠ ' : ''}
+            {freshness.label}
+          </span>
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -467,7 +523,7 @@ export function RacePanel({
 
           <div className="drawer-titleblock">
             <h2 className="drawer-title">
-              {stateName} · {CHAMBER_LABEL[race.chamber]}
+              {stateName} · {CHAMBER_TITLE[race.chamber]}
             </h2>
             {!isResults && viewRead && (
               <p className="drawer-subtitle">Rated {RATING_LABEL[ratingOf(viewRead)]}</p>
@@ -486,22 +542,7 @@ export function RacePanel({
             <SourceTabs race={race} value={viewSourceId} onChange={setViewSourceId} />
 
             <section className="drawer-block">
-              <div className="drawer-block-head">
-                <h3 className="drawer-sec">Candidates</h3>
-                {viewRead && (
-                  <p className="drawer-meta">
-                    {sourceKind(viewSourceId)}
-                    <span className="drawer-meta-dot" aria-hidden="true">
-                      ·
-                    </span>
-                    {readLine(viewRead)}
-                    <span className="drawer-meta-dot" aria-hidden="true">
-                      ·
-                    </span>
-                    {freshnessOf(viewRead).label}
-                  </p>
-                )}
-              </div>
+              <BlockHead title="Candidates" read={viewRead} sourceId={viewSourceId} />
               {race.candidates && <CandidateRows candidates={race.candidates} />}
               <p className="drawer-note">
                 Support shares from the polling average. {CHAMBER_LABEL[race.chamber]} race, 2026.
@@ -539,6 +580,11 @@ export function RacePanel({
               <>
                 <hr className="drawer-divider" />
                 <section className="drawer-block">
+                  <BlockHead
+                    title={`Districts (${race.districts.length})`}
+                    read={viewRead}
+                    sourceId={viewSourceId}
+                  />
                   <DistrictGrid districts={race.districts} sourceId={viewSourceId} />
                 </section>
               </>

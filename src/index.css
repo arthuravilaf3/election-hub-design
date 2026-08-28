@@ -1289,6 +1289,13 @@ body.is-scroll-locked .promo-bar {
   }
 }
 
+/* The share control is a ringed circle in the comp, not a bare glyph. */
+.drawer-headrow .drawer-icon-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
 /* Flag + Follow + share, then the title block. */
 .drawer-headblock {
   display: flex;
@@ -1300,7 +1307,13 @@ body.is-scroll-locked .promo-bar {
 .drawer-headrow {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+}
+
+/* Flag left, controls right — the comp hangs them off opposite ends. */
+.drawer-headrow .btn-follow {
+  margin-left: auto;
+  border-radius: 999px;
 }
 
 .drawer-flag {
@@ -1330,25 +1343,30 @@ body.is-scroll-locked .promo-bar {
   color: var(--ink-subtlest);
 }
 
-/* The local reading toggle — which provider's numbers this panel shows. */
+/* The local reading toggle — which provider's numbers this panel shows.
+   Underline marks the active one, with the row's own hairline underneath,
+   so the selection reads the same way the page's race tabs do. */
 .drawer-sources {
   display: flex;
   gap: 24px;
   padding: 0 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
 .drawer-src {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 0;
+  padding: 8px 0 10px;
+  margin-bottom: -1px;
   font: inherit;
   font-size: 14px;
   border: 0;
+  border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--ink-subtlest);
   cursor: pointer;
-  transition: color 140ms ease-out;
+  transition: color 140ms ease-out, border-color 140ms ease-out;
 }
 
 .drawer-src:hover {
@@ -1358,6 +1376,7 @@ body.is-scroll-locked .promo-bar {
 .drawer-src.is-active {
   color: var(--ink);
   font-weight: 600;
+  border-bottom-color: var(--ink);
 }
 
 .drawer-src-dot {
@@ -1623,76 +1642,17 @@ body.is-scroll-locked .promo-bar {
 .district-chip-tossup { background: var(--rating-tossup); }
 
 /* District blocks carry the full seven-step rating scale. */
-.district-rating-safe-dem { background: var(--rating-safe-dem); }
-.district-rating-likely-dem { background: var(--rating-likely-dem); }
-.district-rating-lean-dem { background: var(--rating-lean-dem); }
-.district-rating-tossup { background: var(--rating-tossup); }
-.district-rating-lean-rep { background: var(--rating-lean-rep); }
-.district-rating-likely-rep { background: var(--rating-likely-rep); }
-.district-rating-safe-rep { background: var(--rating-safe-rep); }
-
-/* District blocks (House detail): two per row so a 52-seat delegation does
-   not become a 52-row scroll. An odd last block keeps its half width —
-   stretching it would read as a bigger seat. */
-.district-grid {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  align-items: start;
-}
-
-.district-block {
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-}
 
 /* The curated "closest races" carry the watchlist marker — the rest of the
    delegation is context around them. */
-.district-block.is-curated {
-  border-color: color-mix(in srgb, var(--brand) 45%, transparent);
-}
-
-.district-block-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-
-.district-id {
-  font-weight: 600;
-  font-size: 14px;
-}
-
 .district-watch {
-  margin-left: auto;
+  margin-left: 8px;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--brand-hover);
-}
-
-.district-rating {
-  margin: 6px 0 0;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.district-read {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: var(--ink-soft);
-}
-
-.district-meta {
-  margin: 4px 0 0;
-  font-size: 10px;
-  color: var(--ink-soft);
+  vertical-align: middle;
 }
 
 /* Expander: the delegation opens in place, no new surface. */
@@ -1716,115 +1676,132 @@ body.is-scroll-locked .promo-bar {
   border-color: var(--selection);
 }
 
-/* Only the narrowest screens fall back to one column. */
-@media (max-width: 480px) {
-  .district-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+/* ---------- Bar rows (drawer): candidates and districts ---------- */
 
-/* ---------- Candidate photo-bars (drawer) ---------- */
-
-.cand-list {
-  display: grid;
-  gap: 12px;
-}
-
-.cand-row {
-  display: grid;
-  grid-template-columns: 1fr 130px;
+/*
+ * One row shape for both lists, per the comp: the bar IS the row's ground —
+ * a party tint at 15% whose WIDTH is the share — with the identity on the
+ * left and the figure on the right, both riding on top of it. Replaces the
+ * old split of "photo-bar track | value column", which put the number in a
+ * separate column from the thing it measured.
+ */
+.bar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  align-items: center;
 }
 
-.cand-track {
+.bar-row {
   position: relative;
-  height: 64px;
-  border-radius: 8px;
-  background: var(--surface);
-  overflow: hidden;
-}
-
-.cand-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 8px 0 0 8px;
-}
-
-.cand-fill-dem { background: var(--bar-dem); }
-.cand-fill-rep { background: var(--bar-rep); }
-.cand-fill-ind { background: var(--cand-ind); }
-
-/* Initials block standing in for the candidate photo, pinned above the fill
-   at the track's left edge. */
-.cand-avatar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 58px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: rgba(250, 250, 250, 0.92);
-  background: rgba(10, 9, 9, 0.35);
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 58px;
+  padding: 12px;
+  border-radius: 8px;
 }
 
-.cand-value {
-  text-align: right;
-  display: grid;
-  gap: 2px;
+/* The width is set inline from the count-up, so the grow animation lives in
+   one place (the rAF in RacePanel) rather than being split with CSS. */
+.bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 8px;
+  background: var(--bar-tint);
+  pointer-events: none;
 }
 
-.cand-name {
-  font-size: 14px;
+/* 15% of the party colour, per the comp: present enough to compare lengths
+   at a glance, faint enough that the name on top stays the loudest thing. */
+.bar-row--dem {
+  --bar-tint: color-mix(in srgb, var(--bar-dem) 15%, transparent);
+}
+
+.bar-row--rep {
+  --bar-tint: color-mix(in srgb, var(--bar-rep) 15%, transparent);
+}
+
+.bar-row--ind {
+  --bar-tint: color-mix(in srgb, var(--cand-ind) 15%, transparent);
+}
+
+/* A district with no lean still gets a bar — neutral, so "too close" reads
+   as a measured state and not as missing data. */
+.bar-row--tossup {
+  --bar-tint: color-mix(in srgb, var(--rating-tossup) 15%, transparent);
+}
+
+.bar-id {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.bar-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bar-title {
+  font-size: 16px;
   font-weight: 600;
+  color: var(--ink);
 }
 
-.cand-pct {
-  font-size: 32px;
-  line-height: 36px;
-  font-weight: 700;
+.bar-sub {
+  font-size: 14px;
+  color: var(--ink-subtlest);
+}
+
+.bar-value {
+  position: relative;
+  flex: none;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 
-.cand-pct-unit {
-  font-size: 16px;
-  vertical-align: super;
+/* The curated "closest races" keep their marker. */
+.bar-row.is-curated .bar-title {
+  color: var(--ink);
 }
 
-/* ---------- Zoom flag + candidate photos (Aug 2026 tweaks) ---------- */
-
-/* State flag ghosted into the zoomed silhouette. */
-.zoom-flag {
-  opacity: 0.2;
-  pointer-events: none;
-  animation: flag-in 600ms ease-out;
+/* Circular portrait on the party colour. */
+.cand-avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: block;
 }
 
-@keyframes flag-in {
-  from {
-    opacity: 0;
-  }
+.bar-row--dem .cand-avatar {
+  background: var(--bar-dem);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .zoom-flag {
-    animation: none;
-  }
+.bar-row--rep .cand-avatar {
+  background: var(--bar-rep);
 }
 
-/* Candidate portrait: grayscale over the party-colored avatar block reads as
-   a duotone, like the reference design. */
-.cand-avatar-dem { background: var(--bar-dem); }
-.cand-avatar-rep { background: var(--bar-rep); }
-.cand-avatar-ind { background: var(--cand-ind); }
+.bar-row--ind .cand-avatar {
+  background: var(--cand-ind);
+}
 
 /* Background-removed portrait over the party color: grayscale + LIGHTEN
    gives the campaign-poster duotone; anchored to the block's bottom edge so
-   heads sit naturally on the bar. */
+   heads sit naturally in the circle. */
 .cand-photo {
   width: 100%;
   height: 100%;

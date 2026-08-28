@@ -214,7 +214,9 @@ await page.waitForTimeout(500);
 await page.locator('[data-state="GA"]').click();
 await page.waitForTimeout(150);
 const barsEarly = await page.evaluate(() =>
-  [...document.querySelectorAll('.cand-fill')].map((el) => parseFloat(el.style.width) || 0)
+  [...document.querySelectorAll('.bar-list:not(.district-list) .bar-fill')].map(
+    (el) => parseFloat(el.style.width) || 0
+  )
 );
 await page.waitForTimeout(1100);
 const drawer = await page.evaluate(() => {
@@ -223,8 +225,12 @@ const drawer = await page.evaluate(() => {
   return {
     camera: document.querySelector('.map-camera').style.transform !== '',
     blur: document.querySelector('.map-rest').style.filter,
-    bars: [...document.querySelectorAll('.cand-fill')].map((el) => el.style.width),
-    pcts: [...document.querySelectorAll('.cand-pct')].map((el) => el.textContent),
+    bars: [...document.querySelectorAll('.bar-list:not(.district-list) .bar-fill')].map(
+      (el) => el.style.width
+    ),
+    pcts: [...document.querySelectorAll('.bar-list:not(.district-list) .bar-value')].map(
+      (el) => el.textContent
+    ),
     // Redesign: the panel's tab row is the SOURCE row now, not chambers.
     sources: [...document.querySelectorAll('.drawer-src')].map((t) => t.textContent.trim()),
     breadcrumb: document.querySelector('.drawer-breadcrumb')?.textContent.trim(),
@@ -383,23 +389,33 @@ console.log(
   'house drawer:',
   JSON.stringify(
     await page.evaluate(() => ({
-      candidates: document.querySelectorAll('.cand-row').length,
+      candidates: document.querySelectorAll('.bar-list:not(.district-list) .bar-row').length,
       sources: document.querySelectorAll('.source-card').length,
-      districtHeading: document.querySelector('.district-grid')
-        ? document.querySelectorAll('.district-block').length
-        : 0,
+      districts: document.querySelectorAll('.district-list .bar-row').length,
       districtsTotal: document.querySelector('.district-expander')?.textContent ?? 'no expander',
-      twoUp: (() => {
-        const b = [...document.querySelectorAll('.district-block')];
-        return b.length >= 2 && b[0].getBoundingClientRect().top === b[1].getBoundingClientRect().top;
+      // Candidates and districts are the SAME row shape now (the comp's), so
+      // a district and a candidate read as the same kind of object.
+      sameRowShape: (() => {
+        const c = document.querySelector('.bar-list:not(.district-list) .bar-row');
+        const d = document.querySelector('.district-list .bar-row');
+        if (!c || !d) return false;
+        const pick = (el) => {
+          const s = getComputedStyle(el);
+          return [s.minHeight, s.padding, s.borderRadius].join('|');
+        };
+        return pick(c) === pick(d);
       })(),
+      // Every district bar must be proportional, never a full-width block.
+      barsProportional: [...document.querySelectorAll('.district-list .bar-fill')].every(
+        (el) => parseFloat(el.style.width) <= 100
+      ),
       finance: document.body.innerText.includes('Finance Data'),
       backToMap: !!document.querySelector('.zoom-exit'),
       follow: !!document.querySelector('.btn-follow'),
-      tabs: document.querySelectorAll('.race-tabs--panel .race-tab').length,
+      chamberTabs: document.querySelectorAll('.drawer .race-tab').length,
     }))
   ),
-  '(10 district blocks 2-up, expander to 17, no finance, no back-to-map)'
+  '(district rows share the candidate row shape, expander, no finance, no back-to-map)'
 );
 await page.screenshot({ path: SHOT('5-house-drawer') });
 await page.keyboard.press('Escape');
@@ -517,7 +533,7 @@ for (const phase of [1, 2, 3, 4]) {
   await probe.waitForTimeout(800);
   const seen = await probe.evaluate(() => ({
     follow: !!document.querySelector('.drawer .btn-follow'),
-    zoomDepth: !!document.querySelector('.district-grid'),
+    zoomDepth: !!document.querySelector('.district-list'),
     picker: !!document.querySelector('.drawer-reads[role="radiogroup"]'),
     electionNight: !!document.querySelector('button[class*="dev"]'),
     raceTags: document.querySelectorAll('.feed-tag').length > 0,
