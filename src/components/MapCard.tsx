@@ -55,7 +55,8 @@ export function MapCard({
   onClearZoom,
 }: MapCardProps) {
   return (
-    <div className={`map-card${zoomedId ? ' is-zoomed' : ''}`}>
+    <div className="map-block">
+      <div className={`map-card${zoomedId ? ' is-zoomed' : ''}`}>
       {/* Whose data — over the map, because the map is what it changes. It
           steps aside while a state is zoomed: that frame belongs to the
           state and its panel. */}
@@ -89,6 +90,13 @@ export function MapCard({
         {panel}
       </div>
 
+      </div>
+
+      {/* Redesign Aug 2026: the read scale left the card and became its own
+          row underneath — it documents the map, it is not part of it. The
+          wrapper stays inside MapCard so the component keeps reading nothing
+          outside its own props, and `.map-card` stays on the card itself
+          (App.tsx scrolls to it by that class). */}
       <Legend
         mode={resultsMode ? 'results' : 'prediction'}
         hasTrust={Object.keys(trust).length > 0}

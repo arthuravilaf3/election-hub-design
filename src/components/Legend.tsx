@@ -10,20 +10,28 @@
  */
 import type { Mode } from '../data/types';
 
-const RATING_ITEMS: Array<[string, string]> = [
-  ['Safe Democrats', 'var(--rating-safe-dem)'],
-  ['Likely Democrats', 'var(--rating-likely-dem)'],
-  ['Lean Democrats', 'var(--rating-lean-dem)'],
+/* [label, color, expansion?] — the comp abbreviates the party to a single
+   letter so all eight steps fit on one line. The expansion rides along in an
+   <abbr title>, so the row stays terse without costing a screen reader the
+   word. */
+type Item = [string, string, string?];
+
+const RATING_ITEMS: Item[] = [
+  ['Safe D', 'var(--rating-safe-dem)', 'Democrats'],
+  ['Likely D', 'var(--rating-likely-dem)', 'Democrats'],
+  ['Lean D', 'var(--rating-lean-dem)', 'Democrats'],
   ['Toss-up', 'var(--rating-tossup)'],
-  ['Lean Republicans', 'var(--rating-lean-rep)'],
-  ['Likely Republicans', 'var(--rating-likely-rep)'],
-  ['Safe Republicans', 'var(--rating-safe-rep)'],
+  ['Lean R', 'var(--rating-lean-rep)', 'Republicans'],
+  ['Likely R', 'var(--rating-likely-rep)', 'Republicans'],
+  ['Safe R', 'var(--rating-safe-rep)', 'Republicans'],
   ['Not on ballot', 'var(--not-on-ballot)'],
 ];
 
 /* A source with nothing to say for a race is a designed state, not a blank:
-   striped gray, same stripe the map paints. */
-const NO_DATA_ITEM: [string, string] = ['No data from this source', 'var(--no-read)'];
+   striped gray, same stripe the map paints. The comp has no swatch for it —
+   the map can still paint it, and an unlabelled fill is worse than a ninth
+   item. */
+const NO_DATA_ITEM: Item = ['No data from this source', 'var(--no-read)'];
 
 const RESULTS_ITEMS: Array<[string, string, boolean?]> = [
   ['Uncalled — no results yet', 'var(--uncalled)'],
@@ -32,22 +40,35 @@ const RESULTS_ITEMS: Array<[string, string, boolean?]> = [
   ['Not on ballot', 'var(--not-on-ballot)'],
 ];
 
+/** "Safe R" -> "Safe <abbr title="Republicans">R</abbr>" */
+function ItemLabel({ label, expansion }: { label: string; expansion?: string }) {
+  if (!expansion) return <>{label}</>;
+  const at = label.lastIndexOf(' ');
+  return (
+    <>
+      {label.slice(0, at + 1)}
+      <abbr title={expansion}>{label.slice(at + 1)}</abbr>
+    </>
+  );
+}
+
 /** `hasTrust` — the override marker is documented only while it is on the
  *  map; a legend for an absent glyph is noise. */
 export function Legend({ mode, hasTrust = false }: { mode: Mode; hasTrust?: boolean }) {
-  const items = mode === 'results' ? RESULTS_ITEMS : [...RATING_ITEMS, NO_DATA_ITEM];
+  const items: Array<[string, string, (string | boolean)?]> =
+    mode === 'results' ? RESULTS_ITEMS : [...RATING_ITEMS, NO_DATA_ITEM];
   return (
     <section className="legend-strip" aria-label="Map legend">
       <ul>
-        {items.map(([label, color, hatched]) => (
+        {items.map(([label, color, extra]) => (
           <li key={label}>
             <span
-              className={`legend-swatch${hatched ? ' legend-swatch-hatched' : ''}${
+              className={`legend-swatch${extra === true ? ' legend-swatch-hatched' : ''}${
                 label === NO_DATA_ITEM[0] ? ' legend-swatch-striped' : ''
               }`}
               style={{ background: color }}
             />
-            {label}
+            <ItemLabel label={label} expansion={typeof extra === 'string' ? extra : undefined} />
           </li>
         ))}
         {hasTrust && (

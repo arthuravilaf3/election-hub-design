@@ -347,14 +347,21 @@ button,
 .map-card {
   position: relative;
   background: var(--surface);
-  border-radius: 24px;
+  border-radius: 8px;
   /* CLIP, not hidden: `hidden` makes the card a scroll container, and the
      zoomed map's transformed bounds give it a huge scrollable area. The
      browser then "reveals" any focused child (the drawer's buttons) by
      scrolling that box AND the page — which threw the document to the top.
      `clip` cuts the same shape without ever being scrollable. */
   overflow: clip;
-  margin-top: 24px;
+}
+
+/* Card + legend as one block. The 24px is the comp's gap between them; the
+   72px above is the page's block rhythm. */
+.map-block {
+  display: grid;
+  gap: 24px;
+  margin-top: 72px;
 }
 
 /* Padding lives on the wrap and collapses during zoom, so the zoomed map
@@ -362,7 +369,11 @@ button,
    keep the map itself a touch smaller than the card, and scale with it so
    mid widths don't get squeezed. */
 .map-wrap {
-  padding: 96px clamp(32px, 9%, 128px) 52px;
+  /* Tuned so the card lands at the comp's ~895px tall at a 1312 rail, WITHOUT
+     pinning a height: a fixed card height would rescale the SVG and reframe
+     every camera target. 1312 - 2*6% = 1154 wide map, x 610/975 = 722 tall,
+     + 120 + 52 = 894. */
+  padding: 120px clamp(32px, 6%, 80px) 52px;
   transition: padding 550ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1006,9 +1017,9 @@ body.is-scroll-locked .promo-bar {
 
 /* ---------- Legend strip ---------- */
 
-/* Sits between the hero and the map — compact, quiet. */
+/* Its own row under the map card: centered, one line at desktop widths. */
 .legend-strip {
-  margin-top: 40px;
+  margin: 0;
 }
 
 .legend-strip ul {
@@ -1018,20 +1029,26 @@ body.is-scroll-locked .promo-bar {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px 16px;
-  font-size: 11px;
-  color: var(--ink-soft);
+  gap: 8px 16px;
+  font-size: 14px;
+  color: var(--ink);
 }
 
 .legend-strip li {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+}
+
+/* The party letter is a label here, not a term being defined — the default
+   dotted underline would read as an error state at this size. */
+.legend-strip abbr {
+  text-decoration: none;
 }
 
 .legend-swatch {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 2px;
   display: inline-block;
   flex: none;
@@ -1864,7 +1881,7 @@ body.is-scroll-locked .promo-bar {
 .feed-section {
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  margin-top: 64px;
+  margin-top: 72px;
   /* Same family as the page — the separation is editorial (the plan banner),
      not chromatic. The gradient adds quiet depth toward the bottom. */
   background: linear-gradient(
@@ -2832,11 +2849,11 @@ body.is-scroll-locked .promo-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 32px;
+  gap: 40px;
   flex-wrap: wrap;
-  margin-top: 96px;
-  padding: 36px 44px;
-  border-radius: 24px;
+  margin-top: 72px;
+  padding: 40px;
+  border-radius: 8px;
   background: linear-gradient(
     120deg,
     var(--brand-pressed) 0%,
@@ -2844,11 +2861,30 @@ body.is-scroll-locked .promo-bar {
   );
 }
 
+.plan-mark {
+  flex: none;
+  width: 81px;
+  height: 81px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  /* The comp's #8f201e — brand/600 taken down, not a new brand value. */
+  background: color-mix(in srgb, var(--brand-pressed) 78%, #000);
+  color: var(--ink);
+}
+
+/* The mark and the copy travel together; the buttons sit opposite them. */
+.plan-copy {
+  flex: 1;
+  min-width: 320px;
+}
+
 .plan-copy h2 {
   margin: 0;
-  font-size: 28px;
-  line-height: 34px;
-  font-weight: 700;
+  font-size: 32px;
+  line-height: 38px;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--ink);
 }
@@ -2867,14 +2903,23 @@ body.is-scroll-locked .promo-bar {
   flex-wrap: wrap;
 }
 
+/* The primary button borrows .btn-follow's fill, but NOT its size — that one
+   is the drawer's Follow control and keeps its own 36px spec. */
+.plan-actions .btn-follow {
+  height: 46px;
+  padding: 0 32px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 .plan-btn-secondary {
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  height: 36px;
-  padding: 0 18px;
+  height: 46px;
+  padding: 0 32px;
   border: 1px solid color-mix(in srgb, var(--ink) 45%, transparent);
-  border-radius: 10px;
+  border-radius: 4px;
   background: transparent;
   color: var(--ink);
   cursor: pointer;
@@ -3343,13 +3388,9 @@ body.is-scroll-locked .promo-bar {
     font-size: 14px;
   }
 
-  .legend-strip {
-    margin-top: 24px;
-  }
-
   .legend-strip ul {
-    gap: 4px 10px;
-    font-size: 10px;
+    gap: 6px 12px;
+    font-size: 12px;
   }
 
   /* Map: near full-bleed inside a tighter card; the source control stacks
@@ -3851,19 +3892,6 @@ body.is-scroll-locked .promo-bar {
   .map-card.is-zoomed .seg-results {
     opacity: 1;
     pointer-events: auto;
-  }
-}
-
-/* Legend inside the map card, under the map — kept off the map's bottom
-   edge so the read scale doesn't hang on the geography. */
-.map-card .legend-strip {
-  margin: 0;
-  padding: 12px 32px 30px;
-}
-
-@media (max-width: 700px) {
-  .map-card .legend-strip {
-    padding: 8px 16px 18px;
   }
 }
 
