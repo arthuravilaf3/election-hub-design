@@ -1,11 +1,11 @@
 /**
- * The page header, above the map card: race tabs first, then the headline
- * they drive, its byline, and the seat bar.
+ * The page header, above the map card: the headline, the countdown and the
+ * byline, then the race tabs, then the seat bar.
  *
- * The tabs come FIRST because the title is their consequence — switching to
- * Senate rewrites the sentence directly below the control that changed it.
- * Only the source selector stays inside the map card; everything that reads
- * as page-level copy lives up here.
+ * Redesign Aug 2026 — the comp puts the title FIRST, at 48px, with the
+ * countdown demoted from a brand pill to a quiet subtitle underneath. The
+ * tabs move below that block. Only the source selector stays inside the map
+ * card; everything that reads as page-level copy lives up here.
  *
  * Heading semantics: the visible headline changes on every interaction, so a
  * stable, visually-hidden h1 carries the document's identity (and matches the
@@ -57,8 +57,17 @@ export function RaceHeader({
     <header className="race-header">
       <h1 className="visually-hidden">{PAGE_TITLE}</h1>
 
-      {/* Days to Election Day — the hub's clock, above the controls. */}
-      <Countdown />
+      {/* Headline, countdown and byline are ONE block: they are recalculated
+          together, so they crossfade together (the key remounts them). The
+          countdown rides along — its text is identical across a race switch,
+          so the crossfade is invisible on it. */}
+      <div className="race-statement" key={`${chamber}:${byline}`}>
+        <h2 className="race-title">
+          <Statement text={statement} emphasis={forecast.emphasis} />
+        </h2>
+        <Countdown />
+        <p className="race-byline">{byline}</p>
+      </div>
 
       <RaceTabs
         chamber={chamber}
@@ -67,15 +76,6 @@ export function RaceHeader({
         className="race-tabs--header"
         onChamber={onChamber}
       />
-
-      {/* Headline and byline are ONE block: they are recalculated together,
-          so they crossfade together (the key remounts them). */}
-      <div className="race-statement" key={`${chamber}:${byline}`}>
-        <h2 className="race-title">
-          <Statement text={statement} emphasis={forecast.emphasis} />
-        </h2>
-        <p className="race-byline">{byline}</p>
-      </div>
 
       <SeatBar forecast={forecast} resultsMode={resultsMode} called={called} />
     </header>
@@ -90,44 +90,47 @@ interface SeatBarProps {
 
 /**
  * Current composition as one bar: Democratic bloc, a NEUTRAL gap for the
- * races still in play, Republican bloc. The numbers hang off the bar's own
- * ends and the count line sits under the gap, so the row reads as one object
- * instead of three floating labels.
+ * races still in play, Republican bloc.
+ *
+ * Redesign Aug 2026 — the numbers no longer hang off the bar's ends with the
+ * count anchored under the gap. They are a three-up label row underneath,
+ * spread end to end, with the contested middle finally named rather than
+ * implied. The bar's own aria-label is unchanged and still carries the whole
+ * sentence, including the "N seats up" figure the visible row drops.
  */
 export function SeatBar({ forecast, resultsMode, called }: SeatBarProps) {
   const gap = forecast.tossupShare;
   const dem = Math.max(0, forecast.demShare - gap / 2);
   const rep = Math.max(0, 100 - dem - gap);
-  const mid = dem + gap / 2;
   const tail = resultsMode
     ? `${called} called`
     : `${forecast.tossups} toss-up${forecast.tossups === 1 ? '' : 's'}`;
 
   return (
     <div className="seat-bar">
-      <span className="seat-bar-end seat-bar-dem-num">
-        {forecast.dem} <abbr title="Democrats">D</abbr>
-      </span>
-      <div className="seat-bar-mid-col">
-        <div
-          className="seat-bar-track"
-          role="img"
-          aria-label={`Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${
-            forecast.dem + forecast.rep
-          }. ${forecast.seatsUp} seats up, ${tail}.`}
-        >
-          <span className="seat-bar-dem" style={{ width: `${dem}%` }} />
-          <span className="seat-bar-gap" style={{ width: `${gap}%` }} />
-          <span className="seat-bar-rep" style={{ width: `${rep}%` }} />
-        </div>
-        {/* Anchored under the gap — the boundary the count is about. */}
-        <p className="seat-bar-count" style={{ left: `${mid}%` }}>
-          {forecast.seatsUp} seats up · {tail}
+      <div
+        className="seat-bar-track"
+        role="img"
+        aria-label={`Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${
+          forecast.dem + forecast.rep
+        }. ${forecast.seatsUp} seats up, ${tail}.`}
+      >
+        <span className="seat-bar-dem" style={{ width: `${dem}%` }} />
+        <span className="seat-bar-gap" style={{ width: `${gap}%` }} />
+        <span className="seat-bar-rep" style={{ width: `${rep}%` }} />
+      </div>
+      <div className="seat-bar-labels" aria-hidden="true">
+        <p className="seat-bar-label">
+          Democrats: <b className="seat-bar-num seat-bar-num--dem">{forecast.dem}</b>
+        </p>
+        <p className="seat-bar-label">
+          {resultsMode ? 'Called' : 'Toss-ups'}:{' '}
+          <b className="seat-bar-num">{resultsMode ? called : forecast.tossups}</b>
+        </p>
+        <p className="seat-bar-label">
+          Republicans: <b className="seat-bar-num seat-bar-num--rep">{forecast.rep}</b>
         </p>
       </div>
-      <span className="seat-bar-end seat-bar-rep-num">
-        {forecast.rep} <abbr title="Republicans">R</abbr>
-      </span>
     </div>
   );
 }

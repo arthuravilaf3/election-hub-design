@@ -868,26 +868,28 @@ body.is-scroll-locked .promo-bar {
    seat bar — centered, per the Figma comp. The order IS the argument: the
    control sits immediately above its own consequence. */
 .race-header {
-  margin: 36px 0 0;
+  /* .app's own 48px top padding supplies the space above. */
+  margin: 0;
   /* Grid so every row is its own line and shrink-to-fit + centered; the seat
-     bar opts back into the full width. */
+     bar opts back into the full width. The 48px rhythm and the 55px side
+     inset are the comp's; the inset clamps away on narrow viewports. */
   display: grid;
   justify-items: center;
   text-align: center;
+  row-gap: 48px;
+  padding: 0 clamp(0px, 4vw, 55px);
 }
 
-/* Days-to-election pill: brand/bold/pressed ground, DS label/400/sm. */
+/* Redesign Aug 2026: the countdown lost its brand pill and became the
+   title's subtitle — quiet, directly under the headline it dates. */
 .countdown {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 20px;
-  padding: 8px 12px;
-  border-radius: 4px;
-  background: var(--brand-pressed);
-  color: var(--ink);
-  font-size: 12px;
-  line-height: 20px;
+  margin: 16px 0 0;
+  color: var(--ink-subtlest);
+  font-size: 16px;
+  line-height: 1;
 }
 
 .countdown strong {
@@ -903,10 +905,11 @@ body.is-scroll-locked .promo-bar {
 .race-tabs.race-tabs--header {
   display: inline-flex;
   justify-content: center;
+  gap: 24px;
 }
 
 .race-statement {
-  margin-top: 16px;
+  /* row-gap on .race-header owns the rhythm now. */
   animation: statement-in 200ms ease-out;
 }
 
@@ -926,24 +929,27 @@ body.is-scroll-locked .promo-bar {
 }
 
 /* Page-title scale: this line IS the page title now. Regular weight with
-   the figure it is about set in bold — the comp's own treatment. Sized to
-   sit on ONE line at desktop widths (no measure cap); the phone step below
-   is allowed to wrap. */
+   the figure it is about set in bold — the comp's own treatment. The comp
+   caps the measure at 573px and lets the line wrap to two or three lines;
+   that wrap IS the design, not an overflow. */
 .race-title {
   margin: 0 auto;
-  font-size: 32px;
+  font-size: 48px;
   line-height: 1.2;
   font-weight: 400;
   letter-spacing: -0.01em;
-  max-width: none;
+  max-width: 573px;
 }
 
 .race-title strong {
   font-weight: 700;
 }
 
+/* Kept even though the comp omits it: every number on this page carries its
+   source and its freshness (hub tenet), and the seat bar right below has no
+   other attribution. */
 .race-byline {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   font-size: 13px;
   color: var(--ink-soft);
 }
@@ -3631,51 +3637,19 @@ body.is-scroll-locked .promo-bar {
 
 /* ---------- 4. Seat bar ---------- */
 
-/* One object: the numbers hang off the bar's own ends, the count line sits
-   under the neutral gap. Widths animate with the same easing family as the
-   map's fill transition, so a race switch reads as ONE recalculation. */
+/* One object: the track, then a three-up label row spread end to end beneath
+   it. Widths animate with the same easing family as the map's fill
+   transition, so a race switch reads as ONE recalculation. */
 .seat-bar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 26px;
+  margin-top: 0;
   width: 100%;
   justify-self: stretch;
-  text-align: left;
-}
-
-.seat-bar-end {
-  font-size: 15px;
-  font-weight: 600;
-  white-space: nowrap;
-  flex: none;
-}
-
-.seat-bar-end abbr {
-  text-decoration: none;
-  color: var(--ink-soft);
-  font-weight: 700;
-}
-
-/* Party identity comes from the bar the number is anchored to, not from the
-   type: --bar-dem/--bar-rep as text on the card surface land at 2.3:1 and
-   3.6:1, well under AA. Ink text, colored bar. */
-.seat-bar-dem-num,
-.seat-bar-rep-num {
-  color: var(--ink);
-}
-
-.seat-bar-mid-col {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  padding-bottom: 20px;
 }
 
 .seat-bar-track {
   display: flex;
   height: 8px;
-  border-radius: 200px;
+  border-radius: 4px;
   overflow: hidden;
   background: var(--surface-2);
 }
@@ -3699,15 +3673,36 @@ body.is-scroll-locked .promo-bar {
   background: var(--rating-tossup);
 }
 
-.seat-bar-count {
-  position: absolute;
-  top: 14px;
-  transform: translateX(-50%);
+/* The blocs at the ends, the contested middle named in the middle. */
+.seat-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.seat-bar-label {
   margin: 0;
-  font-size: 12px;
-  line-height: 20px;
-  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink);
   white-space: nowrap;
+}
+
+.seat-bar-num {
+  font-weight: 500;
+}
+
+/* The figures may carry party colour here, unlike the old end-labels: these
+   are the LIGHT ends of each ramp, not --bar-dem/--bar-rep, which land at
+   2.3:1 and 3.6:1 as text on the page ground — well under AA. */
+.seat-bar-num--dem {
+  color: var(--rating-lean-dem);
+}
+
+.seat-bar-num--rep {
+  color: var(--brand-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {
