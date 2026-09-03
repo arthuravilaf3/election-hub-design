@@ -5,6 +5,7 @@
 // filter and the ad cadence have something to chew on.
 
 import { stillFor } from './images';
+import { asset } from './assets';
 
 export type ItemKind = 'article' | 'short' | 'episode' | 'opinion';
 
@@ -146,7 +147,7 @@ export const ALL_ITEMS: FeedItem[] = Array.from({ length: 36 }, (_, i) => {
   if (kind === 'short') {
     base.imageTall = stillFor(i, 'portrait');
     base.duration = `0:${(11 + ((i * 7) % 48)).toString().padStart(2, '0')}`;
-    base.video = `/shorts/short-${i % 4}.webm`;
+    base.video = asset(`shorts/short-${i % 4}.webm`);
   }
   if (kind === 'episode') base.duration = `${38 + (i % 3) * 9}:0${i % 6}`;
   return base;

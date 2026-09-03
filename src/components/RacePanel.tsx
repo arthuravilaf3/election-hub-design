@@ -35,6 +35,7 @@ const CHAMBER_TITLE: Record<Chamber, string> = {
   governor: 'Governor',
 };
 import { districtLabel } from '../data/districts';
+import { asset } from '../data/assets';
 import type { Candidate, Chamber, District, StateRace } from '../data/types';
 
 const GROW_MS = 800;
@@ -55,7 +56,7 @@ function photoFor(name: string): string {
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 997;
   const pool = FEMALE_FIRST.has(name.split(' ')[0]) ? PHOTOS_F : PHOTOS_M;
   // -cut = background removed (macOS Vision), composited over the party color.
-  return `/candidates/${pool[h % pool.length]}-cut.png`;
+  return asset(`candidates/${pool[h % pool.length]}-cut.png`);
 }
 
 /** Candidate photo-bars: bar and number grow in the same animation frame. */
@@ -496,7 +497,7 @@ export function RacePanel({
       <div className="drawer-scroll">
         <div className="drawer-headblock">
           <div className="drawer-headrow">
-            <img className="drawer-flag" src={`/flags/${race.id}.png`} alt="" aria-hidden="true" />
+            <img className="drawer-flag" src={asset(`flags/${race.id}.png`)} alt="" aria-hidden="true" />
             {/* Follow a State: one state, all of its races. */}
             {showFollow && (
               <button
