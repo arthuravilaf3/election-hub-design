@@ -3948,6 +3948,14 @@ body.is-scroll-locked .promo-bar {
   color: var(--ink-subtlest);
 }
 
+/* The map is INERT while the panel is open — the panel's prev/next arrows are
+   the only way between states. The JS guard in ElectionMap is what enforces
+   it; this stops the cursor from advertising a control that will not answer.
+   The wheel-to-leave listener is on window, so it is unaffected. */
+.map-card.is-zoomed .election-map {
+  pointer-events: none;
+}
+
 /* The zoomed frame belongs to the state and its panel — same fade the source
    control used to do. */
 .map-card.is-zoomed .map-selectors {

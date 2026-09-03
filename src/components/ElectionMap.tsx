@@ -340,15 +340,20 @@ export function ElectionMap({
   };
 
   const handleActivate = (stateId: string) => {
+    /* While the panel is open the map is INERT. The panel owns the state you
+       are reading, and its prev/next arrows are the only way to move between
+       states — a stray click on the sliver of map beside it used to re-aim
+       the camera mid-read, or drop you out of the zoom entirely. Leaving is
+       the close button, Escape, or scrolling away. */
+    if (zoomedId) return;
     if (!races[stateId]) {
       onSelect(stateId); // not on the ballot — selection surfaces the empty state
       return;
     }
-    // Clicking any on-ballot state dives the camera into it (blur the rest);
-    // clicking it again zooms back out. House fills the frame with district
-    // rows, the other chambers with the race detail panel.
-    if (stateId === zoomedId) onClearZoom();
-    else onZoom(stateId);
+    // Clicking any on-ballot state dives the camera into it (blur the rest).
+    // House fills the frame with district rows, the other chambers with the
+    // race detail panel.
+    onZoom(stateId);
   };
 
   // The state under the pointer or keyboard focus — tooltip state already
@@ -383,10 +388,13 @@ export function ElectionMap({
             transitionDelay: staggering && !reducedMotion ? `${index * STAGGER_STEP_MS}ms` : '0ms',
           }}
           role="button"
-          tabIndex={0}
+          /* Out of the tab order and announced as disabled while the panel
+             is open: the map is inert then, and a focusable control that
+             does nothing is worse than no control. */
+          tabIndex={zoomedId ? -1 : 0}
           aria-label={label}
           aria-pressed={selected}
-          aria-disabled={race ? undefined : true}
+          aria-disabled={zoomedId || !race ? true : undefined}
           data-state={shape.id}
           onClick={() => handleActivate(shape.id)}
           onKeyDown={(e) => {

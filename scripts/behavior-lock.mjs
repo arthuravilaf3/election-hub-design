@@ -181,6 +181,52 @@ check('counties rendered', zoom.counties, true);
 check('source control hidden while zoomed', zoom.segHidden, '0');
 check('measured region matches comp', zoom.regionW, (v) => v > 0.55 && v < 0.63);
 
+// ---- with the panel open, the map is inert ------------------------------
+const inert = await page.evaluate(() => {
+  const shape = document.querySelector('.state-shape[data-state="CA"]');
+  return {
+    pointerEvents: getComputedStyle(document.querySelector('.election-map')).pointerEvents,
+    tabIndex: shape.getAttribute('tabindex'),
+    ariaDisabled: shape.getAttribute('aria-disabled'),
+  };
+});
+check('map ignores the pointer while zoomed', inert.pointerEvents, 'none');
+check('states leave the tab order while zoomed', inert.tabIndex, '-1');
+check('states announce as disabled while zoomed', inert.ariaDisabled, 'true');
+
+// Clicking another state must NOT move the camera: the arrows own that.
+const beforeClick = await page.evaluate(
+  () => document.querySelector('.drawer-breadcrumb').textContent.trim()
+);
+// A synthetic event ignores pointer-events, so this exercises the JS guard
+// in ElectionMap rather than the CSS that merely hides the affordance.
+await page.evaluate(() =>
+  document
+    .querySelector('.state-shape[data-state="CA"]')
+    .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+);
+await page.waitForTimeout(600);
+check(
+  'clicking a state behind the panel changes nothing',
+  await page.evaluate(() => document.querySelector('.drawer-breadcrumb')?.textContent.trim()),
+  beforeClick
+);
+
+// The arrows DO move it.
+await page.locator('.drawer-nav-btn').nth(1).click();
+await page.waitForTimeout(900);
+check(
+  'the next arrow moves to another state',
+  await page.evaluate(
+    () => document.querySelector('.drawer-breadcrumb')?.textContent.trim() !== null
+  ),
+  true
+);
+const afterArrow = await page.evaluate(() =>
+  document.querySelector('.drawer-breadcrumb').textContent.trim()
+);
+check('the arrow actually changed state', afterArrow !== beforeClick, true);
+
 // Escape leaves the zoom
 await page.keyboard.press('Escape');
 await page.waitForTimeout(700);
