@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DWNav } from './components/DWNav';
-import { PromoBar } from './components/PromoBar';
 import { RaceHeader } from './components/RaceHeader';
 import { MapCard } from './components/MapCard';
 import { DevToolbar } from './components/DevToolbar';
@@ -325,10 +324,6 @@ export default function App() {
       {/* Full-bleed: the footer runs edge to edge with its own inner rail. */}
       <SiteFooter />
 
-      {/* Fixed to the bottom of the viewport, so flow order is only about
-          reading order: last in the DOM keeps it out of the main content and
-          away from the compact header's stacking neighborhood. */}
-      <PromoBar />
     </>
   );
 }

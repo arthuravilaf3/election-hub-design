@@ -51,33 +51,35 @@ console.log(
   )
 );
 
-// 2. Scroll: the promo bar is FIXED to the bottom now, so it does not scroll
-// away; the sticky chrome is the nav and nothing else — the compact title
-// that used to pin here is gone with the static headline.
+// 2. Scroll: the sticky chrome is the nav and nothing else — no pinned title,
+// and no fixed bar at the bottom (the prediction-game promo is gone).
 await page.evaluate(() => window.scrollTo(0, 430));
 await page.waitForTimeout(600);
 const down = await page.evaluate(() => ({
-  promoPinnedToBottom:
-    Math.round(document.querySelector('.promo-bar').getBoundingClientRect().bottom) ===
-    window.innerHeight,
   mapSectionOnScreen:
     document.querySelector('.map-section').getBoundingClientRect().bottom > window.innerHeight,
-  // Nothing may pin a title any more.
   compactChrome: document.querySelectorAll('.compact-header, .chrome-collapse').length,
+  gamePromo: document.querySelectorAll('.promo-bar').length,
   chromeHeight: Math.round(
     document.querySelector('.site-chrome').getBoundingClientRect().height
   ),
+  // Nothing fixed may sit over the page bottom now.
+  fixedBottomChrome: [...document.querySelectorAll('body *')].filter((el) => {
+    const c = getComputedStyle(el);
+    if (c.position !== 'fixed' || c.display === 'none') return false;
+    const r = el.getBoundingClientRect();
+    return r.width > window.innerWidth * 0.5 && r.bottom >= window.innerHeight - 1;
+  }).length,
   navVisible: document.querySelector('.dw-nav-bar').getBoundingClientRect().top === 0,
 }));
-console.log('scroll down:', JSON.stringify(down), '(nav only; no pinned title; promo fixed at the bottom)');
+console.log('scroll down:', JSON.stringify(down), '(nav only; no pinned title; no bottom bar)');
 await page.evaluate(() => window.scrollTo({ top: 0 }));
 await page.waitForTimeout(600);
 const up = await page.evaluate(() => ({
-  promoStillPinned:
-    Math.round(document.querySelector('.promo-bar').getBoundingClientRect().bottom) ===
-    window.innerHeight,
+  footerReachable:
+    document.querySelector('.site-footer').getBoundingClientRect().height > 0,
 }));
-console.log('scroll top :', JSON.stringify(up), '(promo stays pinned)');
+console.log('scroll top :', JSON.stringify(up), '(footer reachable, nothing covering it)');
 await page.evaluate(() => window.scrollTo({ top: 0 }));
 await page.waitForTimeout(600);
 

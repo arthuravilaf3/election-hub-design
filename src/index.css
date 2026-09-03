@@ -32,10 +32,6 @@
      so the page shares one left edge. */
   --rail: 1440px;
   --rail-pad: 64px;
-
-  /* Height of the fixed bottom promo bar. Read by the page tail, the dev
-     chrome and the three FABs, so the bar's height is stated ONCE. */
-  --promo-bar-h: 113px;
 }
 
 body {
@@ -62,7 +58,7 @@ body {
 /* With the dev toolbar expanded, the bottom chrome is much taller — give the
    page enough tail that every control can scroll clear of it. */
 .app--dev-open {
-  padding-bottom: calc(320px + var(--promo-bar-h));
+  padding-bottom: 320px;
 }
 
 /* The drawer is a modal, and the dev FABs are fixed to the viewport's bottom
@@ -91,12 +87,6 @@ body.is-scroll-locked {
   padding-right: var(--scroll-lock-gutter, 0px);
 }
 
-body {
-  /* The footer is outside .app, so the fixed bar's clearance has to be
-     reserved on the document itself or the bar covers the legal links. */
-  padding-bottom: var(--promo-bar-h);
-}
-
 /* Anything scrolled into view (keyboard focus, programmatic) must land clear
    of the fixed chrome: the 68px sticky nav above, the floating dock and the
    (possibly open) dev toolbar below. */
@@ -104,7 +94,7 @@ input,
 button,
 .state-shape {
   scroll-margin-top: 92px;
-  scroll-margin-bottom: calc(var(--promo-bar-h) + 120px);
+  scroll-margin-bottom: 220px;
 }
 
 /* ---------- Daily Wire site nav (copied from dailywire.com) ---------- */
@@ -556,7 +546,7 @@ button,
   position: fixed;
   left: 0;
   right: 0;
-  bottom: var(--promo-bar-h);
+  bottom: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 24px;
@@ -571,7 +561,7 @@ button,
 .dev-toolbar--collapsed {
   left: auto;
   right: 16px;
-  bottom: calc(var(--promo-bar-h) + 16px);
+  bottom: 16px;
   padding: 0;
   background: transparent;
   border: 0;
@@ -735,113 +725,6 @@ button,
   height: 64px; /* nav only — constant, so the document never resizes */
   z-index: 400;
   background: var(--surface-dim);
-}
-
-/* ---------- Prediction game promo bar (fixed, bottom) ---------- */
-
-/* Redesign Aug 2026: this left the top of the page and became a bar pinned
-   to the bottom of the viewport. Height is declared once as --promo-bar-h;
-   the page tail, the dev chrome and the three FABs all clear it from that
-   one number.
-
-   z-index 500 places it above the page and the dev toolbar (30) but BELOW
-   the mobile drawer's bottom sheet (600) and the FABs (640) — the sheet has
-   to cover it, and the dev chrome has to stay clickable. */
-.promo-bar {
-  position: fixed;
-  inset: auto 0 0 0;
-  z-index: 500;
-  height: var(--promo-bar-h);
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 32px var(--rail-pad);
-  background: var(--surface);
-  border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
-  color: var(--ink);
-}
-
-/* body.is-scroll-locked sets overflow:hidden, which removes the scrollbar and
-   widens the initial containing block — a FIXED full-width element grows with
-   it and jumps sideways. The sticky nav is immune (it inherits body's
-   padding); this bar is not, so it compensates with the same gutter.
-   Invisible on macOS overlay scrollbars — the gutter is 0 there. */
-body.is-scroll-locked .promo-bar {
-  padding-right: calc(var(--rail-pad) + var(--scroll-lock-gutter, 0px));
-}
-
-/* Decorative miniature of the map the CTA sells. */
-.promo-tiles {
-  flex: none;
-  width: 49px;
-  height: 49px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-}
-
-.promo-tile {
-  border-radius: 2px;
-}
-
-.promo-tile--rep {
-  background: var(--rating-likely-rep);
-}
-
-.promo-tile--lean-rep {
-  background: var(--rating-lean-rep);
-}
-
-.promo-tile--dem {
-  background: var(--rating-likely-dem);
-}
-
-.promo-tile--lean-dem {
-  background: var(--rating-lean-dem);
-}
-
-.promo-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.promo-title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.promo-sub {
-  margin: 8px 0 0;
-  font-size: 12px;
-  color: var(--ink-subtlest);
-}
-
-.promo-cta {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 126px;
-  height: 46px;
-  border-radius: 4px;
-  background: var(--ink);
-  color: var(--surface-dim);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background 140ms ease-out;
-}
-
-.promo-cta:hover {
-  background: color-mix(in srgb, var(--ink) 88%, var(--surface-dim));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .promo-cta {
-    transition: none;
-  }
 }
 
 /* ---------- Race header (above the card) ---------- */
@@ -3333,40 +3216,6 @@ body.is-scroll-locked .promo-bar {
     display: none;
   }
 
-  /* Must live on :root, not on .promo-bar — body, .app, the dev chrome and
-     the three FABs all read this to clear the bar. */
-  :root {
-    --promo-bar-h: 76px;
-  }
-
-  /* The bar keeps its fixed bottom slot but loses the tile and the second
-     copy line — one line and the CTA are what fit. Height is re-declared so
-     every clearance that reads --promo-bar-h follows it down. */
-  .promo-bar {
-    gap: 12px;
-    padding: 16px;
-  }
-
-  .promo-tiles,
-  .promo-sub {
-    display: none;
-  }
-
-  .promo-title {
-    font-size: 13px;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-
-  .promo-cta {
-    white-space: nowrap;
-    width: auto;
-    padding: 0 20px;
-    height: 40px;
-  }
-
   .race-header {
     margin-top: 24px;
   }
@@ -3577,7 +3426,7 @@ body.is-scroll-locked .promo-bar {
 .mobile-toggle {
   position: fixed;
   right: 24px;
-  bottom: calc(var(--promo-bar-h) + 76px);
+  bottom: 76px;
   z-index: 640;
   width: 44px;
   height: 44px;
@@ -3703,7 +3552,7 @@ body.is-scroll-locked .promo-bar {
 .theme-toggle {
   position: fixed;
   right: 24px;
-  bottom: calc(var(--promo-bar-h) + 128px);
+  bottom: 128px;
   z-index: 640;
   width: 44px;
   height: 44px;
@@ -4192,7 +4041,7 @@ body.is-scroll-locked .promo-bar {
 .phase-switcher {
   position: fixed;
   right: 24px;
-  bottom: calc(var(--promo-bar-h) + 180px);
+  bottom: 180px;
   z-index: 640;
   display: flex;
   align-items: center;
