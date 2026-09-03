@@ -51,47 +51,33 @@ console.log(
   )
 );
 
-// 2. Scroll: the promo bar scrolls away NORMALLY with the page (no hide/
-// show effect); the compact title pins past the hero and lives EXACTLY as
-// long as the map section is on screen; nav stays.
+// 2. Scroll: the promo bar is FIXED to the bottom now, so it does not scroll
+// away; the sticky chrome is the nav and nothing else — the compact title
+// that used to pin here is gone with the static headline.
 await page.evaluate(() => window.scrollTo(0, 430));
 await page.waitForTimeout(600);
 const down = await page.evaluate(() => ({
-  promoScrolledAway: document.querySelector('.promo-bar').getBoundingClientRect().bottom < 64,
+  promoPinnedToBottom:
+    Math.round(document.querySelector('.promo-bar').getBoundingClientRect().bottom) ===
+    window.innerHeight,
   mapSectionOnScreen:
     document.querySelector('.map-section').getBoundingClientRect().bottom > window.innerHeight,
-  compactVisible: !document
-    .querySelector('.chrome-collapse--tall')
-    .className.includes('is-collapsed'),
-  compactTitle: document.querySelector('.compact-title')?.textContent.slice(0, 24),
-  // The pinned bar carries the race tabs too, so the reader can switch
-  // without scrolling back up.
-  // The compact bar lost its tabs: the RACE pill is on the card, which is on
-  // screen for exactly as long as this bar is.
-  compactTabs: document.querySelectorAll('.race-tabs--compact .race-tab').length,
-  // Solid page ground, the same fill the nav carries — the two read as one
-  // piece of chrome, and the tabs sit under the title.
-  compactMatchesNav:
-    getComputedStyle(document.querySelector('.compact-header')).backgroundColor ===
-    getComputedStyle(document.querySelector('.dw-nav-bar')).backgroundColor,
-
+  // Nothing may pin a title any more.
+  compactChrome: document.querySelectorAll('.compact-header, .chrome-collapse').length,
+  chromeHeight: Math.round(
+    document.querySelector('.site-chrome').getBoundingClientRect().height
+  ),
   navVisible: document.querySelector('.dw-nav-bar').getBoundingClientRect().top === 0,
 }));
-console.log('scroll down:', JSON.stringify(down), '(promo scrolled away; compact pinned over the map section)');
-await page.evaluate(() => document.querySelector('.plan-banner').scrollIntoView());
-await page.waitForTimeout(600);
-const pastMap = await page.evaluate(() => ({
-  compactGone: document
-    .querySelector('.chrome-collapse--tall')
-    .className.includes('is-collapsed'),
-}));
-console.log('past map   :', JSON.stringify(pastMap), '(compact leaves with the map section)');
+console.log('scroll down:', JSON.stringify(down), '(nav only; no pinned title; promo fixed at the bottom)');
 await page.evaluate(() => window.scrollTo({ top: 0 }));
 await page.waitForTimeout(600);
 const up = await page.evaluate(() => ({
-  promoBackInView: document.querySelector('.promo-bar').getBoundingClientRect().top >= 60,
+  promoStillPinned:
+    Math.round(document.querySelector('.promo-bar').getBoundingClientRect().bottom) ===
+    window.innerHeight,
 }));
-console.log('scroll top :', JSON.stringify(up), '(promo back, in flow)');
+console.log('scroll top :', JSON.stringify(up), '(promo stays pinned)');
 await page.evaluate(() => window.scrollTo({ top: 0 }));
 await page.waitForTimeout(600);
 

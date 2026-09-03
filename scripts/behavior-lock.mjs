@@ -55,6 +55,28 @@ check('state fill transition', statics.stateTransition, '0.35s');
 check('statement crossfade', statics.statementAnim, '0.2s');
 check('seat bar width transition', statics.seatBarTransition, '0.3s');
 check('no SVG ancestor transform', statics.svgAncestorTransforms.length, 0);
+check(
+  'sticky chrome is the nav only',
+  await page.evaluate(() =>
+    Math.round(document.querySelector('.site-chrome').getBoundingClientRect().height)
+  ),
+  64
+);
+check(
+  'nothing pins a title on scroll',
+  await page.evaluate(
+    () => document.querySelectorAll('.compact-header, .chrome-collapse, .compact-title').length
+  ),
+  0
+);
+// Click is the ONLY way in: no zoom buttons, no scroll/pinch zoom-in.
+check(
+  'no zoom controls',
+  await page.evaluate(
+    () => document.querySelectorAll('[class*="zoom-in"], [class*="zoom-out"], .zoom-controls').length
+  ),
+  0
+);
 
 // ---- hover: pointermove-driven, tooltip follows, lift copy painted last --
 // Scroll it into view FIRST and settle: the scroll listener clears the
@@ -89,6 +111,16 @@ check('tooltip is fixed', hover1.tipPosition, 'fixed');
 check('tooltip ignores pointer', hover1.tipPointerEvents, 'none');
 check('exactly one lift copy', hover1.lifts, 1);
 check('lift source dimmed', hover1.dimmedSource, true);
+// The lift is a copy painted LAST, so it will cover the hovered state's own
+// abbreviation unless the label rides inside it.
+check(
+  'hovered state keeps its abbreviation',
+  await page.evaluate(() => {
+    const lift = document.querySelector('.lift-overlay');
+    return lift?.querySelector('.state-label')?.textContent ?? null;
+  }),
+  'TX'
+);
 
 // the tooltip TRACKS the cursor (pointermove, not pointerenter)
 await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2);

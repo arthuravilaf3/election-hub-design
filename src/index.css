@@ -737,46 +737,6 @@ button,
   background: var(--surface-dim);
 }
 
-/* The promo + compact bars hang UNDER the nav as an overlay: out of document
-   flow, so hiding them cannot resize the page (see App.tsx comment). */
-.chrome-overlays {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  /* The band is an overlay — clicks/hover must reach the map underneath
-     wherever the scrim has faded; only the header's actual content is
-     interactive (it re-enables below). */
-  pointer-events: none;
-}
-
-.compact-header > * {
-  pointer-events: auto;
-}
-
-/* Height-collapse wrapper: hides a bar smoothly inside the overlay. */
-.chrome-collapse {
-  height: 36px;
-  overflow: hidden;
-  transition: height 300ms ease-out, opacity 300ms ease-out;
-}
-
-.chrome-collapse--tall {
-  /* Title row + tab row (see .compact-header). */
-  height: 92px;
-}
-
-.chrome-collapse.is-collapsed {
-  height: 0;
-  opacity: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chrome-collapse {
-    transition: none;
-  }
-}
-
 /* ---------- Prediction game promo bar (fixed, bottom) ---------- */
 
 /* Redesign Aug 2026: this left the top of the page and became a bar pinned
@@ -959,33 +919,6 @@ body.is-scroll-locked .promo-bar {
   margin: 14px 0 0;
   font-size: 14px;
   color: var(--ink-subtlest);
-}
-
-/* The pinned bar: headline on top, race tabs under it, so the reader can
-   switch races from here instead of scrolling back up. Solid page ground —
-   the same fill the nav carries, so the two read as one piece of chrome. */
-.compact-header {
-  height: 92px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: 8px 16px 10px;
-  background: var(--surface-dim);
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
-}
-
-.compact-title {
-  margin: 0;
-  font-size: 16px;
-  line-height: 22px;
-  font-weight: 600;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 90vw;
 }
 
 /* ---------- Live row ---------- */
@@ -3450,9 +3383,6 @@ body.is-scroll-locked .promo-bar {
 
   /* Phone: a headline truncated to five words says nothing — the pinned bar
      keeps the control and drops the echo. */
-  .compact-title {
-    display: none;
-  }
 
 
   .legend-strip ul {

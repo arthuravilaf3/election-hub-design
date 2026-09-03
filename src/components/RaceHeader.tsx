@@ -100,20 +100,3 @@ export function SeatBar({ forecast, resultsMode, called }: SeatBarProps) {
     </div>
   );
 }
-
-/**
- * The pinned bar, once the real header scrolls under the nav.
- *
- * Redesign Sep 2026 — it carried the headline AND the race tabs, so a reader
- * at the map could switch races without scrolling back. The tabs are gone:
- * the RACE pill now floats over the map card, and this bar only exists while
- * that card is on screen, so the control is already in view. What is left is
- * the page's identity.
- */
-export function CompactHeader({ title }: { title: string }) {
-  return (
-    <div className="compact-header">
-      <p className="compact-title">{title}</p>
-    </div>
-  );
-}

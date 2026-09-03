@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DWNav } from './components/DWNav';
 import { PromoBar } from './components/PromoBar';
-import { RaceHeader, CompactHeader, PAGE_HEADLINE } from './components/RaceHeader';
+import { RaceHeader } from './components/RaceHeader';
 import { MapCard } from './components/MapCard';
 import { DevToolbar } from './components/DevToolbar';
 import { MobilePreview, IS_PREVIEW_FRAME } from './components/MobilePreview';
@@ -28,53 +28,6 @@ import type { Chamber } from './data/types';
 
 const POLL_CLOSING_INTERVAL_MS = 900;
 
-/**
- * Sticky chrome: only the compact title PINS (once the hero is out of view),
- * and it stays for the whole ride through the map section — it leaves when
- * the section's END (where the fixed race selector stops being fixed)
- * reaches the title's own band at the top and pushes it out. The previous
- * rule (hide the moment the dock un-sticks at the viewport BOTTOM) left no
- * scroll window at all on tall viewports — the title never appeared.
- * Nav never moves; promo bar scrolls normally.
- *
- * The hero thresholds carry hysteresis WIDER than the compact bar's own
- * height: showing it can shift layout/scroll clamping, which naive
- * thresholds read as opposite-direction scroll — an open/close oscillation.
- * The section-bottom check needs none: the overlay never changes document
- * height.
- */
-const CHROME_BOTTOM_PX = 156; // nav (64) + compact band (92: title + tabs)
-
-function useCompactVisible(sectionRef: React.RefObject<HTMLElement | null>) {
-  const [visible, setVisible] = useState(false);
-  const pastTitle = useRef(false);
-
-  useEffect(() => {
-    const onScroll = () => {
-      // The compact title takes over the moment the page title slides under
-      // the nav — measured off the element itself, not a fixed offset. No
-      // hysteresis needed: the overlay never changes document height.
-      const titleEl = document.querySelector('.race-title');
-      pastTitle.current = titleEl
-        ? titleEl.getBoundingClientRect().bottom < 64
-        : window.scrollY > 420;
-      const sectionBottom =
-        sectionRef.current?.getBoundingClientRect().bottom ?? Infinity;
-      setVisible(pastTitle.current && sectionBottom > CHROME_BOTTOM_PX);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    // Resize moves both innerHeight and the section bottom without a scroll.
-    window.addEventListener('resize', onScroll);
-    onScroll();
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-    };
-  }, [sectionRef]);
-
-  return visible;
-}
-
 export default function App() {
   const { state, dispatch } = useElectionData();
   const [devOpen, setDevOpen] = useState(false);
@@ -83,7 +36,6 @@ export default function App() {
   const [phase, setPhase] = useState<Phase>(initialPhase);
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
-  const pastTitle = useCompactVisible(mapSectionRef);
   useMessageApi(state, dispatch);
 
   const races = activeRaces(state);
@@ -291,22 +243,12 @@ export default function App() {
 
   return (
     <>
-      {/* Sticky chrome: nav always visible; promo + compact header collapse
-          on scroll-down and return on scroll-up (height animates so content
-          reflows smoothly underneath). */}
-      {/* <header> at top level = banner landmark, so the promo bar and
-          compact header live inside a landmark for AT users. */}
+      {/* The nav, and only the nav. The compact title that used to pin here
+          on scroll is gone (design decision Sep 2026): with a STATIC headline
+          there was nothing to keep in view, and the race selector it also
+          carried now lives on the map card. */}
       <header className="site-chrome">
         <DWNav />
-        {/* Absolutely positioned under the nav (out of document flow):
-            showing/hiding the compact title must never change page height —
-            height changes get clamp-compensated by the browser and read back
-            as opposite-direction scroll (oscillation). */}
-        <div className="chrome-overlays">
-          <div className={`chrome-collapse chrome-collapse--tall${!pastTitle ? ' is-collapsed' : ''}`}>
-            <CompactHeader title={PAGE_HEADLINE} />
-          </div>
-        </div>
       </header>
 
       <div

@@ -620,6 +620,27 @@ export function ElectionMap({
                   {liftId === selectedId && (
                     <path d={liftShape.d} className="selection-outline" />
                   )}
+                  {/* The abbreviation rides along. The lift is a COPY painted
+                      last, so without this it covers the very label of the
+                      state being hovered — the one code the reader is most
+                      likely to be looking for. */}
+                  {(() => {
+                    const box = labelBoxes[liftShape.id];
+                    if (!box || box.w < 30 || box.h < 22) return null;
+                    const nudge = LABEL_NUDGE[liftShape.id] ?? { dx: 0, dy: 0 };
+                    return (
+                      <text
+                        x={box.x + box.w / 2 + nudge.dx}
+                        y={box.y + box.h / 2 + nudge.dy}
+                        className={`state-label state-label--${labelToneFor(
+                          liftRace,
+                          srcFor(liftShape.id)
+                        )}`}
+                      >
+                        {liftShape.id}
+                      </text>
+                    );
+                  })()}
                 </g>
               )}
             </g>
