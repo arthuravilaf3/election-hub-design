@@ -232,13 +232,46 @@ await page.keyboard.press('Escape');
 await page.waitForTimeout(700);
 check('Escape clears zoom', await page.evaluate(() => !document.querySelector('.drawer')), true);
 
-// wheel outside the drawer leaves the zoom
+// ---- scrolling: the page behind keeps scrolling, the panel scrolls itself
 await page.click('.state-shape[data-state=TX]');
-await page.waitForTimeout(800);
+await page.waitForTimeout(900);
+
+// Over the map: the page scrolls, and the panel stays open. It used to close.
+const yBefore = await page.evaluate(() => window.scrollY);
 await page.mouse.move(300, 500);
-await page.mouse.wheel(0, 120);
-await page.waitForTimeout(700);
-check('wheel outside drawer clears zoom', await page.evaluate(() => !document.querySelector('.drawer')), true);
+await page.mouse.wheel(0, 200);
+await page.waitForTimeout(500);
+const overMap = await page.evaluate(() => ({
+  scrolled: window.scrollY,
+  stillOpen: !!document.querySelector('.drawer'),
+  locked: document.body.classList.contains('is-scroll-locked'),
+}));
+check('page is not frozen while the panel is open', overMap.locked, false);
+check('wheel over the map scrolls the page', overMap.scrolled > yBefore, true);
+check('wheel over the map keeps the panel open', overMap.stillOpen, true);
+
+// Over the panel: the panel scrolls and the page does NOT (no scroll chaining
+// — that is what overscroll-behavior: contain on .drawer-scroll buys).
+await page.evaluate(() => document.querySelector('.drawer').scrollIntoView({ block: 'center' }));
+await page.waitForTimeout(400);
+const before = await page.evaluate(() => ({
+  page: window.scrollY,
+  panel: document.querySelector('.drawer-scroll').scrollTop,
+}));
+const db = await page.locator('.drawer-scroll').boundingBox();
+await page.mouse.move(db.x + db.width / 2, db.y + db.height / 2);
+await page.mouse.wheel(0, 200);
+await page.waitForTimeout(500);
+const overPanel = await page.evaluate(() => ({
+  page: window.scrollY,
+  panel: document.querySelector('.drawer-scroll')?.scrollTop,
+  stillOpen: !!document.querySelector('.drawer'),
+}));
+check('wheel over the panel scrolls the panel', overPanel.panel > before.panel, true);
+check('wheel over the panel does not scroll the page', overPanel.page, before.page);
+check('wheel over the panel keeps it open', overPanel.stillOpen, true);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(600);
 
 // ---- Map selectors: a listbox with a select's keyboard contract ---------
 const raceBefore = await page.evaluate(() => document.querySelector('.pill-value').textContent.trim());

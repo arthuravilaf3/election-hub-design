@@ -15,7 +15,6 @@ import { RacePanel } from './components/RacePanel';
 import { useElectionData } from './state/useElectionData';
 import { activeRaces } from './state/electionReducer';
 import { emitMapEvent, useMessageApi } from './hooks/useMessageApi';
-import { useScrollLock } from './hooks/useScrollLock';
 import { isLive } from './data/encoding';
 import { track } from './data/analytics';
 import { picksForChamber } from './data/trust';
@@ -102,62 +101,29 @@ export default function App() {
     track('trust_pick_reset', { state: stateId, race: state.chamber, source: previous ?? null });
   };
 
-  /* Drawer open = modal: the page behind stops scrolling (the drawer's own
-     content still does), so reading the panel is never disturbed.
-     Freezing is only safe once the panel is actually ON SCREEN — it is
-     anchored inside the map card, so opening it while the card is half
-     scrolled past would strand its header above the viewport with no way to
-     scroll up to it. So: bring the card into view first, then freeze — and
-     if the panel still can't fit (short window), leave scrolling alone. */
-  const [modalReady, setModalReady] = useState(false);
-  useScrollLock(!!zoomedRace && modalReady);
+  /* The page keeps scrolling behind the panel (design decision Sep 2026).
+     Opening a state still brings the card into view — the panel is anchored
+     inside it, so opening while the card is half past the viewport would
+     strand its header above the fold — but nothing freezes afterwards.
+     Scrolling over the panel scrolls the panel (overscroll-behavior: contain
+     on .drawer-scroll keeps it from chaining to the page); scrolling
+     anywhere else scrolls the page, as it would with no panel open.
+
+     REVIEW: the panel still carries role="dialog" aria-modal="true" and the
+     focus trap in RacePanel. With the page reachable behind it, that pairing
+     is no longer coherent — a non-modal panel should not trap Tab. Parked
+     deliberately, pending a call on the panel's semantics; useScrollLock is
+     left in the tree for the same reason. */
   useEffect(() => {
-    if (!state.zoomedId) {
-      setModalReady(false);
-      return;
-    }
+    if (!state.zoomedId) return;
     const NAV_H = 64;
-    const fitsInView = (el: Element | null) => {
-      if (!el) return false;
-      const r = el.getBoundingClientRect();
-      return r.top >= NAV_H - 1 && r.bottom <= window.innerHeight + 1;
-    };
-    const drawer = () => document.querySelector('.drawer');
-    if (fitsInView(drawer())) {
-      setModalReady(true);
-      return;
-    }
     const card = document.querySelector('.map-card');
     if (!card || card.getBoundingClientRect().height > window.innerHeight - NAV_H) return;
+    const r = card.getBoundingClientRect();
+    if (r.top >= NAV_H - 1 && r.bottom <= window.innerHeight + 1) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     card.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-    const t = window.setTimeout(() => setModalReady(fitsInView(drawer())), reduced ? 0 : 560);
-    return () => window.clearTimeout(t);
   }, [state.zoomedId]);
-  /* A scroll gesture is never trapped: while the panel holds the page still,
-     wheeling or dragging ANYWHERE OUTSIDE it closes the panel and hands the
-     scroll back. Inside the panel the gesture belongs to its own content.
-     Without this, a click on a state froze the page until the reader found
-     the close button — and only on viewports tall enough for the lock to
-     engage, which made it look like a bug in the map. */
-  useEffect(() => {
-    // Not gated on the lock: on short viewports the page never freezes, and
-    // the gesture should still mean the same thing everywhere.
-    if (!zoomedRace) return;
-    const NOISE = 8; // trackpad jitter is not scroll intent
-    const release = (e: Event) => {
-      if ((e.target as Element | null)?.closest?.('.drawer')) return;
-      if (e.type === 'wheel' && Math.abs((e as WheelEvent).deltaY) < NOISE) return;
-      dispatch({ type: 'CLEAR_ZOOM' });
-    };
-    window.addEventListener('wheel', release, { passive: true });
-    window.addEventListener('touchmove', release, { passive: true });
-    return () => {
-      window.removeEventListener('wheel', release);
-      window.removeEventListener('touchmove', release);
-    };
-  }, [zoomedRace, dispatch]);
-
   const zoomedName = state.zoomedId
     ? STATE_SHAPES.find((s) => s.id === state.zoomedId)?.name ?? state.zoomedId
     : '';
