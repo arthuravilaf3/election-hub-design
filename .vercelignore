@@ -1,9 +1,0 @@
-# Vercel builds from source and installs its own dependencies — uploading
-# these only makes the deploy slower (node_modules alone is ~151MB, which was
-# enough to stall the upload before the build ever started).
-node_modules
-dist
-.git
-
-# Dev-only verification harnesses; not part of the deliverable.
-scripts
