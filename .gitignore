@@ -3,3 +3,6 @@ dist
 *.local
 .DS_Store
 .vercel
+
+# Single-file build output (regenerate with `npm run pack`).
+election-hub-prototype.html
