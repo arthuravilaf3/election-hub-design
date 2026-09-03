@@ -72,9 +72,18 @@ export function forecastFor(
   }
 
   const current = CURRENT_SEATS[chamber];
-  // Byline time only — the date lives in the drawer's per-read freshness.
+  /* Full date AND time (redesign Sep 2026). The line under the title is the
+     only freshness the top of the page carries now, so "1:00PM" alone would
+     leave the reader guessing which day. */
   const updated = newest
-    ? new Date(newest).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })
+    ? (() => {
+        const d = new Date(newest);
+        const date = d.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        const time = d
+          .toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })
+          .replace(/\s/g, '');
+        return `${date} · ${time}`;
+      })()
     : '';
 
   return {

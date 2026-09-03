@@ -9,6 +9,20 @@ import { chromium } from 'playwright';
 const BASE = process.env.HUB_URL ?? 'http://localhost:5174/?phase=4&trust=1';
 const SHOT = (name) => `/tmp/usmap-${name}.png`;
 
+/* Redesign Sep 2026: the header's race tabs and the three-up source segments
+   are gone — both are pill dropdowns over the map now. */
+const PILL = { race: 0, source: 1 };
+async function pick(page, which, optionId) {
+  // Close whatever is open first: clicking a pill TOGGLES it, so a menu left
+  // open by an earlier step would make this click close it instead.
+  await page.evaluate(() => document.querySelector('.pill-menu') && document.body.click());
+  await page.locator('.map-selectors .pill').nth(PILL[which]).click();
+  await page.locator(`.pill-option[data-option="${optionId}"]`).click();
+  await page.waitForTimeout(120);
+}
+const pillValues = () => [...document.querySelectorAll('.pill-value')].map((e) => e.textContent.trim());
+
+
 const browser = await chromium.launch({ channel: 'chrome' });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 
@@ -25,8 +39,8 @@ console.log(
   'defaults:',
   JSON.stringify(
     await page.evaluate(() => ({
-      chamber: document.querySelector('.race-tabs--header .race-tab[aria-selected="true"]')?.dataset.chamber,
-      source: document.querySelector('.seg.is-active .seg-brand')?.textContent.trim(),
+      chamber: [...document.querySelectorAll('.pill-value')][0]?.textContent.trim(),
+      source: [...document.querySelectorAll('.pill-value')][1]?.textContent.trim(),
       statement: document.querySelector('.race-title')?.textContent,
       byline: document.querySelector('.race-byline')?.textContent,
       stateLabels: document.querySelectorAll('.state-label').length,
@@ -52,18 +66,15 @@ const down = await page.evaluate(() => ({
   compactTitle: document.querySelector('.compact-title')?.textContent.slice(0, 24),
   // The pinned bar carries the race tabs too, so the reader can switch
   // without scrolling back up.
+  // The compact bar lost its tabs: the RACE pill is on the card, which is on
+  // screen for exactly as long as this bar is.
   compactTabs: document.querySelectorAll('.race-tabs--compact .race-tab').length,
-  compactTabActive: document.querySelector('.race-tabs--compact .race-tab.is-active')?.textContent,
   // Solid page ground, the same fill the nav carries — the two read as one
   // piece of chrome, and the tabs sit under the title.
   compactMatchesNav:
     getComputedStyle(document.querySelector('.compact-header')).backgroundColor ===
     getComputedStyle(document.querySelector('.dw-nav-bar')).backgroundColor,
-  compactTabsUnderTitle: (() => {
-    const t = document.querySelector('.compact-title').getBoundingClientRect();
-    const tabs = document.querySelector('.race-tabs--compact').getBoundingClientRect();
-    return tabs.top >= t.bottom - 1;
-  })(),
+
   navVisible: document.querySelector('.dw-nav-bar').getBoundingClientRect().top === 0,
 }));
 console.log('scroll down:', JSON.stringify(down), '(promo scrolled away; compact pinned over the map section)');
@@ -93,7 +104,7 @@ console.log(
       const card = document.querySelector('.map-card');
       const sec = document.querySelector('.map-section');
       // Redesign order: title first, then the tabs, then the bar.
-      const order = [...sec.querySelectorAll('.race-title, .race-tabs--header, .seat-bar, .map-card')].map(
+      const order = [...sec.querySelectorAll('.race-title, .seat-bar, .map-card')].map(
         (e) => e.className.split(' ')[0]
       );
       return {
@@ -108,7 +119,8 @@ console.log(
         labelsHidden: document.querySelector('.seat-bar-labels')?.getAttribute('aria-hidden'),
         barAlt: document.querySelector('.seat-bar-track')?.getAttribute('aria-label'),
         barOutsideCard: !card.contains(document.querySelector('.seat-bar')),
-        segInsideCard: card.contains(document.querySelector('.seg-control')),
+        selectorsInsideCard: card.contains(document.querySelector('.map-selectors')),
+        pills: [...document.querySelectorAll('.pill-label')].map((e) => e.textContent.trim()),
         // The legend left the card in the redesign.
         legendOutsideCard: !card.contains(document.querySelector('.legend-strip')),
         staticTitleGone: !document.querySelector('.page-title, .page-dek'),
@@ -119,16 +131,16 @@ console.log(
 
 // 4. Source picker: compact dropdown in the card header; selection persists
 // across race switches; race switch updates the statement + staggers the map.
-await page.locator('.seg[data-source="kalshi"]').click();
+await pick(page, 'source', 'kalshi');
 await page.waitForTimeout(400);
 await page.screenshot({ path: SHOT('3-source-segments') });
 console.log(
   'source switched to:',
-  await page.locator('.seg.is-active .seg-brand').textContent().then((t) => t.trim())
+  await page.locator('.pill-value').nth(1).textContent().then((t) => t.trim())
 );
 // Race switch: statement + byline + bar crossfade together, stagger wave
 // runs on the map, source survives.
-await page.locator('.race-tabs--header .race-tab[data-chamber="senate"]').click();
+await pick(page, 'race', 'senate');
 await page.waitForTimeout(80);
 const midSwitch = await page.evaluate(() => ({
   staggerDelay: [...document.querySelectorAll('.state-shape')].filter(
@@ -140,7 +152,7 @@ const postSwitch = await page.evaluate(() => ({
   statement: document.querySelector('.race-title')?.textContent,
   byline: document.querySelector('.race-byline')?.textContent,
   seats: [...document.querySelectorAll('.seat-bar-label')].map((e) => e.textContent.trim()).join(' / '),
-  source: document.querySelector('.seg.is-active .seg-brand')?.textContent.trim(),
+  source: [...document.querySelectorAll('.pill-value')][1]?.textContent.trim(),
   syncWindow: {
     statement: getComputedStyle(document.querySelector('.race-statement')).animationDuration,
     bar: getComputedStyle(document.querySelector('.seat-bar-dem')).transitionDuration,
@@ -159,9 +171,9 @@ console.log(
   '| durations',
   JSON.stringify(postSwitch.syncWindow)
 );
-await page.locator('.race-tabs--header .race-tab[data-chamber="house"]').click();
+await pick(page, 'race', 'house');
 await page.waitForTimeout(600);
-await page.locator('.seg[data-source="dw-poll-avg"]').click();
+await pick(page, 'source', 'dw-poll-avg');
 await page.waitForTimeout(400);
 
 // 5. Interaction layer: crisp map (no transformed ancestors), lift, race tabs
@@ -185,31 +197,34 @@ const lift = await page.evaluate(() => ({
     document.querySelector('.map-camera')?.lastElementChild,
 }));
 console.log('lift:', JSON.stringify(lift));
+await page.locator('.map-selectors .pill').nth(0).click();
 console.log(
-  'race tabs (header, tablist semantics):',
+  'map selectors (listbox semantics):',
   JSON.stringify(
     await page.evaluate(() => {
-      const list = document.querySelector('.race-tabs--header');
-      const active = list.querySelector('.race-tab.is-active');
-      const s = getComputedStyle(active);
+      const btn = document.querySelectorAll('.map-selectors .pill')[0];
+      const list = document.querySelector('.pill-menu');
       return {
-        role: list.getAttribute('role'),
-        tabs: [...list.querySelectorAll('.race-tab')].map(
-          (t) => `${t.textContent}:${t.getAttribute('aria-selected')}`
+        haspopup: btn.getAttribute('aria-haspopup'),
+        expanded: btn.getAttribute('aria-expanded'),
+        listRole: list?.getAttribute('role'),
+        options: [...(list?.querySelectorAll('[role=option]') ?? [])].map(
+          (o) => `${o.querySelector('.pill-option-label').textContent}:${o.getAttribute('aria-selected')}`
         ),
-        controls: active.getAttribute('aria-controls'),
-        panel: document.querySelector('#map-region')?.getAttribute('role'),
-        underline: `${s.borderBottomWidth} ${s.borderBottomColor}`,
+        // The old tabs pointed at a tabpanel; nothing may still claim to.
+        danglingTabpanel: document.querySelector('#map-region')?.getAttribute('role'),
         floatingDock: !!document.querySelector('.dock-row, .dock-pill, .dock-option'),
       };
     })
   ),
-  '(floatingDock must be false)'
+  '(floatingDock must be false, danglingTabpanel must be null)'
 );
+await page.keyboard.press('Escape');
+await page.waitForTimeout(150);
 
 
 // 6. Senate drawer: zoom + candidate bars grow from 0 + tabs
-await page.locator('.race-tabs--header .race-tab[data-chamber="senate"]').click();
+await pick(page, 'race', 'senate');
 await page.waitForTimeout(500);
 await page.locator('[data-state="GA"]').click();
 await page.waitForTimeout(150);
@@ -251,7 +266,7 @@ console.log(
   'zoomed frame:',
   JSON.stringify(
     await page.evaluate(() => ({
-      sourceControlHidden: getComputedStyle(document.querySelector('.seg-control')).opacity === '0',
+      sourceControlHidden: getComputedStyle(document.querySelector('.map-selectors')).opacity === '0',
       // The chamber tabs are GONE from the panel — the chamber is a label in
       // the breadcrumb now, and this row belongs to the source.
       chamberTabsInPanel: document.querySelectorAll('.drawer .race-tab').length,
@@ -277,7 +292,7 @@ console.log(
       meta: document.querySelector('.drawer-meta')?.textContent.trim(),
       // The map keeps the GLOBAL source — this row never repaints it.
       mapUnchanged: document.querySelector('.state-shape[data-state="TX"]')?.style.fill === before,
-      globalSegStillActive: document.querySelector('.seg.is-active .seg-brand')?.textContent.trim(),
+      globalSegStillActive: [...document.querySelectorAll('.pill-value')][1]?.textContent.trim(),
     }), beforePick)
   )
 );
@@ -381,7 +396,7 @@ await page.keyboard.press('Escape');
 await page.waitForTimeout(400);
 
 // 7. House drawer: SAME layout as the others + a Districts section.
-await page.locator('.race-tabs--header .race-tab[data-chamber="house"]').click();
+await pick(page, 'race', 'house');
 await page.waitForTimeout(400);
 await page.locator('[data-state="PA"]').click();
 await page.waitForTimeout(900);
@@ -422,7 +437,7 @@ await page.keyboard.press('Escape');
 await page.waitForTimeout(700);
 
 // 8. Stale feed: freshness surfaces per-read (tooltip carries ⚠)
-await page.locator('.race-tabs--header .race-tab[data-chamber="senate"]').click();
+await pick(page, 'race', 'senate');
 await page.getByRole('button', { name: 'DEV' }).click();
 await page.waitForTimeout(300);
 await page.getByRole('button', { name: 'Simulate stale feed' }).click();
@@ -441,7 +456,7 @@ await page.getByRole('button', { name: 'Reset' }).click();
 await page.waitForTimeout(400);
 
 // 9. Cutover to results — sources disabled, hardening intact
-await page.locator('.race-tabs--header .race-tab[data-chamber="senate"]').click();
+await pick(page, 'race', 'senate');
 await page.getByRole('button', { name: 'Results', exact: true }).click();
 await page.waitForTimeout(1600);
 console.log(
@@ -494,10 +509,11 @@ await page.waitForTimeout(400);
 await page.evaluate(() => window.scrollTo({ top: 300 }));
 await page.waitForTimeout(300);
 const mid = await page.evaluate(() => {
-  const tabs = document.querySelector('.race-tabs--header').getBoundingClientRect();
+  const sel = document.querySelector('.map-selectors').getBoundingClientRect();
   const card = document.querySelector('.map-card').getBoundingClientRect();
   return {
-    tabsAboveCard: tabs.bottom <= card.top + 1,
+    // The selectors live INSIDE the card now, not above it.
+    selectorsInCard: sel.top >= card.top - 1 && sel.bottom <= card.bottom + 1,
     fixedControls: [...document.querySelectorAll('.map-section *')].filter((el) => {
       const p = getComputedStyle(el).position;
       return p === 'fixed' || p === 'sticky';
@@ -510,15 +526,15 @@ await page.evaluate(() => {
 });
 await page.waitForTimeout(400);
 const past = await page.evaluate(() => {
-  const tabs = document.querySelector('.race-tabs--header').getBoundingClientRect();
+  const sel = document.querySelector('.map-selectors').getBoundingClientRect();
   const feed = document.querySelector('.feed-section').getBoundingClientRect();
   return {
-    tabsScrolledAway: tabs.bottom <= 0,
+    selectorsScrolledAway: sel.bottom <= 0,
     feedVisible: feed.top < window.innerHeight,
-    overlap: tabs.bottom > 0 && tabs.bottom > feed.top,
+    overlap: sel.bottom > 0 && sel.bottom > feed.top,
   };
 });
-console.log('no floating chrome: mid-section', JSON.stringify(mid), '| past section', JSON.stringify(past), '(tabsAboveCard true, fixedControls 0, overlap false)');
+console.log('no floating chrome: mid-section', JSON.stringify(mid), '| past section', JSON.stringify(past), '(selectorsInCard true, fixedControls 0, overlap false)');
 
 // 12b. Delivery phases: each one shows only what it carries. Phase 1 is the
 // MVP — no Follow, no zoom depth, no election night, no race tags, no picker.

@@ -1,81 +1,47 @@
 /**
- * The page header, above the map card: the headline, the countdown and the
- * byline, then the race tabs, then the seat bar.
+ * The page header, above the map card: the countdown, the headline, the
+ * freshness line, then the seat bar.
  *
- * Redesign Aug 2026 — the comp puts the title FIRST, at 48px, with the
- * countdown demoted from a brand pill to a quiet subtitle underneath. The
- * tabs move below that block. Only the source selector stays inside the map
- * card; everything that reads as page-level copy lives up here.
+ * Redesign Sep 2026 — the headline is STATIC page copy now. It used to be the
+ * forecast read ("Democrats have a 61% chance of winning the House"), driven
+ * by the race tabs that sat here; both are gone. The race is chosen from the
+ * RACE pill over the map instead, and the forecast sentence retires with the
+ * tabs that drove it.
  *
- * Heading semantics: the visible headline changes on every interaction, so a
- * stable, visually-hidden h1 carries the document's identity (and matches the
- * browser tab), while the headline itself is an h2 at page-title scale.
+ * Heading semantics: with a stable headline, the visible line IS the h1 —
+ * the old arrangement (hidden h1 + h2 at title scale) existed only because
+ * the visible one changed on every interaction.
  */
 import { Countdown } from './Countdown';
-import { RaceTabs } from './RaceTabs';
 import type { ForecastData } from '../data/hero';
-import type { Chamber } from '../data/types';
 
-/** Document-level title, mirrored in <title>. */
+/** Document-level title, mirrored in <title>. Deliberately shorter than the
+ *  visible headline: a browser tab has no room for the full sentence. */
 export const PAGE_TITLE = '2026 Midterms';
 
-/** Splits the headline so the figure it is about can carry the bold weight
- *  (DS mock: statement in regular, the number in bold). */
-function Statement({ text, emphasis }: { text: string; emphasis?: string }) {
-  const at = emphasis ? text.indexOf(emphasis) : -1;
-  if (at < 0) return <>{text}</>;
-  return (
-    <>
-      {text.slice(0, at)}
-      <strong>{emphasis}</strong>
-      {text.slice(at + emphasis!.length)}
-    </>
-  );
-}
+/** The visible headline. */
+export const PAGE_HEADLINE = '2026 Midterms Elections and Predictions.';
 
 interface RaceHeaderProps {
-  chamber: Chamber;
-  statement: string;
   byline: string;
   forecast: ForecastData;
   resultsMode: boolean;
   /** Races already called — the seat bar's tail in results mode. */
   called: number;
-  onChamber: (chamber: Chamber) => void;
 }
 
-export function RaceHeader({
-  chamber,
-  statement,
-  byline,
-  forecast,
-  resultsMode,
-  called,
-  onChamber,
-}: RaceHeaderProps) {
+export function RaceHeader({ byline, forecast, resultsMode, called }: RaceHeaderProps) {
   return (
     <header className="race-header">
-      <h1 className="visually-hidden">{PAGE_TITLE}</h1>
-
-      {/* Headline, countdown and byline are ONE block: they are recalculated
-          together, so they crossfade together (the key remounts them). The
-          countdown rides along — its text is identical across a race switch,
-          so the crossfade is invisible on it. */}
-      <div className="race-statement" key={`${chamber}:${byline}`}>
-        <h2 className="race-title">
-          <Statement text={statement} emphasis={forecast.emphasis} />
-        </h2>
+      {/* Countdown above the headline, freshness below it. Only the freshness
+          line moves, so it alone is keyed for the crossfade. */}
+      <div className="race-statement">
         <Countdown />
-        <p className="race-byline">{byline}</p>
+        <h1 className="race-title">{PAGE_HEADLINE}</h1>
+        <p className="race-byline" key={byline}>
+          {byline}
+        </p>
       </div>
-
-      <RaceTabs
-        chamber={chamber}
-        controls="map-region"
-        label="Race"
-        className="race-tabs--header"
-        onChamber={onChamber}
-      />
 
       <SeatBar forecast={forecast} resultsMode={resultsMode} called={called} />
     </header>
@@ -136,34 +102,18 @@ export function SeatBar({ forecast, resultsMode, called }: SeatBarProps) {
 }
 
 /**
- * The pinned bar, once the real header scrolls under the nav: the headline
- * AND the race tabs. The tabs come along because the reader who has scrolled
- * to the map still wants to switch races without scrolling back up — and the
- * whole bar leaves together when the map section ends.
+ * The pinned bar, once the real header scrolls under the nav.
  *
- * Its tabs carry their own id prefix: two tablists for the same state must
- * not share element ids.
+ * Redesign Sep 2026 — it carried the headline AND the race tabs, so a reader
+ * at the map could switch races without scrolling back. The tabs are gone:
+ * the RACE pill now floats over the map card, and this bar only exists while
+ * that card is on screen, so the control is already in view. What is left is
+ * the page's identity.
  */
-export function CompactHeader({
-  title,
-  chamber,
-  onChamber,
-}: {
-  title: string;
-  chamber: Chamber;
-  onChamber: (chamber: Chamber) => void;
-}) {
+export function CompactHeader({ title }: { title: string }) {
   return (
     <div className="compact-header">
       <p className="compact-title">{title}</p>
-      <RaceTabs
-        chamber={chamber}
-        controls="map-region"
-        idPrefix="compact-race-tab"
-        label="Race"
-        className="race-tabs--compact"
-        onChamber={onChamber}
-      />
     </div>
   );
 }

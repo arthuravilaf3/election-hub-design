@@ -11,9 +11,10 @@
  */
 import { ElectionMap } from './ElectionMap';
 import { Legend } from './Legend';
-import { SourceSegments } from './SourceSegments';
+import { MapSelectors } from './MapSelectors';
 import type { Chamber, StateRace } from '../data/types';
 import { CAMERA_MS, DRAWER_INSET, DRAWER_W } from '../data/layout';
+import { CHAMBER_LABEL } from '../data/summary';
 
 interface MapCardProps {
   races: Record<string, StateRace>;
@@ -31,6 +32,7 @@ interface MapCardProps {
   showCounties?: boolean;
   /** The state detail panel, injected so the card owns no app state. */
   panel?: React.ReactNode;
+  onChamber: (chamber: Chamber) => void;
   onSource: (sourceId: string) => void;
   onSelect: (stateId: string) => void;
   onZoom: (stateId: string) => void;
@@ -50,6 +52,7 @@ export function MapCard({
   resultsSource,
   showCounties = true,
   panel,
+  onChamber,
   onSource,
   onSelect,
   onZoom,
@@ -69,21 +72,22 @@ export function MapCard({
           } as React.CSSProperties
         }
       >
-      {/* Whose data — over the map, because the map is what it changes. It
-          steps aside while a state is zoomed: that frame belongs to the
-          state and its panel. */}
-      <SourceSegments
+      {/* Which race and whose data — over the map, because the map is what
+          they change. They step aside while a state is zoomed: that frame
+          belongs to the state and its panel. */}
+      <MapSelectors
+        chamber={chamber}
         sourceId={sourceId}
         resultsMode={resultsMode}
         resultsSource={resultsSource}
+        onChamber={onChamber}
         onSource={onSource}
       />
 
       <div
         className="map-and-panel"
         id="map-region"
-        role="tabpanel"
-        aria-labelledby={`race-tab-${chamber}`}
+        aria-label={`United States ${CHAMBER_LABEL[chamber]} map`}
       >
         <ElectionMap
           races={races}

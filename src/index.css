@@ -898,17 +898,17 @@ body.is-scroll-locked .promo-bar {
   display: grid;
   justify-items: center;
   text-align: center;
-  row-gap: 48px;
+  row-gap: 40px;
   padding: 0 clamp(0px, 4vw, 55px);
 }
 
-/* Redesign Aug 2026: the countdown lost its brand pill and became the
-   title's subtitle — quiet, directly under the headline it dates. */
+/* Redesign Sep 2026: the countdown lost its brand pill and moved ABOVE the
+   headline — the clock frames the page, it does not annotate the title. */
 .countdown {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin: 16px 0 0;
+  margin: 0 0 16px;
   color: var(--ink-subtlest);
   font-size: 16px;
   line-height: 1;
@@ -920,14 +920,6 @@ body.is-scroll-locked .promo-bar {
 
 .countdown svg {
   flex: none;
-}
-
-/* Shrink-to-fit so the tablist rule spans the tabs, not the page. Written
-   with both classes: the base .race-tabs block is declared later. */
-.race-tabs.race-tabs--header {
-  display: inline-flex;
-  justify-content: center;
-  gap: 24px;
 }
 
 .race-statement {
@@ -950,30 +942,23 @@ body.is-scroll-locked .promo-bar {
   }
 }
 
-/* Page-title scale: this line IS the page title now. Regular weight with
-   the figure it is about set in bold — the comp's own treatment. The comp
-   caps the measure at 573px and lets the line wrap to two or three lines;
-   that wrap IS the design, not an overflow. */
+/* Page-title scale. Static copy now, so it carries the bold weight whole —
+   there is no figure inside it to pick out any more. */
 .race-title {
-  margin: 0 auto;
-  font-size: 48px;
-  line-height: 1.2;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  max-width: 573px;
-}
-
-.race-title strong {
+  margin: 0;
+  font-size: 40px;
+  line-height: 1.15;
   font-weight: 700;
+  letter-spacing: -0.015em;
+  max-width: 22ch;
+  margin-inline: auto;
 }
 
-/* Kept even though the comp omits it: every number on this page carries its
-   source and its freshness (hub tenet), and the seat bar right below has no
-   other attribution. */
+/* Freshness only — the source is named by the SOURCE pill over the map. */
 .race-byline {
-  margin: 12px 0 0;
-  font-size: 13px;
-  color: var(--ink-soft);
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--ink-subtlest);
 }
 
 /* The pinned bar: headline on top, race tabs under it, so the reader can
@@ -1001,20 +986,6 @@ body.is-scroll-locked .promo-bar {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 90vw;
-}
-
-/* Same tabs, smaller and rule-less: the band's own bottom edge separates it,
-   a second hairline right above it would read as a double line. */
-.race-tabs.race-tabs--compact {
-  display: inline-flex;
-  flex: none;
-  gap: 18px;
-  border-bottom: 0;
-}
-
-.race-tabs--compact .race-tab {
-  font-size: 13px;
-  padding: 4px 2px 6px;
 }
 
 /* ---------- Live row ---------- */
@@ -1421,42 +1392,6 @@ body.is-scroll-locked .promo-bar {
   border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
-/* THE race tabs — one definition, used by the map header and the state
-   panel (see RaceTabs.tsx). Underline is the active channel; weight backs it
-   up so the state does not rest on color alone. */
-.race-tabs {
-  display: flex;
-  gap: 20px;
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-}
-
-.race-tab {
-  font: inherit;
-  font-size: 14px;
-  padding: 8px 2px 10px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--ink-soft);
-  cursor: pointer;
-  transition: color 150ms ease-out, border-color 150ms ease-out;
-}
-
-.race-tab:hover {
-  color: var(--ink);
-}
-
-.race-tab.is-active {
-  color: var(--ink);
-  font-weight: 600;
-  border-bottom-color: var(--ink);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .race-tab {
-    transition: none;
-  }
-}
 
 .drawer-sec {
   margin: 0;
@@ -1859,16 +1794,6 @@ body.is-scroll-locked .promo-bar {
   background: var(--surface);
 }
 
-/* Chamber tabs inside the drawer: disabled = state has no race there. */
-.race-tab:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.race-tab:disabled:hover {
-  color: var(--ink-soft);
-}
-
 /* Follow: primary until followed, then secondary. */
 .btn-follow {
   font: inherit;
@@ -1920,34 +1845,6 @@ body.is-scroll-locked .promo-bar {
   margin: 0;
   font-size: 12px;
   color: var(--ink-soft);
-}
-
-/* Brand wordmarks: the SVG is a MASK, painted with currentColor — the
-   asset's own fills never show, so the "white" is really var(--ink) and
-   follows the UI tokens. Widths keep each file's aspect ratio at 14px. */
-.source-logo {
-  display: inline-block;
-  height: 14px;
-  background: currentColor;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  vertical-align: -2px;
-}
-
-.source-logo--polymarket {
-  width: 76px;
-  -webkit-mask-image: url('/logos/polymarket.svg');
-  mask-image: url('/logos/polymarket.svg');
-}
-
-.source-logo--kalshi {
-  width: 55px;
-  -webkit-mask-image: url('/logos/kalshi.svg');
-  mask-image: url('/logos/kalshi.svg');
 }
 
 /* The picker's menu: brand on the left, kind disclaimer on the right. */
@@ -3361,12 +3258,6 @@ body.is-scroll-locked .promo-bar {
   background: var(--surface-2);
 }
 
-/* Brand without a vector yet: the label dressed as a wordmark. */
-.source-wordmark {
-  font-weight: 800;
-  letter-spacing: 0.05em;
-}
-
 /* Internal search inside dropdown menus (state filter). */
 .menu-search {
   font: inherit;
@@ -3563,9 +3454,6 @@ body.is-scroll-locked .promo-bar {
     display: none;
   }
 
-  .race-tabs--compact .race-tab {
-    font-size: 14px;
-  }
 
   .legend-strip ul {
     gap: 6px 12px;
@@ -3587,37 +3475,56 @@ body.is-scroll-locked .promo-bar {
     padding: 10px 14px 16px;
   }
 
-  .race-tabs--header {
-    width: 100%;
-    gap: 16px;
-  }
 
   /* The three-up row is too wide for a phone. Keep the two blocs on the
      ends where the bar puts them and drop the contested middle to its own
      centered line, rather than letting it wrap somewhere arbitrary. */
-  .seat-bar-labels {
+  /* Descendant selectors on purpose: the base seat-bar block is declared
+     LATER in this file, so a bare .seat-bar-labels here would lose the
+     cascade on equal specificity. */
+  .seat-bar .seat-bar-labels {
     display: grid;
     grid-template-columns: 1fr 1fr;
     row-gap: 4px;
   }
 
-  .seat-bar-label {
+  .seat-bar .seat-bar-label {
     font-size: 13px;
   }
 
-  .seat-bar-label:nth-child(1) {
+  .seat-bar .seat-bar-label:nth-child(1) {
     order: 1;
   }
 
-  .seat-bar-label:nth-child(3) {
+  .seat-bar .seat-bar-label:nth-child(3) {
     order: 2;
     text-align: right;
   }
 
-  .seat-bar-label:nth-child(2) {
+  .seat-bar .seat-bar-label:nth-child(2) {
     order: 3;
     grid-column: 1 / -1;
     text-align: center;
+  }
+
+  /* Two 168px pills plus their insets do not fit a phone card: they drop out
+     of the overlay and stack above the map, in normal flow. */
+  .map-card .map-selectors {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 12px 12px 0;
+  }
+
+  .map-card .pill {
+    min-width: 0;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .map-card .pill-value {
+    font-size: 16px;
   }
 
   /* Drawer -> bottom sheet: fixed over the page, content still scrolls
@@ -3970,152 +3877,158 @@ body.is-scroll-locked .promo-bar {
   }
 }
 
-/* ---------- Source segments (inside the map area) ---------- */
+/* ---------- Map selectors (RACE + SOURCE pills, over the map) ---------- */
 
-/* Centered on the map area, aligned to its top: all three providers at equal
-   weight, each with its kind disclaimer. The map is its background — no band
-   of its own. */
-.seg-control {
+/*
+ * Redesign Sep 2026. These replace the header's race tabs AND the three-up
+ * source segments.
+ *
+ * Worth stating what the swap costs: the segments showed all three providers
+ * at once precisely so that no single one could look like the truth (hub
+ * tenet 2), and a dropdown shows one at a time. The side-by-side comparison
+ * did not disappear — it lives in "Sources compared" inside the state drawer,
+ * which is now the only place the three reads sit together.
+ *
+ * Top-LEFT of the card, not centred like the old control: two pills read as
+ * a toolbar, and a toolbar belongs on an edge.
+ */
+.map-selectors {
   position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 24px;
+  left: 24px;
   z-index: 3;
   display: flex;
-  padding: 3px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--surface-2) 92%, transparent);
-  backdrop-filter: blur(8px);
-  transition: opacity 250ms ease-out;
+  align-items: center;
+  gap: 16px;
 }
 
-.seg {
+.pill-wrap {
+  position: relative;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 168px;
+  padding: 12px 20px;
   font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  min-width: 124px;
-  padding: 7px 14px;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease-out, border-color 140ms ease-out;
+}
+
+.pill:hover,
+.pill.is-open {
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.pill-text {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--ink-soft);
-  cursor: pointer;
-  transition: color 140ms ease-out, background 140ms ease-out;
+  gap: 2px;
+  min-width: 0;
 }
 
-/* Brand over kind: the logo identifies the provider, the line under it says
-   what kind of number that provider publishes. */
-.seg-brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 17px;
-  opacity: 0.72;
-  transition: opacity 140ms ease-out;
-}
-
-.seg.is-active .seg-brand,
-.seg:hover .seg-brand {
-  opacity: 1;
-}
-
-/* 10px per the comp (was 9). */
-.seg-kind {
-  font-size: 10px;
+.pill-label {
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  color: color-mix(in srgb, var(--ink-soft) 82%, transparent);
-  white-space: nowrap;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
 }
 
-.seg:hover {
+.pill-value {
+  font-size: 18px;
+  line-height: 1.2;
   color: var(--ink);
 }
 
-/* Active chip lifts: one step lighter than the track in dark, the page
-   ground in light (see the theme layer). */
-.seg.is-active {
-  background: var(--surface-hover);
-  color: var(--ink);
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--surface-dim) 60%, transparent);
+.pill-chevron {
+  flex: none;
+  margin-left: auto;
+  color: var(--ink-subtlest);
 }
 
-.seg.is-active .seg-kind {
-  color: var(--ink-soft);
-}
-
-:root[data-theme='light'] .seg.is-active {
-  background: var(--surface-dim);
-}
-
-/* Pre-existing light-mode AA failure: --ink-soft at 82% lands on #848484
-   over the control's #ebebeb — 3.1:1 at 10px, where 4.5 is required. The
-   dark theme's treatment is fine; only light needs the darker tone. */
-:root[data-theme='light'] .seg-kind {
-  color: var(--ink-subtle);
-}
-
-/* Results mode: static attribution, same slot. */
-.seg-results {
+/* The menu hangs off the pill it belongs to. */
+.pill-menu {
   position: absolute;
-  top: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
-}
-
-/* The zoomed frame belongs to the state and its panel. */
-.map-card.is-zoomed .seg-control,
-.map-card.is-zoomed .seg-results {
-  opacity: 0;
-  pointer-events: none;
-}
-
-@media (max-width: 1080px) {
-  .seg {
-    min-width: 104px;
-    padding: 6px 10px;
-  }
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 4;
+  min-width: 100%;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  animation: menu-in 140ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .seg,
-  .seg-brand,
-  .seg-control {
+  .pill,
+  .pill-menu {
     transition: none;
+    animation: none;
   }
 }
 
-/* Phone: no room to share the map's top band — the control comes out of the
-   overlay and stacks above the map, full width. */
-@media (max-width: 700px) {
-  .seg-control,
-  .seg-results {
-    position: static;
-    transform: none;
-    margin: 12px 14px 0;
-    backdrop-filter: none;
-  }
+.pill-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+  cursor: pointer;
+}
 
-  .seg {
-    min-width: 0;
-    flex: 1;
-    padding: 6px 8px;
-  }
+.pill-option:hover,
+.pill-option:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
+}
 
-  .seg-kind {
-    letter-spacing: 0;
-  }
+.pill-option.is-selected .pill-option-label {
+  font-weight: 600;
+}
 
-  .map-card.is-zoomed .seg-control,
-  .map-card.is-zoomed .seg-results {
-    opacity: 1;
-    pointer-events: auto;
+.pill-option-label {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.pill-option-hint {
+  font-size: 12px;
+  color: var(--ink-subtlest);
+}
+
+/* Results mode: no choice, just the attribution, in the pills' slot. */
+.source-byline.seg-results {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-subtlest);
+}
+
+/* The zoomed frame belongs to the state and its panel — same fade the source
+   control used to do. */
+.map-card.is-zoomed .map-selectors {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-card.is-zoomed .map-selectors {
+    transition: none;
   }
 }
 

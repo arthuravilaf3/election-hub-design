@@ -137,7 +137,7 @@ const zoom = await page.evaluate(() => {
     // the camera measures this fraction; it must match the painted layout
     regionW: drawer ? +(drawer.offsetLeft / frame.clientWidth).toFixed(3) : null,
     counties: document.querySelectorAll('.county-cell, .county-layer path').length > 0,
-    segHidden: getComputedStyle(document.querySelector('.seg-control')).opacity,
+    segHidden: getComputedStyle(document.querySelector('.map-selectors')).opacity,
     locked: document.body.classList.contains('is-scroll-locked'),
   };
 });
@@ -161,6 +161,42 @@ await page.mouse.move(300, 500);
 await page.mouse.wheel(0, 120);
 await page.waitForTimeout(700);
 check('wheel outside drawer clears zoom', await page.evaluate(() => !document.querySelector('.drawer')), true);
+
+// ---- Map selectors: a listbox with a select's keyboard contract ---------
+const raceBefore = await page.evaluate(() => document.querySelector('.pill-value').textContent.trim());
+await page.locator('.map-selectors .pill').nth(0).focus();
+await page.keyboard.press('ArrowDown'); // opens
+await page.waitForTimeout(200);
+check('ArrowDown opens the menu', await page.evaluate(() => !!document.querySelector('.pill-menu')), true);
+await page.keyboard.press('ArrowDown'); // moves
+await page.keyboard.press('Enter'); // commits
+await page.waitForTimeout(700);
+const raceKb = await page.evaluate(() => ({
+  value: document.querySelector('.pill-value').textContent.trim(),
+  closed: !document.querySelector('.pill-menu'),
+  // Focus must come back to the trigger, or the reader is dropped at the top.
+  focusOnPill: document.activeElement?.classList.contains('pill'),
+}));
+check('keyboard commits a change', raceKb.value !== raceBefore, true);
+check('menu closes on commit', raceKb.closed, true);
+check('focus returns to the pill', raceKb.focusOnPill, true);
+
+// Escape closes without committing
+await page.keyboard.press('ArrowDown');
+await page.waitForTimeout(150);
+await page.keyboard.press('ArrowDown');
+await page.keyboard.press('Escape');
+await page.waitForTimeout(250);
+const esc = await page.evaluate(() => ({
+  closed: !document.querySelector('.pill-menu'),
+  value: document.querySelector('.pill-value').textContent.trim(),
+}));
+check('Escape closes the menu', esc.closed, true);
+check('Escape commits nothing', esc.value, raceKb.value);
+
+// A race switch still runs the stagger wave over the map.
+await page.evaluate(() => document.body.click());
+await page.waitForTimeout(200);
 
 // ---- Sources compared: the three cards share one set of columns ---------
 await page.click('.state-shape[data-state=TX]');

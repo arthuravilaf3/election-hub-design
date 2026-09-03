@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DWNav } from './components/DWNav';
 import { PromoBar } from './components/PromoBar';
-import { RaceHeader, CompactHeader } from './components/RaceHeader';
+import { RaceHeader, CompactHeader, PAGE_HEADLINE } from './components/RaceHeader';
 import { MapCard } from './components/MapCard';
 import { DevToolbar } from './components/DevToolbar';
 import { MobilePreview, IS_PREVIEW_FRAME } from './components/MobilePreview';
@@ -22,7 +22,6 @@ import { picksForChamber } from './data/trust';
 import { featuresFor, initialPhase, type Phase } from './data/phases';
 import { forecastFor } from './data/hero';
 import { summarize } from './data/summary';
-import { sourceLabel } from './data/sources';
 import { HOUSE_DISTRICT_COUNT } from './data/mockRaces';
 import { STATE_SHAPES } from './data/states';
 import type { Chamber } from './data/types';
@@ -103,13 +102,15 @@ export default function App() {
   // Whoever the certified feed is, once results are live.
   const resultsSource = Object.values(races).find((r) => r.results?.source)?.results?.source;
   const called = summary.calledDem + summary.calledRep;
-  // The headline the tabs drive, and the line that says whose numbers it is.
-  const statement = anyResults
-    ? `${called} of ${Object.keys(races).length} races called.`
-    : forecast.title;
+  /* Redesign Sep 2026: the headline is static page copy now, so the only
+     line that moves is the freshness one. The source name it used to carry
+     lives in the SOURCE pill over the map (design decision — the map's own
+     control names it). */
   const byline = anyResults
-    ? `per ${resultsSource ?? 'the certified feed'} · updating live`
-    : `per ${sourceLabel(state.sourceId)}${forecast.updated ? ` · updated ${forecast.updated}` : ''}`;
+    ? 'Updating live'
+    : forecast.updated
+      ? `Last updated ${forecast.updated}`
+      : '';
 
   const zoomedRace = state.zoomedId ? races[state.zoomedId] : undefined;
 
@@ -303,11 +304,7 @@ export default function App() {
             as opposite-direction scroll (oscillation). */}
         <div className="chrome-overlays">
           <div className={`chrome-collapse chrome-collapse--tall${!pastTitle ? ' is-collapsed' : ''}`}>
-            <CompactHeader
-              title={statement}
-              chamber={state.chamber}
-              onChamber={(chamber) => selectChamber(chamber, 'header')}
-            />
+            <CompactHeader title={PAGE_HEADLINE} />
           </div>
         </div>
       </header>
@@ -335,13 +332,10 @@ export default function App() {
               paints it. */}
           <section className="map-section" aria-label="Election map" ref={mapSectionRef}>
           <RaceHeader
-            chamber={state.chamber}
-            statement={statement}
             byline={byline}
             forecast={forecast}
             resultsMode={anyResults}
             called={called}
-            onChamber={(chamber) => selectChamber(chamber, 'header')}
           />
 
           <MapCard
@@ -355,6 +349,7 @@ export default function App() {
             flash={state.flash}
             resultsMode={anyResults}
             resultsSource={resultsSource}
+            onChamber={(chamber) => selectChamber(chamber, 'header')}
             onSource={(sourceId) => dispatch({ type: 'SET_SOURCE', sourceId })}
             onSelect={handleSelect}
             onZoom={(stateId) => {
