@@ -135,7 +135,7 @@ console.log(
 
 // 4. Source picker: compact dropdown in the card header; selection persists
 // across race switches; race switch updates the statement + staggers the map.
-await pick(page, 'source', 'kalshi');
+await pick(page, 'source', 'dw-poll-avg');
 await page.waitForTimeout(400);
 await page.screenshot({ path: SHOT('3-source-segments') });
 console.log(

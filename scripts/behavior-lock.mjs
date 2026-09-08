@@ -59,11 +59,12 @@ check('dot recolour + goo transitions', statics.seatBarTransition, '0.3s, 0.22s'
 check('no SVG ancestor transform', statics.svgAncestorTransforms.length, 0);
 // The countdown is a live clock: it ticks.
 {
-  const s1 = await page.evaluate(() => document.querySelectorAll('.countdown-num')[3].textContent);
+  const s1 = await page.evaluate(() => [...document.querySelectorAll('.countdown-num')[3].querySelectorAll('.countdown-roll-in')].map((e) => e.textContent).join(''));
   await page.waitForTimeout(1150);
-  const s2 = await page.evaluate(() => document.querySelectorAll('.countdown-num')[3].textContent);
+  const s2 = await page.evaluate(() => [...document.querySelectorAll('.countdown-num')[3].querySelectorAll('.countdown-roll-in')].map((e) => e.textContent).join(''));
   check('countdown has four units', await page.evaluate(() => [...document.querySelectorAll('.countdown-label')].map((e) => e.textContent).join(',')), 'days,hours,minutes,seconds');
   check('countdown seconds tick', s1 !== s2, true);
+check('only the changed digit rolls', await page.evaluate(() => document.querySelectorAll('.countdown-num')[3].querySelectorAll('.countdown-roll-out').length <= 1), true);
   check('countdown is a timer, not a live region', await page.evaluate(() => document.querySelector('.countdown').getAttribute('role') + '/' + document.querySelector('.countdown').getAttribute('aria-live')), 'timer/null');
 }
 check(
@@ -329,15 +330,23 @@ check(
   await page.evaluate(() => { const r = document.querySelector('.map-selectors').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(innerHeight - r.bottom)].join(','); }),
   `${Math.round(1440 / 2)},40`
 );
-// The dots come in from nothing, in a stagger, on every filter change.
+// A SOURCE change keeps the same dots and recolours them; a RACE change
+// rebuilds the grid and replays the entry sweep.
+await page.evaluate(() => document.querySelectorAll('.dot').forEach((d) => (d.dataset.keep = '1')));
 await page.locator('.map-selectors .pill').nth(1).click();
-await page.locator('.pill-option[data-option="kalshi"]').click();
+await page.locator('.pill-option[data-option="dw-poll-avg"]').click();
+await page.waitForTimeout(400);
+check('a source change keeps the same dot nodes', await page.evaluate(() => document.querySelectorAll('.dot[data-keep]').length > 0), true);
+await page.locator('.map-selectors .pill').nth(0).click();
+await page.locator('.pill-option[data-option="governor"]').click();
+await page.waitForTimeout(100);
 const entry = await page.evaluate(() => {
   const d = document.querySelectorAll('.dot');
   const cs = (i) => getComputedStyle(d[i]);
-  return { anim: cs(0).animationName, fill: cs(0).animationFillMode, d0: cs(0).animationDelay, d100: cs(100).animationDelay, goo: getComputedStyle(document.querySelector('.dots-grid')).filter };
+  return { kept: document.querySelectorAll('.dot[data-keep]').length, anim: cs(0).animationName, fill: cs(0).animationFillMode, d0: cs(0).animationDelay, d100: cs(Math.min(30, d.length - 1)).animationDelay, goo: getComputedStyle(document.querySelector('.dots-grid')).filter };
 });
-check('dots replay an entry animation on filter change', entry.anim, 'dot-in');
+check('a race change rebuilds the dots', entry.kept, 0);
+check('dots replay an entry animation on race change', entry.anim, 'dot-in');
 check('entry animation releases scale when done (backwards, not both)', entry.fill, 'backwards');
 check('entry is staggered across the grid', entry.d0 !== entry.d100, true);
 check('the grid has no filter at rest (perfect circles)', entry.goo, 'none');
@@ -354,7 +363,7 @@ await page.waitForTimeout(120);
 const goo = await page.evaluate(() => { const h = document.querySelector('.dot.is-goo'); return { hot: document.querySelectorAll('.dot.is-goo').length, scale: h ? getComputedStyle(h).transform : 'none' }; });
 check('the dots the pointer crossed go gooey', goo.hot >= 2 && goo.hot <= 6, true);
 check('the goo filter is on only while dots are hot', await page.evaluate(() => /dots-goo/.test(getComputedStyle(document.querySelector('.dots-grid')).filter)), true);
-check('a gooey dot barely grows (the blur draws the neck)', /matrix\(1\.0[4-9]/.test(goo.scale), true);
+check('a gooey dot deforms into a stretched ellipse', /matrix\(1\.2[0-9]*, 0, 0, 1\.1/.test(goo.scale), true);
 await page.waitForTimeout(800);
 check('they let go again', await page.evaluate(() => document.querySelectorAll('.dot.is-goo').length), 0);
 check('and the filter switches off again', await page.evaluate(() => getComputedStyle(document.querySelector('.dots-grid')).filter), 'none');

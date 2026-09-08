@@ -18,9 +18,19 @@ export interface DataSource {
   /** Full attribution shown in the sourcing disclosure. */
   attribution: string;
   kind: SourceKind;
+  /** False = known provider, not offered in the SOURCE picker. */
+  listed?: boolean;
 }
 
+/* Order = the picker's order, and SOURCES[0] is the default. Polymarket leads
+   (Sep 2026, the presenting partner). Kalshi stays known but unlisted. */
 export const SOURCES: DataSource[] = [
+  {
+    id: 'polymarket',
+    label: 'Polymarket',
+    attribution: 'Polymarket market-implied odds (mock)',
+    kind: 'market',
+  },
   {
     id: 'dw-poll-avg',
     label: 'DDHQ',
@@ -28,15 +38,12 @@ export const SOURCES: DataSource[] = [
     kind: 'poll',
   },
   {
+    /* Not in the picker (Sep 2026), but still a known provider: its reads
+       stay in the fixtures and must keep their label everywhere they show. */
+    listed: false,
     id: 'kalshi',
     label: 'Kalshi',
     attribution: 'Kalshi market-implied odds (mock)',
-    kind: 'market',
-  },
-  {
-    id: 'polymarket',
-    label: 'Polymarket',
-    attribution: 'Polymarket market-implied odds (mock)',
     kind: 'market',
   },
 ];

@@ -218,7 +218,7 @@ export function MapSelectors({
         <PillSelect
           label="Source"
           value={sourceId}
-          options={SOURCES.map((s) => ({
+          options={SOURCES.filter((s) => s.listed !== false).map((s) => ({
             id: s.id,
             label: sourceLabel(s.id),
             hint: sourceKind(s.id),

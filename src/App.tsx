@@ -206,7 +206,6 @@ export default function App() {
           <RaceHeader
             chamber={state.chamber}
             forecast={forecast}
-            sourceId={state.sourceId}
             resultsMode={anyResults}
             called={called}
             raceCount={Object.keys(races).length}

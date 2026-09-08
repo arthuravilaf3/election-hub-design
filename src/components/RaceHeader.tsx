@@ -28,8 +28,6 @@ export const PAGE_TITLE = '2026 Midterms';
 interface RaceHeaderProps {
   chamber: Chamber;
   forecast: ForecastData;
-  /** Which provider's numbers the page is showing right now. */
-  sourceId: string;
   resultsMode: boolean;
   /** Races already called — the statement's subject in results mode. */
   called: number;
@@ -40,7 +38,6 @@ interface RaceHeaderProps {
 export function RaceHeader({
   chamber,
   forecast,
-  sourceId,
   resultsMode,
   called,
   raceCount,
@@ -84,10 +81,11 @@ export function RaceHeader({
 
       <Countdown />
 
-      {/* Keyed on the filters so every race/source change replays the entry
-          sweep — the dots come in from nothing, per the motion reference. */}
+      {/* Keyed on the RACE only: a race change rebuilds the grid and replays
+          the entry sweep; a source change keeps the same dots and just
+          recolours them in place (the background transition). */}
       <Dots
-        key={`${chamber}:${resultsMode ? 'results' : sourceId}`}
+        key={`${chamber}:${resultsMode ? 'results' : 'forecast'}`}
         forecast={forecast}
         chamber={chamber}
         headline={headline}
@@ -227,8 +225,8 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
           <filter id="dots-goo">
             {/* Small blur + hard threshold: only circles that actually overlap
                 fuse, and the neck between them stays thin. */}
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -13" result="goo" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -12" result="goo" />
             {/* `over`, not `atop`: the neck exists only in the blurred layer — the
                 source has no pixels there — and atop would discard it. */}
             <feComposite in="SourceGraphic" in2="goo" operator="over" />

@@ -376,7 +376,7 @@ button,
      + 120 + 52 = 894. */
   /* 15% sides = the map at ~80% of the width it had at 6% (Sep 2026: "20%
      smaller"); top/bottom trimmed to match. */
-  padding: 96px clamp(32px, 15%, 200px) 40px;
+  padding: 40px clamp(32px, 15%, 200px) 40px;
 }
 
 .election-map {
@@ -855,16 +855,22 @@ button,
 }
 
 .countdown-num {
-  position: relative;
-  display: block;
-  height: 1em;
-  overflow: hidden;
+  display: flex;
+  justify-content: center;
   font-size: 56px;
   line-height: 1;
   font-weight: 400;
   letter-spacing: -0.02em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* One digit, one clipped box: only the digit that changed rolls. */
+.countdown-digit {
+  position: relative;
+  display: block;
+  height: 1em;
+  overflow: hidden;
 }
 
 /* The roll: the new figure rises from below, the old one leaves upward. */
@@ -1024,7 +1030,10 @@ button,
   /* 1.12x: with a 4px gap a 24px dot grows to just touch its neighbours —
      tangent, not overlapping. Overlapping circles already have a wide waist;
      tangent ones only get the thin bridge the blur draws between them. */
-  transform: scale(1.06);
+  /* Deform, not just grow: a slight stretch toward the neighbours turns the
+     circle into an ellipse for the beat it is hot; the goo layer underneath
+     adds the bulge and the thin neck. */
+  transform: scale(1.22, 1.1);
   z-index: 1;
 }
 

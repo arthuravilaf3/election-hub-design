@@ -28,7 +28,7 @@ function partsUntil(target: string, now: number): Parts {
 const pad = (n: number) => String(n).padStart(2, '0');
 
 /**
- * A figure that ROLLS when it changes: the new value rises in from below
+ * One digit that ROLLS when it changes: the new value rises in from below
  * while the old one leaves upward, inside a clipped box one line tall. Keyed
  * on the value, so React mounts a fresh pair per change; the leaving copy is
  * kept for the length of the animation and then dropped. Reduced motion
@@ -45,7 +45,7 @@ function Roll({ value }: { value: string }) {
     return () => window.clearTimeout(id);
   }, [value]);
   return (
-    <span className="countdown-num">
+    <span className="countdown-digit">
       <span className="countdown-roll-in" key={`in-${value}`}>
         {value}
       </span>
@@ -54,6 +54,17 @@ function Roll({ value }: { value: string }) {
           {leaving}
         </span>
       )}
+    </span>
+  );
+}
+
+/** A figure as independent digits, so "19" -> "18" rolls only the 9. */
+function Figure({ value }: { value: string }) {
+  return (
+    <span className="countdown-num">
+      {value.split('').map((d, i) => (
+        <Roll value={d} key={`${value.length}-${i}`} />
+      ))}
     </span>
   );
 }
@@ -93,7 +104,7 @@ export function Countdown({ now }: CountdownProps) {
     >
       {units.map(([value, label]) => (
         <span className="countdown-unit" key={label}>
-          <Roll value={value} />
+          <Figure value={value} />
           <span className="countdown-label">{label}</span>
         </span>
       ))}
