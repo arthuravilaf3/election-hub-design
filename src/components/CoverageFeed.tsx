@@ -530,7 +530,8 @@ export function CoverageFeed() {
       count += 1;
       const next = visible[idx + 1];
       const nextIsBoundary = !next || next.day !== item.day;
-      if (!IS_AD_FREE && (pendingAd || count % 6 === 0) && count > 0) {
+      // One ad every four posts (Sep 2026).
+      if (!IS_AD_FREE && (pendingAd || count % 4 === 0) && count > 0) {
         if (nextIsBoundary && next) {
           pendingAd = true; // would touch the upcoming divider — defer
         } else if (next) {

@@ -64,7 +64,21 @@ check('no SVG ancestor transform', statics.svgAncestorTransforms.length, 0);
   const s2 = await page.evaluate(() => [...document.querySelectorAll('.countdown-num')[3].querySelectorAll('.countdown-roll-in')].map((e) => e.textContent).join(''));
   check('countdown has four units', await page.evaluate(() => [...document.querySelectorAll('.countdown-label')].map((e) => e.textContent).join(',')), 'days,hours,minutes,seconds');
   check('countdown seconds tick', s1 !== s2, true);
-check('only the changed digit rolls', await page.evaluate(() => document.querySelectorAll('.countdown-num')[3].querySelectorAll('.countdown-roll-out').length <= 1), true);
+// Digits roll independently: seconds are two boxes, and across a few ticks
+// at least one tick rolls exactly ONE of them (both roll on 20 -> 19, which
+// is correct — that is why a single sample is not a valid check).
+{
+  const boxes = await page.evaluate(() => document.querySelectorAll('.countdown-num')[3].querySelectorAll('.countdown-digit').length);
+  check('seconds are two independent digit boxes', boxes, 2);
+  let singles = 0;
+  for (let i = 0; i < 4; i++) {
+    await page.waitForFunction(() => document.querySelectorAll('.countdown-num')[3].querySelectorAll('.countdown-roll-out').length > 0, null, { timeout: 1500 }).catch(() => {});
+    const n = await page.evaluate(() => document.querySelectorAll('.countdown-num')[3].querySelectorAll('.countdown-roll-out').length);
+    if (n === 1) singles += 1;
+    await page.waitForTimeout(600);
+  }
+  check('a tick that changes one digit rolls only that digit', singles >= 1, true);
+}
   check('countdown is a timer, not a live region', await page.evaluate(() => document.querySelector('.countdown').getAttribute('role') + '/' + document.querySelector('.countdown').getAttribute('aria-live')), 'timer/null');
 }
 check(

@@ -1870,15 +1870,6 @@ button,
   background: var(--surface);
 }
 
-/* One inventory, not two: above this width the rail carries the ads and the
-   in-feed slots stand down. display:none elements never intersect, so the
-   impression observer reports zero for them on its own — no faked telemetry. */
-@media (min-width: 1080px) {
-  .feed-ad {
-    display: none;
-  }
-}
-
 @media (max-width: 1079px) {
   .feed-section {
     display: block;
@@ -2006,8 +1997,12 @@ button,
   display: block;
 }
 
+/* Every row in the list — post OR ad — opens with the hairline, so an ad
+   sits BETWEEN two posts (rule, ad, rule) instead of hanging off the end of
+   the one before it. */
 .feed-item + .feed-item,
 .feed-item + .feed-skeletons,
+.feed-item + .feed-ad,
 .feed-ad + .feed-item {
   margin-top: 32px;
   padding-top: 32px;
@@ -2355,7 +2350,6 @@ button,
   border-radius: 8px;
   background: color-mix(in srgb, var(--surface) 55%, var(--surface-dim));
   border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
-  margin: 12px 0;
 }
 
 .feed-ad-label {
