@@ -12,7 +12,15 @@ const SHOT = (name) => `/tmp/usmap-${name}.png`;
 /* Redesign Sep 2026: the header's race tabs and the three-up source segments
    are gone — both are pill dropdowns over the map now. */
 const PILL = { race: 0, source: 1 };
+/* The pills are fixed to the viewport centre and only shown while the map
+   card crosses that centreline — anywhere else they are pointer-events:none
+   and a click would be refused. Bring the card to the middle first. */
+async function revealPills(page) {
+  await page.evaluate(() => document.querySelector('.map-card').scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(350);
+}
 async function pick(page, which, optionId) {
+  await revealPills(page);
   // Close whatever is open first: clicking a pill TOGGLES it, so a menu left
   // open by an earlier step would make this click close it instead.
   await page.evaluate(() => document.querySelector('.pill-menu') && document.body.click());
@@ -41,8 +49,9 @@ console.log(
     await page.evaluate(() => ({
       chamber: [...document.querySelectorAll('.pill-value')][0]?.textContent.trim(),
       source: [...document.querySelectorAll('.pill-value')][1]?.textContent.trim(),
-      statement: document.querySelector('.race-title')?.textContent,
-      byline: document.querySelector('.race-byline')?.textContent,
+      title: document.querySelector('.hub-title')?.textContent,
+      statement: document.querySelector('.dots-title')?.textContent,
+      byline: document.querySelector('.hub-byline')?.textContent,
       stateLabels: document.querySelectorAll('.state-label').length,
       txLabel: [...document.querySelectorAll('.state-label')].find((t) => t.textContent === 'TX') ? 'TX' : 'MISSING',
       pageTitle: document.querySelector('h1')?.textContent,
@@ -92,21 +101,20 @@ console.log(
       const card = document.querySelector('.map-card');
       const sec = document.querySelector('.map-section');
       // Redesign order: title first, then the tabs, then the bar.
-      const order = [...sec.querySelectorAll('.race-title, .seat-bar, .map-card')].map(
+      const order = [...sec.querySelectorAll('.hub-header, .dots, .map-card')].map(
         (e) => e.className.split(' ')[0]
       );
       return {
         order,
-        titleTag: document.querySelector('.race-title')?.tagName,
-        h1Hidden: getComputedStyle(document.querySelector('h1')).position === 'absolute',
-        seatBarLabels: [...document.querySelectorAll('.seat-bar-label')].map((e) =>
-          e.textContent.trim()
+        titleTag: document.querySelector('.hub-title')?.tagName,
+        statementTag: document.querySelector('.dots-title')?.tagName,
+        seatInfo: document.querySelector('.dots-seats')?.textContent.replace(/\s+/g, ' ').trim(),
+        dots: document.querySelectorAll('.dots-grid .dot').length,
+        dotsByParty: ['rep', 'toss', 'dem'].map(
+          (p) => `${p}:${document.querySelectorAll(`.dot--${p}`).length}`
         ),
-        // The label row is decorative — the track's own aria-label is the
-        // non-visual equivalent and still carries "N seats up".
-        labelsHidden: document.querySelector('.seat-bar-labels')?.getAttribute('aria-hidden'),
-        barAlt: document.querySelector('.seat-bar-track')?.getAttribute('aria-label'),
-        barOutsideCard: !card.contains(document.querySelector('.seat-bar')),
+        dotsAlt: document.querySelector('.dots-grid')?.getAttribute('aria-label'),
+        dotsOutsideCard: !card.contains(document.querySelector('.dots')),
         selectorsInsideCard: card.contains(document.querySelector('.map-selectors')),
         pills: [...document.querySelectorAll('.pill-label')].map((e) => e.textContent.trim()),
         // The legend left the card in the redesign.
@@ -137,13 +145,14 @@ const midSwitch = await page.evaluate(() => ({
 }));
 await page.waitForTimeout(900);
 const postSwitch = await page.evaluate(() => ({
-  statement: document.querySelector('.race-title')?.textContent,
-  byline: document.querySelector('.race-byline')?.textContent,
-  seats: [...document.querySelectorAll('.seat-bar-label')].map((e) => e.textContent.trim()).join(' / '),
+  statement: document.querySelector('.dots-title')?.textContent,
+  byline: document.querySelector('.hub-byline')?.textContent,
+  seats: document.querySelector('.dots-seats')?.textContent.replace(/\s+/g, ' ').trim(),
+  dots: ['rep', 'toss', 'dem'].map((p) => `${p}:${document.querySelectorAll(`.dot--${p}`).length}`).join(' '),
   source: [...document.querySelectorAll('.pill-value')][1]?.textContent.trim(),
   syncWindow: {
-    statement: getComputedStyle(document.querySelector('.race-statement')).animationDuration,
-    bar: getComputedStyle(document.querySelector('.seat-bar-dem')).transitionDuration,
+    statement: getComputedStyle(document.querySelector('.dots-copy')).animationDuration,
+    bar: getComputedStyle(document.querySelector('.dot')).transitionDuration,
     map: getComputedStyle(document.querySelector('.state-shape')).transitionDuration.split(',')[0],
   },
 }));
@@ -185,6 +194,7 @@ const lift = await page.evaluate(() => ({
     document.querySelector('.map-camera')?.lastElementChild,
 }));
 console.log('lift:', JSON.stringify(lift));
+await revealPills(page);
 await page.locator('.map-selectors .pill').nth(0).click();
 console.log(
   'map selectors (listbox semantics):',

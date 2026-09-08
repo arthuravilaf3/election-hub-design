@@ -52,15 +52,6 @@ export default function App() {
   // Whoever the certified feed is, once results are live.
   const resultsSource = Object.values(races).find((r) => r.results?.source)?.results?.source;
   const called = summary.calledDem + summary.calledRep;
-  /* Redesign Sep 2026: the headline is static page copy now, so the only
-     line that moves is the freshness one. The source name it used to carry
-     lives in the SOURCE pill over the map (design decision — the map's own
-     control names it). */
-  const byline = anyResults
-    ? 'Updating live'
-    : forecast.updated
-      ? `Last updated ${forecast.updated}`
-      : '';
 
   const zoomedRace = state.zoomedId ? races[state.zoomedId] : undefined;
 
@@ -239,10 +230,13 @@ export default function App() {
               paints it. */}
           <section className="map-section" aria-label="Election map" ref={mapSectionRef}>
           <RaceHeader
-            byline={byline}
+            chamber={state.chamber}
             forecast={forecast}
+            sourceId={state.sourceId}
             resultsMode={anyResults}
+            resultsSource={resultsSource}
             called={called}
+            raceCount={Object.keys(races).length}
           />
 
           <MapCard

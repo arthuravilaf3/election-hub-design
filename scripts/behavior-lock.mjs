@@ -34,8 +34,8 @@ const statics = await page.evaluate(() => {
     cameraOrigin: cs('.map-camera', 'transformOrigin'),
     cardOverflow: cs('.map-card', 'overflow'),
     stateTransition: cs('.state-shape', 'transitionDuration').split(',')[0].trim(),
-    statementAnim: cs('.race-statement', 'animationDuration'),
-    seatBarTransition: cs('.seat-bar-dem', 'transitionDuration'),
+    statementAnim: cs('.dots-copy', 'animationDuration'),
+    seatBarTransition: cs('.dot', 'transitionDuration'),
     // Any 3D transform on an SVG ancestor makes the compositor rasterize and
     // resample the map, pixelating every border.
     svgAncestorTransforms: (() => {
@@ -274,6 +274,28 @@ await page.keyboard.press('Escape');
 await page.waitForTimeout(600);
 
 // ---- Map selectors: a listbox with a select's keyboard contract ---------
+// Fixed to the viewport centre and shown only while the map card crosses it:
+// centre the card first, and lock that gate while we are here.
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.waitForTimeout(300);
+check(
+  'pills hidden while the centreline is off the card',
+  await page.evaluate(() => document.querySelector('.map-selectors').classList.contains('is-offscreen')),
+  true
+);
+await page.evaluate(() => document.querySelector('.map-card').scrollIntoView({ block: 'center' }));
+await page.waitForTimeout(400);
+check(
+  'pills shown while the centreline crosses the card',
+  await page.evaluate(() => document.querySelector('.map-selectors').classList.contains('is-offscreen')),
+  false
+);
+check('pills are fixed', await page.evaluate(() => getComputedStyle(document.querySelector('.map-selectors')).position), 'fixed');
+check(
+  'pills sit on the viewport centre',
+  await page.evaluate(() => { const r = document.querySelector('.map-selectors').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)].join(','); }),
+  `${Math.round(1440 / 2)},${Math.round(1000 / 2)}`
+);
 const raceBefore = await page.evaluate(() => document.querySelector('.pill-value').textContent.trim());
 await page.locator('.map-selectors .pill').nth(0).focus();
 await page.keyboard.press('ArrowDown'); // opens

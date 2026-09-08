@@ -727,46 +727,116 @@ button,
   background: var(--surface-dim);
 }
 
-/* ---------- Race header (above the card) ---------- */
+/* ---------- Hub header (redesign Sep 2026, "Map Final") ---------- */
 
-/* Countdown, then tabs, then the headline they drive, its byline and the
-   seat bar — centered, per the Figma comp. The order IS the argument: the
-   control sits immediately above its own consequence. */
-.race-header {
-  /* .app's own 48px top padding supplies the space above. */
-  margin: 0;
-  /* Grid so every row is its own line and shrink-to-fit + centered; the seat
-     bar opts back into the full width. The 48px rhythm and the 55px side
-     inset are the comp's; the inset clamps away on narrow viewports. */
-  display: grid;
-  justify-items: center;
-  text-align: center;
-  row-gap: 40px;
-  padding: 0 clamp(0px, 4vw, 55px);
+/* Name and mark on the left, the clock on the right, a hairline under both.
+   .app's own 48px top padding supplies the space above. */
+.hub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 24px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
-/* Redesign Sep 2026: the countdown lost its brand pill and moved ABOVE the
-   headline — the clock frames the page, it does not annotate the title. */
-.countdown {
+.hub-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* The comp sets this in Neue Haas Grotesk Display, which is not in the DS;
+   Libre Franklin at the same size and a medium-heavy weight is the sanctioned
+   stand-in. The '26 mark rides the cap height, top-aligned with the type. */
+.hub-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 0;
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.hub-mark {
+  flex: none;
+  width: 90px;
+  height: 77px;
+  margin-top: -6px;
+}
+
+.hub-byline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ink-subtlest);
+}
+
+.hub-presented {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin: 0 0 16px;
+  gap: 8px;
+}
+
+.hub-presented em {
+  font-style: italic;
+}
+
+/* Provider wordmarks are shipped as dark-on-transparent SVGs; the filter
+   pair paints them in the page's ink without a mask (which would need a
+   fixed width per file). Light mode flips it below. */
+.hub-logo {
+  height: 18px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(1);
+}
+
+.hub-presenter {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hub-dot {
   color: var(--ink-subtlest);
-  font-size: 16px;
+}
+
+/* Right side: the clock, quiet. */
+.countdown {
+  flex: none;
+  margin: 0;
+  font-size: 20px;
   line-height: 1;
+  color: var(--ink-subtle);
+  text-align: right;
 }
 
 .countdown strong {
-  font-weight: 600;
+  font-weight: 500;
 }
 
-.countdown svg {
-  flex: none;
+/* ---------- Dots (the forecast beside every seat) ---------- */
+
+.dots {
+  display: grid;
+  grid-template-columns: minmax(0, 426px) minmax(0, 808px);
+  justify-content: space-between;
+  align-items: start;
+  gap: 48px;
+  margin-top: 60px;
 }
 
-.race-statement {
-  /* row-gap on .race-header owns the rhythm now. */
+.dots-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   animation: statement-in 200ms ease-out;
 }
 
@@ -780,28 +850,77 @@ button,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .race-statement {
+  .dots-copy {
     animation: none;
   }
 }
 
-/* Page-title scale. Static copy now, so it carries the bold weight whole —
-   there is no figure inside it to pick out any more. */
-.race-title {
+.dots-title {
   margin: 0;
-  font-size: 40px;
-  line-height: 1.15;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  max-width: 22ch;
-  margin-inline: auto;
+  font-size: 56px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
 }
 
-/* Freshness only — the source is named by the SOURCE pill over the map. */
-.race-byline {
-  margin: 14px 0 0;
-  font-size: 14px;
-  color: var(--ink-subtlest);
+.dots-seats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* The figures carry party colour on the LIGHT end of each ramp — the bar
+   tokens themselves land under AA as text on the page ground. */
+.dots-num--dem {
+  color: var(--rating-lean-dem);
+}
+
+.dots-num--rep {
+  color: var(--brand-hover);
+}
+
+/* 29 across at 24px + 4px gaps = 808, the comp's grid width; 435 seats fill
+   fifteen rows. Other chambers wrap to fewer rows on the same pitch. */
+.dots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 24px);
+  justify-content: end;
+  gap: 4px;
+}
+
+.dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  /* Same easing family as the map's fill transition, so a race switch reads
+     as one recalculation here too. */
+  transition: background 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    transition: none;
+  }
+}
+
+/* Party colour comes from the seat-bar tokens, not the comp's lighter hexes:
+   the data palette is frozen (decision Aug 2026), and these dots are the bar
+   in another shape. */
+.dot--dem {
+  background: var(--bar-dem);
+}
+
+.dot--rep {
+  background: var(--bar-rep);
+}
+
+.dot--toss {
+  background: var(--rating-tossup);
 }
 
 /* ---------- Live row ---------- */
@@ -3258,42 +3377,63 @@ button,
   /* The three-up row is too wide for a phone. Keep the two blocs on the
      ends where the bar puts them and drop the contested middle to its own
      centered line, rather than letting it wrap somewhere arbitrary. */
-  /* Descendant selectors on purpose: the base seat-bar block is declared
-     LATER in this file, so a bare .seat-bar-labels here would lose the
-     cascade on equal specificity. */
-  .seat-bar .seat-bar-labels {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    row-gap: 4px;
-  }
-
-  .seat-bar .seat-bar-label {
-    font-size: 13px;
-  }
-
-  .seat-bar .seat-bar-label:nth-child(1) {
-    order: 1;
-  }
-
-  .seat-bar .seat-bar-label:nth-child(3) {
-    order: 2;
-    text-align: right;
-  }
-
-  .seat-bar .seat-bar-label:nth-child(2) {
-    order: 3;
-    grid-column: 1 / -1;
-    text-align: center;
-  }
-
   /* Two 168px pills plus their insets do not fit a phone card: they drop out
      of the overlay and stack above the map, in normal flow. */
   .map-card .map-selectors {
     position: static;
+    transform: none;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     padding: 12px 12px 0;
+  }
+
+  /* In flow there is nothing to hide from. */
+  .map-card .map-selectors.is-offscreen {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .hub-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .hub-title {
+    font-size: 40px;
+  }
+
+  .hub-mark {
+    width: 56px;
+    height: 48px;
+    margin-top: -2px;
+  }
+
+  .countdown {
+    font-size: 16px;
+    text-align: left;
+  }
+
+  .dots {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 32px;
+  }
+
+  .dots-title {
+    font-size: 32px;
+  }
+
+  .dots-grid {
+    grid-template-columns: repeat(auto-fill, 12px);
+    justify-content: start;
+    gap: 3px;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
   }
 
   .map-card .pill {
@@ -3537,14 +3677,18 @@ button,
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-/* The seat-bar figures use the LIGHT end of each ramp on the dark page; on
+/* The dots figures use the LIGHT end of each ramp on the dark page; on
    white those are ~1.7:1. Swap to the dark end, which the light canvas can
    carry — the bar itself is unchanged, this is type only. */
-:root[data-theme='light'] .seat-bar-num--dem {
+:root[data-theme='light'] .hub-logo {
+  filter: brightness(0);
+}
+
+:root[data-theme='light'] .dots-num--dem {
   color: var(--rating-safe-dem);
 }
 
-:root[data-theme='light'] .seat-bar-num--rep {
+:root[data-theme='light'] .dots-num--rep {
   color: var(--rating-safe-rep);
 }
 
@@ -3578,84 +3722,6 @@ button,
   }
 }
 
-/* ---------- 4. Seat bar ---------- */
-
-/* One object: the track, then a three-up label row spread end to end beneath
-   it. Widths animate with the same easing family as the map's fill
-   transition, so a race switch reads as ONE recalculation. */
-.seat-bar {
-  margin-top: 0;
-  width: 100%;
-  justify-self: stretch;
-}
-
-.seat-bar-track {
-  display: flex;
-  height: 8px;
-  border-radius: 4px;
-  overflow: hidden;
-  background: var(--surface-2);
-}
-
-.seat-bar-dem,
-.seat-bar-gap,
-.seat-bar-rep {
-  transition: width 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.seat-bar-dem {
-  background: var(--bar-dem);
-}
-
-.seat-bar-rep {
-  background: var(--bar-rep);
-}
-
-/* The races still in play: neutral, part of neither bloc. */
-.seat-bar-gap {
-  background: var(--rating-tossup);
-}
-
-/* The blocs at the ends, the contested middle named in the middle. */
-.seat-bar-labels {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.seat-bar-label {
-  margin: 0;
-  font-size: 16px;
-  line-height: 1;
-  color: var(--ink);
-  white-space: nowrap;
-}
-
-.seat-bar-num {
-  font-weight: 500;
-}
-
-/* The figures may carry party colour here, unlike the old end-labels: these
-   are the LIGHT ends of each ramp, not --bar-dem/--bar-rep, which land at
-   2.3:1 and 3.6:1 as text on the page ground — well under AA. */
-.seat-bar-num--dem {
-  color: var(--rating-lean-dem);
-}
-
-.seat-bar-num--rep {
-  color: var(--brand-hover);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .seat-bar-dem,
-  .seat-bar-gap,
-  .seat-bar-rep {
-    transition: none;
-  }
-}
-
 /* ---------- Map selectors (RACE + SOURCE pills, over the map) ---------- */
 
 /*
@@ -3672,13 +3738,24 @@ button,
  * a toolbar, and a toolbar belongs on an edge.
  */
 .map-selectors {
-  position: absolute;
-  top: 24px;
-  left: 24px;
-  z-index: 3;
+  /* "fixed chips": pinned to the centre of the viewport, above the page but
+     under the site chrome (400) and the drawer's mobile sheet (600). The
+     is-offscreen class (an IntersectionObserver on .map-section) hides them
+     when the map is not on screen, so they never float over the feed. */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  transition: opacity 200ms ease-out;
+}
+
+.map-selectors.is-offscreen {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .pill-wrap {
@@ -3688,15 +3765,13 @@ button,
 .pill {
   display: flex;
   align-items: center;
-  gap: 20px;
-  min-width: 168px;
-  padding: 12px 20px;
+  gap: 16px;
+  padding: 16px 16px 16px 24px;
   font: inherit;
   text-align: left;
-  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(8px);
+  border: 1px solid var(--surface-hover);
+  border-radius: 9999px;
+  background: var(--surface);
   color: var(--ink);
   cursor: pointer;
   transition: background 140ms ease-out, border-color 140ms ease-out;
@@ -3716,23 +3791,26 @@ button,
 }
 
 .pill-label {
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--ink-subtlest);
 }
 
 .pill-value {
-  font-size: 18px;
-  line-height: 1.2;
+  font-size: 16px;
+  line-height: 16px;
+  font-weight: 500;
   color: var(--ink);
 }
 
+/* A 14x8 chevron centred in the comp's 24px icon box. */
 .pill-chevron {
   flex: none;
-  margin-left: auto;
-  color: var(--ink-subtlest);
+  box-sizing: content-box;
+  padding: 8px 5px;
+  color: var(--ink);
 }
 
 /* The menu hangs off the pill it belongs to. */
@@ -3754,7 +3832,8 @@ button,
 
 @media (prefers-reduced-motion: reduce) {
   .pill,
-  .pill-menu {
+  .pill-menu,
+  .map-selectors {
     transition: none;
     animation: none;
   }

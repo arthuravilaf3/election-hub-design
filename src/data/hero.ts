@@ -23,6 +23,10 @@ const CHAMBER_PHRASE: Record<Chamber, string> = {
 export interface ForecastData {
   /** The statement itself. */
   title: string;
+  /** The same read in the comp's short form — "53% chance Democrats take
+   *  the House" — for the dots block, where it sits beside the grid at 56px
+   *  and has no room for a full sentence. */
+  headline: string;
   /** The one number the sentence is about — set in bold inside the headline
    *  (the DS mock sets the statement in regular with the figure in bold). */
   emphasis?: string;
@@ -60,34 +64,46 @@ export function forecastFor(
 
   const gap = demLeans - repLeans;
   let title: string;
+  let headline: string;
   let emphasis: string | undefined;
+  const body = chamber === 'governor' ? 'governorships' : chamber === 'house' ? 'House' : 'Senate';
   if (gap === 0) {
-    title = `Control of the ${chamber === 'governor' ? 'governorships' : chamber === 'house' ? 'House' : 'Senate'} is a toss-up.`;
+    title = `Control of the ${body} is a toss-up.`;
+    headline = `Control of the ${body} is a toss-up`;
   } else {
     // Fixture probability: 55% floor + 3pts per race of lean gap, capped 95.
     const chance = Math.min(95, 55 + 3 * Math.abs(gap));
     const leader = gap > 0 ? 'Democrats' : 'Republicans';
     emphasis = `${chance}%`;
     title = `${leader} have a ${chance}% chance of ${CHAMBER_PHRASE[chamber]}.`;
+    headline =
+      chamber === 'governor'
+        ? `${chance}% chance ${leader} win the most governorships`
+        : `${chance}% chance ${leader} take the ${body}`;
   }
 
   const current = CURRENT_SEATS[chamber];
-  /* Full date AND time (redesign Sep 2026). The line under the title is the
-     only freshness the top of the page carries now, so "1:00PM" alone would
-     leave the reader guessing which day. */
+  /* Date AND time, in the comp's form: "Sep 1, 2026 9:00 AM ET". Pinned to
+     Eastern — the election clock everyone quotes — and labelled as such, so
+     a reader elsewhere is not left guessing whose 9:00 that is. */
   const updated = newest
-    ? (() => {
-        const d = new Date(newest);
-        const date = d.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        const time = d
-          .toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })
-          .replace(/\s/g, '');
-        return `${date} · ${time}`;
-      })()
+    ? new Date(newest)
+        .toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZone: 'America/New_York',
+        })
+        // "Sep 1, 2026, 9:00 AM" -> "Sep 1, 2026 9:00 AM": only the comma
+        // before the time goes.
+        .replace(/, (\d{1,2}:)/, ' $1') + ' ET'
     : '';
 
   return {
     title,
+    headline,
     emphasis,
     updated,
     dem: current.dem,

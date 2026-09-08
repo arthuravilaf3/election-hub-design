@@ -1,102 +1,163 @@
 /**
- * The page header, above the map card: the countdown, the headline, the
- * freshness line, then the seat bar.
+ * The top of the page (redesign Sep 2026, "Map Final"): the hub header, then
+ * the dots block. The map card and the feed follow unchanged.
  *
- * Redesign Sep 2026 — the headline is STATIC page copy now. It used to be the
- * forecast read ("Democrats have a 61% chance of winning the House"), driven
- * by the race tabs that sat here; both are gone. The race is chosen from the
- * RACE pill over the map instead, and the forecast sentence retires with the
- * tabs that drove it.
+ * Header — "The Midterms" with the '26 dot-matrix mark beside it, a
+ * "Presented by <source> · Updated <when>" line under it, and the Election
+ * Day countdown on the right. This replaces the static sentence headline and
+ * the freshness-only line: the source is named again, up top, because the
+ * comp names it.
  *
- * Heading semantics: with a stable headline, the visible line IS the h1 —
- * the old arrangement (hidden h1 + h2 at title scale) existed only because
- * the visible one changed on every interaction.
+ * Dots — the forecast read in its short form beside a waffle of every seat
+ * in the chamber, one dot per seat, coloured by party. This replaces the
+ * seat bar. The ENCODING is the bar's, dot for pixel: the same three shares
+ * (dem / the neutral toss-up gap / rep) laid out as a grid instead of a
+ * track, so a race switch recolours exactly what the bar used to resize.
  */
 import { Countdown } from './Countdown';
+import { asset } from '../data/assets';
 import type { ForecastData } from '../data/hero';
+import { sourceLabel } from '../data/sources';
+import type { Chamber } from '../data/types';
 
-/** Document-level title, mirrored in <title>. Deliberately shorter than the
- *  visible headline: a browser tab has no room for the full sentence. */
+/** Document-level title, mirrored in <title>. */
 export const PAGE_TITLE = '2026 Midterms';
 
-/** The visible headline. */
-export const PAGE_HEADLINE = '2026 Midterms Elections and Predictions.';
+/** Providers that ship a wordmark in public/logos; the rest are set as text. */
+const SOURCE_LOGO: Record<string, string> = {
+  kalshi: 'logos/kalshi.svg',
+  polymarket: 'logos/polymarket.svg',
+};
 
 interface RaceHeaderProps {
-  byline: string;
+  chamber: Chamber;
   forecast: ForecastData;
+  /** Which provider's numbers the page is showing right now. */
+  sourceId: string;
   resultsMode: boolean;
-  /** Races already called — the seat bar's tail in results mode. */
+  /** The certified feed, once results are live. */
+  resultsSource?: string;
+  /** Races already called — the statement's subject in results mode. */
   called: number;
+  /** Total races in the chamber view, for the results statement. */
+  raceCount: number;
 }
 
-export function RaceHeader({ byline, forecast, resultsMode, called }: RaceHeaderProps) {
-  return (
-    <header className="race-header">
-      {/* Countdown above the headline, freshness below it. Only the freshness
-          line moves, so it alone is keyed for the crossfade. */}
-      <div className="race-statement">
-        <Countdown />
-        <h1 className="race-title">{PAGE_HEADLINE}</h1>
-        <p className="race-byline" key={byline}>
-          {byline}
-        </p>
-      </div>
+export function RaceHeader({
+  chamber,
+  forecast,
+  sourceId,
+  resultsMode,
+  resultsSource,
+  called,
+  raceCount,
+}: RaceHeaderProps) {
+  const presenter = resultsMode ? (resultsSource ?? 'the certified feed') : sourceLabel(sourceId);
+  const logo = resultsMode ? undefined : SOURCE_LOGO[sourceId];
+  const headline = resultsMode ? `${called} of ${raceCount} races called` : forecast.headline;
 
-      <SeatBar forecast={forecast} resultsMode={resultsMode} called={called} />
-    </header>
+  return (
+    <>
+      <header className="hub-header">
+        <div className="hub-brand">
+          <h1 className="hub-title">
+            The Midterms
+            {/* The '26 mark completes the name — it is part of the heading,
+                so its alt is the year the type is not spelling out. */}
+            <img className="hub-mark" src={asset('logos/midterms-26.svg')} alt="'26" />
+          </h1>
+          <p className="hub-byline">
+            <span className="hub-presented">
+              <em>Presented by</em>
+              {logo ? (
+                <img className="hub-logo" src={asset(logo)} alt={presenter} />
+              ) : (
+                <b className="hub-presenter">{presenter}</b>
+              )}
+            </span>
+            {(forecast.updated || resultsMode) && (
+              <>
+                <span className="hub-dot" aria-hidden="true">
+                  •
+                </span>
+                <span className="hub-updated">
+                  {resultsMode ? 'Updating live' : `Updated ${forecast.updated}`}
+                </span>
+              </>
+            )}
+          </p>
+        </div>
+        <Countdown />
+      </header>
+
+      <Dots forecast={forecast} chamber={chamber} headline={headline} resultsMode={resultsMode} called={called} />
+    </>
   );
 }
 
-interface SeatBarProps {
+interface DotsProps {
   forecast: ForecastData;
+  chamber: Chamber;
+  headline: string;
   resultsMode: boolean;
   called: number;
 }
 
 /**
- * Current composition as one bar: Democratic bloc, a NEUTRAL gap for the
- * races still in play, Republican bloc.
- *
- * Redesign Aug 2026 — the numbers no longer hang off the bar's ends with the
- * count anchored under the gap. They are a three-up label row underneath,
- * spread end to end, with the contested middle finally named rather than
- * implied. The bar's own aria-label is unchanged and still carries the whole
- * sentence, including the "N seats up" figure the visible row drops.
+ * One dot per seat. Reproduces the seat bar's split exactly — dem bloc, the
+ * neutral gap for the races still in play, rep bloc — as counts of the
+ * chamber's seats rather than percentages of a track. Reading order is the
+ * comp's: Republican dots first, from the top; Democratic dots fill from the
+ * bottom; the contested seats sit where the two meet.
  */
-export function SeatBar({ forecast, resultsMode, called }: SeatBarProps) {
+function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
+  const total = forecast.dem + forecast.rep;
   const gap = forecast.tossupShare;
-  const dem = Math.max(0, forecast.demShare - gap / 2);
-  const rep = Math.max(0, 100 - dem - gap);
+  const demShare = Math.max(0, forecast.demShare - gap / 2);
+  const dem = Math.round((total * demShare) / 100);
+  const toss = Math.round((total * gap) / 100);
+  const rep = Math.max(0, total - dem - toss);
   const tail = resultsMode
     ? `${called} called`
     : `${forecast.tossups} toss-up${forecast.tossups === 1 ? '' : 's'}`;
+  const body = chamber === 'governor' ? 'governorships' : chamber === 'house' ? 'House' : 'Senate';
+
+  const seats: Array<'rep' | 'toss' | 'dem'> = [
+    ...Array<'rep'>(rep).fill('rep'),
+    ...Array<'toss'>(toss).fill('toss'),
+    ...Array<'dem'>(dem).fill('dem'),
+  ];
 
   return (
-    <div className="seat-bar">
+    <section className="dots" aria-label={`${body} forecast`}>
+      {/* Keyed on the headline so a race switch crossfades the copy, the way
+          the old statement did. */}
+      <div className="dots-copy" key={headline}>
+        <h2 className="dots-title">{headline}</h2>
+        <p className="dots-seats">
+          <span>
+            <b className="dots-num dots-num--dem">{forecast.dem}</b> democrat seats
+          </span>
+          <span className="hub-dot" aria-hidden="true">
+            •
+          </span>
+          <span>
+            <b className="dots-num dots-num--rep">{forecast.rep}</b> republican seats
+          </span>
+        </p>
+      </div>
+
+      {/* The grid is one image to assistive tech — 435 list items would be
+          noise. The sentence is the seat bar's, unchanged. */}
       <div
-        className="seat-bar-track"
+        className="dots-grid"
         role="img"
-        aria-label={`Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${
-          forecast.dem + forecast.rep
-        }. ${forecast.seatsUp} seats up, ${tail}.`}
+        aria-label={`Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${total}. ${forecast.seatsUp} seats up, ${tail}.`}
       >
-        <span className="seat-bar-dem" style={{ width: `${dem}%` }} />
-        <span className="seat-bar-gap" style={{ width: `${gap}%` }} />
-        <span className="seat-bar-rep" style={{ width: `${rep}%` }} />
+        {seats.map((party, i) => (
+          <span key={i} className={`dot dot--${party}`} />
+        ))}
       </div>
-      <div className="seat-bar-labels" aria-hidden="true">
-        <p className="seat-bar-label">
-          Democrats: <b className="seat-bar-num seat-bar-num--dem">{forecast.dem}</b>
-        </p>
-        <p className="seat-bar-label">
-          {resultsMode ? 'Called' : 'Toss-ups'}:{' '}
-          <b className="seat-bar-num">{resultsMode ? called : forecast.tossups}</b>
-        </p>
-        <p className="seat-bar-label">
-          Republicans: <b className="seat-bar-num seat-bar-num--rep">{forecast.rep}</b>
-        </p>
-      </div>
-    </div>
+    </section>
   );
 }

@@ -4,7 +4,7 @@ import { saveTrust } from '../data/trust';
 
 /* The recolor wave. 6ms per state (~300ms across 51) keeps the sweep
    perceivable while landing inside the same window as the card's statement
-   fade (200ms) and seat-bar widths (300ms) — a race switch has to read as
+   fade (200ms) and the seat dots' recolour (300ms) — a race switch has to read as
    ONE instrument recalculating, not four things updating in sequence. */
 const STAGGER_STEP_MS = 6;
 const STAGGER_TOTAL_MS = 51 * STAGGER_STEP_MS + 450; // wave + longest transition
