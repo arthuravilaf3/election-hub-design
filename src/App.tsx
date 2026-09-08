@@ -208,7 +208,6 @@ export default function App() {
             forecast={forecast}
             sourceId={state.sourceId}
             resultsMode={anyResults}
-            resultsSource={resultsSource}
             called={called}
             raceCount={Object.keys(races).length}
           />
@@ -257,11 +256,7 @@ export default function App() {
               the plan banner sits where the surface-step used to be. */}
           <PlanBanner />
 
-          <CoverageFeed
-            ballot={state.ballot}
-            sourceId={state.sourceId}
-            showRaceTags={features.raceTags}
-          />
+          <CoverageFeed />
 
           {/* Race calls, cutover notices and control changes are announced politely. */}
           <div aria-live="polite" className="visually-hidden">

@@ -354,7 +354,7 @@ await page.waitForTimeout(120);
 const goo = await page.evaluate(() => { const h = document.querySelector('.dot.is-goo'); return { hot: document.querySelectorAll('.dot.is-goo').length, scale: h ? getComputedStyle(h).transform : 'none' }; });
 check('the dots the pointer crossed go gooey', goo.hot >= 2 && goo.hot <= 6, true);
 check('the goo filter is on only while dots are hot', await page.evaluate(() => /dots-goo/.test(getComputedStyle(document.querySelector('.dots-grid')).filter)), true);
-check('a gooey dot grows just to tangency', /matrix\(1\.1[0-9]/.test(goo.scale), true);
+check('a gooey dot barely grows (the blur draws the neck)', /matrix\(1\.0[4-9]/.test(goo.scale), true);
 await page.waitForTimeout(800);
 check('they let go again', await page.evaluate(() => document.querySelectorAll('.dot.is-goo').length), 0);
 check('and the filter switches off again', await page.evaluate(() => getComputedStyle(document.querySelector('.dots-grid')).filter), 'none');

@@ -17,18 +17,13 @@
 import { useEffect, useRef } from 'react';
 import { Countdown } from './Countdown';
 import { asset } from '../data/assets';
+import polymarketLogo from '../images/polymarketlogo.png';
 import type { ForecastData } from '../data/hero';
-import { sourceLabel } from '../data/sources';
 import type { Chamber } from '../data/types';
 
 /** Document-level title, mirrored in <title>. */
 export const PAGE_TITLE = '2026 Midterms';
 
-/** Providers that ship a wordmark in public/logos; the rest are set as text. */
-const SOURCE_LOGO: Record<string, string> = {
-  kalshi: 'logos/kalshi.svg',
-  polymarket: 'logos/polymarket.svg',
-};
 
 interface RaceHeaderProps {
   chamber: Chamber;
@@ -36,8 +31,6 @@ interface RaceHeaderProps {
   /** Which provider's numbers the page is showing right now. */
   sourceId: string;
   resultsMode: boolean;
-  /** The certified feed, once results are live. */
-  resultsSource?: string;
   /** Races already called — the statement's subject in results mode. */
   called: number;
   /** Total races in the chamber view, for the results statement. */
@@ -49,12 +42,12 @@ export function RaceHeader({
   forecast,
   sourceId,
   resultsMode,
-  resultsSource,
   called,
   raceCount,
 }: RaceHeaderProps) {
-  const presenter = resultsMode ? (resultsSource ?? 'the certified feed') : sourceLabel(sourceId);
-  const logo = resultsMode ? undefined : SOURCE_LOGO[sourceId];
+  /* The presenting sponsor is Polymarket, whatever source the map shows —
+     "Presented by" is a partnership line, not a data attribution. The data
+     source stays named where it lives: the SOURCE pill and the panel. */
   const headline = resultsMode ? `${called} of ${raceCount} races called` : forecast.headline;
 
   return (
@@ -70,11 +63,7 @@ export function RaceHeader({
           <p className="hub-byline">
             <span className="hub-presented">
               <em>Presented by</em>
-              {logo ? (
-                <img className="hub-logo" src={asset(logo)} alt={presenter} />
-              ) : (
-                <b className="hub-presenter">{presenter}</b>
-              )}
+              <img className="hub-logo" src={polymarketLogo} alt="Polymarket" />
             </span>
             {(forecast.updated || resultsMode) && (
               <>
@@ -238,8 +227,8 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
           <filter id="dots-goo">
             {/* Small blur + hard threshold: only circles that actually overlap
                 fuse, and the neck between them stays thin. */}
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -12" result="goo" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -13" result="goo" />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
         </defs>

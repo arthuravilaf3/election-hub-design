@@ -374,7 +374,9 @@ button,
      pinning a height: a fixed card height would rescale the SVG and reframe
      every camera target. 1312 - 2*6% = 1154 wide map, x 610/975 = 722 tall,
      + 120 + 52 = 894. */
-  padding: 120px clamp(32px, 6%, 80px) 52px;
+  /* 15% sides = the map at ~80% of the width it had at 6% (Sep 2026: "20%
+     smaller"); top/bottom trimmed to match. */
+  padding: 96px clamp(32px, 15%, 200px) 40px;
 }
 
 .election-map {
@@ -760,7 +762,9 @@ button,
    stand-in. The '26 mark rides the cap height, top-aligned with the type. */
 .hub-title {
   display: flex;
-  align-items: flex-start;
+  /* baseline: an <img> contributes its bottom edge, so the mark's foot sits
+     exactly on the type's baseline, as in the comp. */
+  align-items: baseline;
   gap: 16px;
   margin: 0;
   font-size: 64px;
@@ -774,7 +778,6 @@ button,
   flex: none;
   width: 90px;
   height: 77px;
-  margin-top: -6px;
 }
 
 .hub-byline {
@@ -852,12 +855,54 @@ button,
 }
 
 .countdown-num {
+  position: relative;
+  display: block;
+  height: 1em;
+  overflow: hidden;
   font-size: 56px;
   line-height: 1;
   font-weight: 400;
   letter-spacing: -0.02em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* The roll: the new figure rises from below, the old one leaves upward. */
+.countdown-roll-in {
+  display: block;
+  animation: roll-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.countdown-roll-out {
+  position: absolute;
+  inset: 0;
+  display: block;
+  animation: roll-out 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes roll-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes roll-out {
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .countdown-roll-in,
+  .countdown-roll-out {
+    animation: none;
+  }
+
+  .countdown-roll-out {
+    display: none;
+  }
 }
 
 .countdown-label {
@@ -979,7 +1024,7 @@ button,
   /* 1.12x: with a 4px gap a 24px dot grows to just touch its neighbours —
      tangent, not overlapping. Overlapping circles already have a wide waist;
      tangent ones only get the thin bridge the blur draws between them. */
-  transform: scale(1.12);
+  transform: scale(1.06);
   z-index: 1;
 }
 
@@ -1778,17 +1823,21 @@ button,
   margin-top: 72px;
   padding: 0 16px 64px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 388px;
-  column-gap: 84px;
+  grid-template-columns: 304px minmax(0, 1fr) 304px;
+  column-gap: 56px;
 }
 
 .feed-rail {
   min-width: 0;
 }
 
+/* Two ad rails, one per side, no divider — the columns separate themselves. */
 .feed-ad-rail {
-  border-left: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-  padding-left: 84px;
+  min-width: 0;
+}
+
+.feed-ad-rail--left {
+  order: -1;
 }
 
 /* Sticky is safe now: removing the 100vw bleed also removed the
@@ -1910,7 +1959,7 @@ button,
 .feed-item,
 .feed-skeleton,
 .feed-date {
-  max-width: 864px;
+  max-width: 608px;
 }
 
 /* DS Card Feed (Sep 2026): avatar-led. 48px identity mark on the left, one
@@ -1951,7 +2000,9 @@ button,
 .feed-item + .feed-item,
 .feed-item + .feed-skeletons,
 .feed-ad + .feed-item {
-  margin-top: 40px;
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
 /* The column: attribution + headline block, then the media, 32 apart. */
@@ -1961,7 +2012,9 @@ button,
   gap: 32px;
 }
 
-.feed-head {
+/* The card's head: attribution row, then the headline block. (Not
+   .feed-head — that is the SECTION header above the list.) */
+.feed-card-head {
   display: grid;
   gap: 12px;
 }
@@ -4204,6 +4257,18 @@ button,
 
 @media (max-width: 700px) {
   .phase-switcher {
+    display: none;
+  }
+}
+
+/* Three feed columns need the whole 1312 rail. Below that: one column, no
+   rails — the inline ad slots come back on their own. */
+@media (max-width: 1200px) {
+  .feed-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .feed-ad-rail {
     display: none;
   }
 }

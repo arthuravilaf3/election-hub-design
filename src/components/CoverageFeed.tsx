@@ -9,13 +9,11 @@
 // hand off (stubbed), filter changes announced to screen readers.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { RaceTag } from './RaceTag';
 import { track } from '../data/analytics';
 import { ALL_ITEMS, FILTERS, HOSTS, HOST_FILTERABLE, TAGGED_STATE_IDS } from '../data/feedItems';
 import { STATE_SHAPES } from '../data/states';
 import type { FeedItem, ItemKind } from '../data/feedItems';
 import { isVisited, markVisited } from '../data/visited';
-import type { Ballot } from '../data/types';
 
 /** Mock global flag: ad-free subscribers see ZERO ad slots (PRD tenet 4).
  *  Togglable per-visit via ?adfree for testing both layouts. */
@@ -145,15 +143,7 @@ function SkeletonRows({ count }: { count: number }) {
   );
 }
 
-interface CoverageFeedProps {
-  /** Live ballot + active source: race-tag dots mirror the map exactly. */
-  ballot: Ballot;
-  sourceId: string;
-  /** Phase gate: tags and the hand-off into the map are a later delivery. */
-  showRaceTags?: boolean;
-}
-
-export function CoverageFeed({ ballot, sourceId, showRaceTags = true }: CoverageFeedProps) {
+export function CoverageFeed() {
   const [filter, setFilter] = useState<ItemKind | 'all'>('all');
   const [host, setHost] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -445,7 +435,7 @@ export function CoverageFeed({ ballot, sourceId, showRaceTags = true }: Coverage
         )}
 
         <div className="feed-body">
-          <div className="feed-head">
+          <div className="feed-card-head">
             <div className="feed-attrib">
               <p className="feed-meta">
                 <span className="feed-author">{item.author}</span>
@@ -453,9 +443,6 @@ export function CoverageFeed({ ballot, sourceId, showRaceTags = true }: Coverage
                 <span className="feed-kind">{kindLabel}</span>
                 <span className="feed-sep" aria-hidden="true">•</span>
                 <span className="feed-time">{item.time}</span>
-                {showRaceTags && item.tag && (
-                  <RaceTag tag={item.tag} ballot={ballot} sourceId={sourceId} />
-                )}
               </p>
               <button
                 type="button"
@@ -948,8 +935,17 @@ export function CoverageFeed({ ballot, sourceId, showRaceTags = true }: Coverage
       {/* The comp's second column. Above 1080 this rail carries the ad
           inventory and the in-feed slots stand down (see index.css) — running
           both would double it. Ad-free tiers get neither (PRD tenet 4). */}
+      {/* Two rails, one per side (Sep 2026). Each is its own landmark. */}
       {!IS_AD_FREE && (
-        <aside className="feed-ad-rail" aria-label="Advertisement">
+        <aside className="feed-ad-rail feed-ad-rail--left" aria-label="Advertisement, left">
+          <div className="feed-ad-rail-inner">
+            <p className="feed-ad-rail-label">ADVERTISEMENT</p>
+            <div className="feed-ad-rail-slot" data-impression="ad-rail-left" />
+          </div>
+        </aside>
+      )}
+      {!IS_AD_FREE && (
+        <aside className="feed-ad-rail feed-ad-rail--right" aria-label="Advertisement, right">
           {/* The column stretches so its left rule runs the full height of
               the stream; only this inner block sticks. */}
           <div className="feed-ad-rail-inner">

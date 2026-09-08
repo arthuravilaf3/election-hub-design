@@ -1,7 +1,7 @@
 // Election Day countdown (PRD P1). Redesign Sep 2026: a LIVE clock — days,
 // hours, minutes, seconds — ticking once a second under the hub header.
 // The interval is the only timer in the app; it is cleared on unmount.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export const ELECTION_DAY = '2026-11-03T00:00:00-05:00';
 
@@ -26,6 +26,37 @@ function partsUntil(target: string, now: number): Parts {
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * A figure that ROLLS when it changes: the new value rises in from below
+ * while the old one leaves upward, inside a clipped box one line tall. Keyed
+ * on the value, so React mounts a fresh pair per change; the leaving copy is
+ * kept for the length of the animation and then dropped. Reduced motion
+ * collapses it to a plain swap (see the CSS pair).
+ */
+function Roll({ value }: { value: string }) {
+  const prev = useRef(value);
+  const [leaving, setLeaving] = useState<string | null>(null);
+  useEffect(() => {
+    if (prev.current === value) return;
+    setLeaving(prev.current);
+    prev.current = value;
+    const id = window.setTimeout(() => setLeaving(null), 450);
+    return () => window.clearTimeout(id);
+  }, [value]);
+  return (
+    <span className="countdown-num">
+      <span className="countdown-roll-in" key={`in-${value}`}>
+        {value}
+      </span>
+      {leaving !== null && (
+        <span className="countdown-roll-out" aria-hidden="true" key={`out-${leaving}`}>
+          {leaving}
+        </span>
+      )}
+    </span>
+  );
+}
 
 interface CountdownProps {
   /** Test seam: freeze the clock at a given instant. */
@@ -62,7 +93,7 @@ export function Countdown({ now }: CountdownProps) {
     >
       {units.map(([value, label]) => (
         <span className="countdown-unit" key={label}>
-          <span className="countdown-num">{value}</span>
+          <Roll value={value} />
           <span className="countdown-label">{label}</span>
         </span>
       ))}
