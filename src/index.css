@@ -4328,11 +4328,19 @@ button,
   background: var(--surface-dim);
 }
 
-.poly-ticker iframe {
+.poly-ticker iframe,
+.poly-ticker-img {
   display: block;
   width: 100%;
   height: var(--ticker-h);
   border: 0;
+}
+
+/* The stand-in capture is 1440 wide: pin it left and crop the right edge on
+   narrower viewports, never squash it. */
+.poly-ticker-img {
+  object-fit: cover;
+  object-position: left center;
 }
 
 body {
