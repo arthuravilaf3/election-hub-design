@@ -76,64 +76,8 @@ export function ElectionMap({
   onClearZoom,
 }: ElectionMapProps) {
   const pathRefs = useRef(new Map<string, SVGPathElement>());
-  const cameraRef = useRef<SVGGElement>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
-  /* DRAG TO PAN (Sep 2026). The map moves left/right/up/down under a drag
-     and never scales — there is no zoom any more, by decision. Imperative:
-     the translate is written straight onto the camera group during the
-     drag (a re-render per pointer move over 51 paths is the wrong tool).
-     A drag that travelled more than a few pixels swallows the click that
-     ends it, so letting go over a state does not open it. Pixels convert
-     to viewBox units through the SVG's own CTM, so the map follows the
-     pointer 1:1 at any rendered size. Clamped so most of the map can never
-     leave the frame. */
-  const pan = useRef({ x: 0, y: 0 });
-  const drag = useRef<{ id: number; x: number; y: number; ox: number; oy: number; moved: boolean } | null>(null);
-  const [panning, setPanning] = useState(false);
-  const applyPan = () => {
-    const c = cameraRef.current;
-    if (c) c.style.transform = pan.current.x || pan.current.y ? `translate(${pan.current.x}px, ${pan.current.y}px)` : '';
-  };
-  const onPanStart = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (e.button !== 0) return;
-    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, ox: pan.current.x, oy: pan.current.y, moved: false };
-  };
-  const onPanMove = (e: React.PointerEvent<SVGSVGElement>) => {
-    const d = drag.current;
-    if (!d || d.id !== e.pointerId) return;
-    const dx = e.clientX - d.x;
-    const dy = e.clientY - d.y;
-    if (!d.moved && Math.hypot(dx, dy) < 4) return;
-    if (!d.moved) {
-      d.moved = true;
-      setPanning(true);
-      e.currentTarget.setPointerCapture(e.pointerId);
-      setTooltip(null);
-    }
-    const ctm = e.currentTarget.getScreenCTM();
-    const k = ctm ? 1 / ctm.a : 1; // screen px -> viewBox units
-    const [, , vw, vh] = MAP_VIEWBOX.split(' ').map(Number);
-    pan.current = {
-      x: Math.max(-vw * 0.6, Math.min(vw * 0.6, d.ox + dx * k)),
-      y: Math.max(-vh * 0.6, Math.min(vh * 0.6, d.oy + dy * k)),
-    };
-    applyPan();
-  };
-  const onPanEnd = (e: React.PointerEvent<SVGSVGElement>) => {
-    const d = drag.current;
-    if (!d || d.id !== e.pointerId) return;
-    if (d.moved) {
-      // Keep the flag through the click that follows pointerup, then clear.
-      window.setTimeout(() => {
-        drag.current = null;
-      }, 0);
-      setPanning(false);
-    } else {
-      drag.current = null;
-    }
-  };
-  const justDragged = () => !!drag.current?.moved;
   /** Geometry centers for the state-abbreviation labels (measured once). */
   const [labelBoxes, setLabelBoxes] = useState<Record<string, Box>>({});
 
@@ -187,8 +131,6 @@ export function ElectionMap({
   };
 
   const handleActivate = (stateId: string) => {
-    // A drag that ended here is not a click.
-    if (justDragged()) return;
     // The open state itself: nothing to do (close is the X or Escape).
     if (stateId === zoomedId) return;
     if (!races[stateId]) {
@@ -275,11 +217,7 @@ export function ElectionMap({
           the compositor rasterize + resample it, pixelating the borders. */}
           <svg
             viewBox={MAP_VIEWBOX}
-            className={`election-map${panning ? ' is-panning' : ''}`}
-            onPointerDown={onPanStart}
-            onPointerMove={onPanMove}
-            onPointerUp={onPanEnd}
-            onPointerCancel={onPanEnd}
+            className="election-map"
             role="group"
             aria-label={`United States ${CHAMBER_LABEL[chamber]} map. States are focusable; press Enter or Space to select.`}
           >
@@ -315,7 +253,7 @@ export function ElectionMap({
               </pattern>
             </defs>
 
-            <g ref={cameraRef} className="map-camera">
+            <g className="map-camera">
               <g className="map-rest">
                 {rest.map(([shape, index]) => renderState(shape, index))}
               </g>
@@ -415,7 +353,7 @@ export function ElectionMap({
             </g>
           </svg>
 
-      {tooltip && !panning && (
+      {tooltip && (
         <MapTooltip
           name={tooltip.name}
           race={races[tooltip.id]}

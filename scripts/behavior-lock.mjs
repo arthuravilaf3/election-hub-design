@@ -57,6 +57,15 @@ check('statement crossfade', statics.statementAnim, '0.2s');
 // .dot carries two transitions now: background (the recolour, 300ms) and transform (the hover goo, 220ms).
 check('dot recolour + goo transitions', statics.seatBarTransition, '0.3s, 0.22s');
 check('no SVG ancestor transform', statics.svgAncestorTransforms.length, 0);
+// The countdown is a live clock: it ticks.
+{
+  const s1 = await page.evaluate(() => document.querySelectorAll('.countdown-num')[3].textContent);
+  await page.waitForTimeout(1150);
+  const s2 = await page.evaluate(() => document.querySelectorAll('.countdown-num')[3].textContent);
+  check('countdown has four units', await page.evaluate(() => [...document.querySelectorAll('.countdown-label')].map((e) => e.textContent).join(',')), 'days,hours,minutes,seconds');
+  check('countdown seconds tick', s1 !== s2, true);
+  check('countdown is a timer, not a live region', await page.evaluate(() => document.querySelector('.countdown').getAttribute('role') + '/' + document.querySelector('.countdown').getAttribute('aria-live')), 'timer/null');
+}
 check(
   'sticky chrome is the nav only',
   await page.evaluate(() =>
@@ -218,32 +227,16 @@ check(
 );
 check('the map still did not move', await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform), 'none');
 
-// ---- drag to pan: four directions, never a zoom ---------------------------
-const svgBox = await page.locator('.election-map').boundingBox();
-const cx = svgBox.x + svgBox.width * 0.5;
-const cy = svgBox.y + svgBox.height * 0.15; // ocean above the states
-await page.mouse.move(cx, cy);
-await page.mouse.down();
-await page.mouse.move(cx + 120, cy + 60, { steps: 8 });
-await page.mouse.up();
-await page.waitForTimeout(150);
-const panned = await page.evaluate(() => {
-  const m = new DOMMatrix(getComputedStyle(document.querySelector('.map-camera')).transform);
-  return { dx: Math.round(m.e), dy: Math.round(m.f), scale: +m.a.toFixed(3), cursor: getComputedStyle(document.querySelector('.election-map')).cursor };
-});
-check('a drag pans the map right', panned.dx > 20, true);
-check('a drag pans the map down', panned.dy > 10, true);
-check('panning never scales', panned.scale, 1);
-check('the map is a grab surface', panned.cursor, 'grab');
-check('a drag does not open the state it ends on', await page.evaluate(() => document.querySelector('.drawer-breadcrumb')?.textContent.trim()), (v) => /California/.test(v));
-// Start the return drag well left of the panel: after the first drag the
-// old start point can sit over the drawer, which is not a grab surface.
-await page.mouse.move(cx, cy + 60);
-await page.mouse.down();
-await page.mouse.move(cx - 120, cy, { steps: 8 });
-await page.mouse.up();
-await page.waitForTimeout(150);
-check('and pans back the other way', await page.evaluate(() => { const m = new DOMMatrix(getComputedStyle(document.querySelector('.map-camera')).transform); return Math.abs(m.e) < 6 && Math.abs(m.f) < 6; }), true);
+// ---- no pan, no zoom: the map never moves under the pointer ----------------
+{
+  const sb = await page.locator('.election-map').boundingBox();
+  await page.mouse.move(sb.x + sb.width * 0.5, sb.y + sb.height * 0.15);
+  await page.mouse.down();
+  await page.mouse.move(sb.x + sb.width * 0.5 + 120, sb.y + sb.height * 0.15 + 60, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+  check('a drag does not move the map', await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform), 'none');
+}
 
 // The arrows DO move it.
 await page.locator('.drawer-nav-btn').nth(1).click();

@@ -515,7 +515,7 @@ const opinionTone = await page.evaluate(() => {
     kicker: !!document.querySelector('.feed-kicker'),
     badge: !!document.querySelector('.feed-plus'),
     lock: !!document.querySelector('.feed-lock'),
-    rowThumbOverlay: !!document.querySelector('.feed-item .feed-thumb > :not(.feed-img)'),
+    rowThumbOverlay: !!document.querySelector('.feed-item--opinion .feed-thumb > :not(.feed-img)'),
   };
 });
 await page.getByRole('button', { name: 'Shorts', exact: true }).click();

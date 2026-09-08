@@ -392,13 +392,34 @@ export function CoverageFeed({ ballot, sourceId, showRaceTags = true }: Coverage
   }, [visible, loading, filter, host]);
 
   /* ---- render list: day groups + ad slots ---- */
+  /* The DS "Card Feed" row (DailyWire 3.0 App Design System, Card Feed):
+     avatar-led — a 48px identity mark on the left (circle; square for an
+     episode, where it is the show's art), and one column on the right
+     holding the attribution row, the headline block and a full-width media
+     surface. One shape for all content types; the type decides the media
+     (16:9 still, 9:16 short with a mute mark, episode still with its
+     duration badge) and whether the description shows (articles and opinion
+     only). No background, no border, no divider — separation belongs to the
+     list. Hover changes the headline colour and nothing else. */
+  const KIND_LABEL_CARD: Record<FeedItem['kind'], string> = {
+    article: 'Article',
+    opinion: 'Opinion',
+    short: 'Short',
+    episode: 'Episode',
+  };
+  const initialsOf = (name: string) =>
+    name
+      .split(' ')
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join('');
   const renderFeedItem = (item: FeedItem) => {
-    // The comp leads the meta line with a recency badge in bold; ours is the
-    // real relative timestamp, emphasised only while the item is from today.
-    const fresh = item.day.startsWith('Today');
+    // The DS writes the episode number here ("Ep. 1520"); the fixture has none.
+    const kindLabel = KIND_LABEL_CARD[item.kind];
+    const showDek = (item.kind === 'article' || item.kind === 'opinion') && !!item.dek;
     return (
       <article
-        className={`feed-item${item.opinion ? ' feed-item--opinion' : ''}${
+        className={`feed-item feed-item--${item.kind}${item.opinion ? ' feed-item--opinion' : ''}${
           isVisited(item.id) ? ' is-visited' : ''
         }`}
         key={item.id}
@@ -411,41 +432,73 @@ export function CoverageFeed({ ballot, sourceId, showRaceTags = true }: Coverage
           track('feed_item_click', { id: item.id, kind: item.kind });
         }}
       >
-        {/* dailywire.com list pattern: square still on the left, headline
-            and meta to its right. The box is sized in CSS, so the image
-            landing later never shifts the row. */}
-        <div className="feed-thumb" aria-hidden="true">
-          <img className="feed-img" src={item.image} alt="" loading="lazy" decoding="async" />
-        </div>
+        {/* Identity mark: the show's art for an episode, initials otherwise
+            (host photos have not landed). */}
+        {item.kind === 'episode' ? (
+          <span className="feed-avatar feed-avatar--square" aria-hidden="true">
+            <img src={item.image} alt="" loading="lazy" decoding="async" />
+          </span>
+        ) : (
+          <span className="feed-avatar" aria-hidden="true">
+            {initialsOf(item.host ?? item.author)}
+          </span>
+        )}
+
         <div className="feed-body">
-          <h3 className="feed-headline">{item.headline}</h3>
-          {item.dek && <p className="feed-dek">{item.dek}</p>}
-          {/* Timestamp rides in the meta line now that the left column
-              belongs to the image. */}
-          {/* Comp's meta line: recency · read time · [host] By Author, then a
-              wider gap before the race tag. The FIRST slot is the only bold
-              one, and only while the item is from today. */}
-          <p className="feed-meta">
-            <span className="feed-metadata">
-              <span className={`feed-time${fresh ? ' is-fresh' : ''}`}>{item.time}</span>
-              <span className="feed-sep" aria-hidden="true">•</span>
-              <span>{item.metaTail}</span>
-              <span className="feed-sep" aria-hidden="true">•</span>
-              {item.host && (
-                <span className="feed-byline-avatar" aria-hidden="true">
-                  {item.host
-                    .split(' ')
-                    .map((w) => w[0])
-                    .slice(0, 2)
-                    .join('')}
-                </span>
+          <div className="feed-head">
+            <div className="feed-attrib">
+              <p className="feed-meta">
+                <span className="feed-author">{item.author}</span>
+                <span className="feed-sep" aria-hidden="true">•</span>
+                <span className="feed-kind">{kindLabel}</span>
+                <span className="feed-sep" aria-hidden="true">•</span>
+                <span className="feed-time">{item.time}</span>
+                {showRaceTags && item.tag && (
+                  <RaceTag tag={item.tag} ballot={ballot} sourceId={sourceId} />
+                )}
+              </p>
+              <button
+                type="button"
+                className="feed-kebab"
+                aria-label="More options"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  track('feed_item_menu', { id: item.id });
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <circle cx="12" cy="5" r="1.8" />
+                  <circle cx="12" cy="12" r="1.8" />
+                  <circle cx="12" cy="19" r="1.8" />
+                </svg>
+              </button>
+            </div>
+            <div className="feed-text">
+              <h3 className="feed-headline">{item.headline}</h3>
+              {showDek && <p className="feed-dek">{item.dek}</p>}
+            </div>
+          </div>
+
+          {/* The media surface, by content type. Boxes are sized in CSS so an
+              image landing later never shifts the row. */}
+          {item.kind === 'short' ? (
+            <div className="feed-thumb feed-thumb--portrait" aria-hidden="true">
+              <img className="feed-img" src={item.imageTall ?? item.image} alt="" loading="lazy" decoding="async" />
+              <span className="feed-mute">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+                  <path d="m16 9 5 6M21 9l-5 6" />
+                </svg>
+              </span>
+            </div>
+          ) : (
+            <div className="feed-thumb" aria-hidden="true">
+              <img className="feed-img" src={item.imageWide} alt="" loading="lazy" decoding="async" />
+              {item.kind === 'episode' && item.duration && (
+                <span className="feed-duration">{item.duration}</span>
               )}
-              <span>By {item.author}</span>
-            </span>
-            {showRaceTags && item.tag && (
-              <RaceTag tag={item.tag} ballot={ballot} sourceId={sourceId} />
-            )}
-          </p>
+            </div>
+          )}
         </div>
       </article>
     );

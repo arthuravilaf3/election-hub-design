@@ -24,6 +24,8 @@ export interface FeedItem {
   video?: string; // shorts: public/ path to the loop
   /** Row thumbnail (DW CDN), square crop. */
   image: string;
+  /** The DS card's media surface: the same still at 16:9. */
+  imageWide: string;
   /** Shorts only — the same still at 9:16 for the card. */
   imageTall?: string;
   /** Editorial voice, independent of format: written pieces (kind
@@ -135,6 +137,7 @@ export const ALL_ITEMS: FeedItem[] = Array.from({ length: 36 }, (_, i) => {
     metaTail:
       kind === 'short' ? 'Short' : kind === 'episode' ? `${38 + (i % 3) * 9} min` : `${4 + (i % 5)} min`,
     image: stillFor(i),
+    imageWide: stillFor(i, 'wide'),
     tag: tagFor(headline),
     // Opinion voice: every written piece; commentary clips from the flagship
     // opinion hosts; "The Breakdown" analysis episodes.

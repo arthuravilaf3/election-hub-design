@@ -816,8 +816,8 @@ button,
   color: var(--ink-subtlest);
 }
 
-/* Right side: the clock, quiet. */
-.countdown {
+/* Right side: the tagline. The one brand-red word is chrome, not data. */
+.hub-tagline {
   flex: none;
   margin: 0;
   font-size: 20px;
@@ -826,8 +826,44 @@ button,
   text-align: right;
 }
 
-.countdown strong {
-  font-weight: 500;
+.hub-tagline strong {
+  font-weight: 700;
+  color: var(--brand-hover); /* brand/500 is 4.49:1 here, a hair under AA */
+}
+
+/* ---------- Countdown (live) ---------- */
+
+/* Four figures spread across the rail under the header's hairline: days,
+   hours, minutes, seconds, ticking. Big light numerals, quiet labels. */
+.countdown {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0;
+  padding: 48px 0 0;
+}
+
+.countdown-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 110px;
+}
+
+.countdown-num {
+  font-size: 56px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-label {
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ink-subtlest);
 }
 
 /* ---------- Dots (the forecast beside every seat) ---------- */
@@ -1877,13 +1913,39 @@ button,
   max-width: 864px;
 }
 
-/* Article card, per the comp: 16:9 still on the left, text column beside it,
-   rows separated by space rather than rules (only the day header rules). */
+/* DS Card Feed (Sep 2026): avatar-led. 48px identity mark on the left, one
+   column on the right. Rows are separated by space, never rules. */
 .feed-item {
   display: grid;
-  grid-template-columns: 204px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
+}
+
+.feed-avatar {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--surface-hover);
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1;
+  overflow: hidden;
+}
+
+/* An episode's mark is the show's art: square, r8. */
+.feed-avatar--square {
+  border-radius: 8px;
+}
+
+.feed-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .feed-item + .feed-item,
@@ -1892,90 +1954,84 @@ button,
   margin-top: 40px;
 }
 
-/* Relative timestamp rides in the meta line (the left column is the image). */
-.feed-time {
-  color: var(--ink-soft);
-}
-
+/* The column: attribution + headline block, then the media, 32 apart. */
 .feed-body {
   min-width: 0;
   display: grid;
-  gap: 14px;
-  justify-items: start;
+  gap: 32px;
+}
+
+.feed-head {
+  display: grid;
+  gap: 12px;
+}
+
+.feed-attrib {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Attribution: author • kind • time, 14px, quiet. The race tag rides at the
+   end of the same line. */
+.feed-meta {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ink-subtlest);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.feed-author {
+  color: var(--ink);
+}
+
+.feed-sep {
+  color: var(--ink-subtlest);
+}
+
+.feed-kebab {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin: -13px 0; /* the 40px hit area sits on a 14px line */
+  padding: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  transition: background 140ms ease-out;
+}
+
+.feed-kebab:hover {
+  background: var(--surface-hover);
+}
+
+.feed-text {
+  display: grid;
+  gap: 12px;
 }
 
 .feed-headline {
   margin: 0;
-  /* The comp's card uses Heading-Article-Content size=md weight=medium:
-     Libre Franklin 500 at 20px / 120%. (The xl/semibold variant is the
-     article PAGE headline, not the card.) */
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1.2;
   font-weight: 500;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: var(--ink);
 }
 
 .feed-dek {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
-  color: var(--ink-subtle);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Comp's meta row: the metadata group runs at gap 6, and the race tag sits
-   a wider 14 away from it. */
-.feed-meta {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1;
   color: var(--ink-subtlest);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.feed-metadata {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.feed-sep {
-  color: var(--ink-subtlest);
-  font-weight: 600;
-}
-
-/* Only the recency slot carries weight, and only while it is today's — the
-   comp's bold "New" against the gray "Today". */
-.feed-time.is-fresh {
-  font-weight: 600;
-  color: var(--ink);
-}
-
-/* 20px host mark before the byline (initials until real host photos land). */
-.feed-byline-avatar {
-  width: 20px;
-  height: 20px;
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--ink-soft);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
 }
 
 .feed-tag {
@@ -1988,15 +2044,35 @@ button,
   color: var(--ink);
 }
 
-/* Fixed 16:9 box + object-fit cover: the image can arrive whenever it likes,
-   the row never moves. The dark surface is the placeholder. */
+/* The media surface: full column width at 16:9, r8. Fixed box + cover, so
+   the image can arrive whenever it likes and the row never moves. */
 .feed-thumb {
   position: relative;
-  width: 204px;
+  width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--surface-2);
   overflow: hidden;
+}
+
+/* A short: 9:16, 330 wide, with the mute mark in the corner. */
+.feed-thumb--portrait {
+  width: min(330px, 100%);
+  aspect-ratio: 9 / 16;
+}
+
+.feed-mute {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fafafa;
 }
 
 .feed-img,
@@ -2009,26 +2085,17 @@ button,
 
 .feed-duration {
   position: absolute;
-  right: 6px;
-  bottom: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 6px;
+  right: 16px;
+  bottom: 16px;
+  padding: 6px 12px;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--surface-dim) 82%, transparent);
-  color: var(--ink);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fafafa;
+  font-size: 14px;
+  line-height: 1;
 }
 
 @media (max-width: 760px) {
-  .feed-item {
-    grid-template-columns: 148px minmax(0, 1fr);
-    gap: 12px;
-  }
-
-  .feed-thumb {
-    width: 148px;
-  }
-
   .feed-headline {
     font-size: 18px;
     line-height: 1.2;
@@ -3171,7 +3238,38 @@ button,
 .related-item:hover .related-headline,
 .feed-item:active .feed-headline,
 .related-item:active .related-headline {
-  color: var(--ink-soft);
+  color: var(--ink-subtlest);
+}
+
+/* DS Card Feed, Breakpoint=Mobile: 32px mark, tighter column, 16px title. */
+@media (max-width: 700px) {
+  .feed-item {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .feed-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .feed-body {
+    gap: 24px;
+  }
+
+  .feed-meta {
+    font-size: 12px;
+  }
+
+  .feed-kebab {
+    width: 32px;
+    height: 32px;
+    margin: -10px 0;
+  }
+
+  .feed-headline {
+    font-size: 16px;
+  }
 }
 
 /* ==================== MOBILE (<= 700px) ==================== */
@@ -3263,9 +3361,27 @@ button,
     margin-top: -2px;
   }
 
-  .countdown {
+  .hub-tagline {
     font-size: 16px;
     text-align: left;
+  }
+
+  .countdown {
+    padding-top: 24px;
+    gap: 8px;
+  }
+
+  .countdown-unit {
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .countdown-num {
+    font-size: 32px;
+  }
+
+  .countdown-label {
+    font-size: 14px;
   }
 
   .dots {
@@ -3378,9 +3494,6 @@ button,
     padding: 0;
   }
 
-  .feed-thumb {
-    width: 120px;
-  }
 
   .feed-body {
     gap: 8px;
@@ -3722,22 +3835,6 @@ button,
   margin: 0;
   font-size: 13px;
   color: var(--ink-subtlest);
-}
-
-/* Drag to pan: the whole SVG is a grab surface; states keep their pointer
-   cursor on top of it. touch-action pan-y leaves vertical page scrolling to
-   the browser on touch — a horizontal drag pans the map. */
-.election-map {
-  cursor: grab;
-  touch-action: pan-y;
-}
-
-.election-map.is-panning {
-  cursor: grabbing;
-}
-
-.election-map.is-panning .state-shape {
-  cursor: grabbing;
 }
 
 /* The zoomed frame belongs to the state and its panel — same fade the source

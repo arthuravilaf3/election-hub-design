@@ -20,8 +20,9 @@ const STILLS = [
 
 /** Square crop for the feed rows; 9:16 for shorts. auto=format lets imgix
  *  serve avif/webp where the browser takes it. */
-export function stillFor(index: number, shape: 'square' | 'portrait' = 'square'): string {
+export function stillFor(index: number, shape: 'square' | 'portrait' | 'wide' = 'square'): string {
   const src = STILLS[index % STILLS.length];
-  const crop = shape === 'square' ? 'w=480&h=480' : 'w=480&h=854';
+  // wide = the DS Card Feed media surface, 548x308 (16:9).
+  const crop = shape === 'square' ? 'w=480&h=480' : shape === 'wide' ? 'w=1096&h=616' : 'w=480&h=854';
   return `${src}?${crop}&fit=crop&auto=format`;
 }

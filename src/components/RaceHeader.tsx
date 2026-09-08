@@ -3,8 +3,8 @@
  * the dots block. The map card and the feed follow unchanged.
  *
  * Header — "The Midterms" with the '26 dot-matrix mark beside it, a
- * "Presented by <source> · Updated <when>" line under it, and the Election
- * Day countdown on the right. This replaces the static sentence headline and
+ * "Presented by <source> · Updated <when>" line under it, the tagline on the
+ * right, and under the hairline the live countdown to Election Day. This replaces the static sentence headline and
  * the freshness-only line: the source is named again, up top, because the
  * comp names it.
  *
@@ -88,8 +88,12 @@ export function RaceHeader({
             )}
           </p>
         </div>
-        <Countdown />
+        <p className="hub-tagline">
+          The <strong>right</strong> place to be.
+        </p>
       </header>
+
+      <Countdown />
 
       {/* Keyed on the filters so every race/source change replays the entry
           sweep — the dots come in from nothing, per the motion reference. */}
