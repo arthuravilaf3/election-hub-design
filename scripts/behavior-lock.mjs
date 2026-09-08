@@ -48,7 +48,8 @@ const statics = await page.evaluate(() => {
     })(),
   };
 });
-check('map-wrap transition', statics.mapWrapTransition, '0.55s');
+// Sep 2026: the padding no longer collapses when a state opens — nothing to transition.
+check('map-wrap has no padding transition', statics.mapWrapTransition, '0s');
 check('camera transform-origin', statics.cameraOrigin, '0px 0px');
 check('map-card overflow', statics.cardOverflow, 'clip');
 check('state fill transition', statics.stateTransition, '0.35s');
@@ -153,33 +154,38 @@ await page.waitForTimeout(200);
 check('focus shows tooltip', await page.evaluate(() => !!document.querySelector('.map-tooltip')), true);
 await page.evaluate(() => document.querySelector('.state-shape[data-state=TX]').blur());
 
-// ---- zoom ---------------------------------------------------------------
+// ---- opening a state (Sep 2026: no camera, no blur, no counties) ---------
+const paddingBefore = await page.evaluate(() => getComputedStyle(document.querySelector('.map-wrap')).paddingTop);
 await page.click('.state-shape[data-state=TX]');
 await page.waitForTimeout(900);
 const zoom = await page.evaluate(() => {
-  const frame = document.querySelector('.map-and-panel');
   const drawer = document.querySelector('.drawer');
+  const other = document.querySelector('.state-label:not(.state-label--open)');
   return {
     camera: getComputedStyle(document.querySelector('.map-camera')).transform,
     restFilter: getComputedStyle(document.querySelector('.map-rest')).filter,
     restOpacity: getComputedStyle(document.querySelector('.map-rest')).opacity,
+    openLabel: getComputedStyle(document.querySelector('.state-label--open')).opacity,
+    otherLabel: other ? getComputedStyle(other).opacity : null,
+    padding: getComputedStyle(document.querySelector('.map-wrap')).paddingTop,
     drawer: !!drawer,
     dialog: drawer?.getAttribute('role'),
     modal: drawer?.getAttribute('aria-modal'),
-    // the camera measures this fraction; it must match the painted layout
-    regionW: drawer ? +(drawer.offsetLeft / frame.clientWidth).toFixed(3) : null,
-    counties: document.querySelectorAll('.county-cell, .county-layer path').length > 0,
+    counties: document.querySelectorAll('.county-cell, .county-layer path').length,
     segHidden: getComputedStyle(document.querySelector('.map-selectors')).opacity,
     locked: document.body.classList.contains('is-scroll-locked'),
   };
 });
-check('camera transformed', zoom.camera !== 'none', true);
-check('rest layer blurred', /blur\(2\.5px\)/.test(zoom.restFilter), true);
-check('rest layer dimmed', zoom.restOpacity, '0.35');
+check('the map does not move', zoom.camera, 'none');
+check('no blur on the rest', zoom.restFilter, 'none');
+check('other states dim to 30%', zoom.restOpacity, '0.3');
+check('other labels dim with their states', zoom.otherLabel, '0.3');
+// Labels sit at 0.85/0.9 by tone; "full ink" means undimmed, not literally 1.
+check('the open state keeps its label undimmed', zoom.openLabel, (v) => parseFloat(v) >= 0.8);
+check('the map keeps its padding (no reflow)', zoom.padding, paddingBefore);
 check('drawer is a modal dialog', `${zoom.dialog}/${zoom.modal}`, 'dialog/true');
-check('counties rendered', zoom.counties, true);
-check('source control hidden while zoomed', zoom.segHidden, '0');
-check('measured region matches comp', zoom.regionW, (v) => v > 0.55 && v < 0.63);
+check('no county subdivision', zoom.counties, 0);
+check('source control hidden while a state is open', zoom.segHidden, '0');
 
 // ---- with the panel open, the map is inert ------------------------------
 const inert = await page.evaluate(() => {
@@ -279,14 +285,21 @@ await page.waitForTimeout(600);
 await page.evaluate(() => window.scrollTo(0, 0));
 await page.waitForTimeout(300);
 check(
-  'pills hidden while the centreline is off the card',
+  'pills visible on entry, before reaching the map',
+  await page.evaluate(() => document.querySelector('.map-selectors').classList.contains('is-offscreen')),
+  false
+);
+await page.evaluate(() => document.querySelector('.feed-section').scrollIntoView({ block: 'start' }));
+await page.waitForTimeout(400);
+check(
+  'pills hidden once the map is passed',
   await page.evaluate(() => document.querySelector('.map-selectors').classList.contains('is-offscreen')),
   true
 );
 await page.evaluate(() => document.querySelector('.map-card').scrollIntoView({ block: 'center' }));
 await page.waitForTimeout(400);
 check(
-  'pills shown while the centreline crosses the card',
+  'pills back while the map is on screen',
   await page.evaluate(() => document.querySelector('.map-selectors').classList.contains('is-offscreen')),
   false
 );
@@ -331,21 +344,39 @@ check('Escape commits nothing', esc.value, raceKb.value);
 await page.evaluate(() => document.body.click());
 await page.waitForTimeout(200);
 
-// ---- Sources compared: the three cards share one set of columns ---------
+// ---- Drawer tabs: Data / Related content --------------------------------
 await page.click('.state-shape[data-state=TX]');
 await page.waitForTimeout(900);
-const cols = await page.evaluate(() => {
-  const cards = [...document.querySelectorAll('.source-card')];
-  if (cards.length < 3) return null;
-  const col = (i) => cards.map((c) => Math.round(c.children[i].getBoundingClientRect().left));
-  const same = (a) => a.every((v) => v === a[0]);
-  return {
-    aligned: same(col(0)) && same(col(1)) && same(col(2)),
-    overflow: cards.some((c) => c.scrollWidth > c.clientWidth),
-  };
-});
-check('source cards share columns', cols?.aligned, true);
-check('source cards do not overflow', cols?.overflow, false);
+const tabs = await page.evaluate(() => ({
+  role: document.querySelector('.drawer-tabs')?.getAttribute('role'),
+  labels: [...document.querySelectorAll('.drawer-tab')].map((t) => t.textContent.trim()),
+  selected: document.querySelector('.drawer-tab[aria-selected="true"]')?.textContent.trim(),
+  sourcesCompared: document.body.innerText.includes('Sources compared'),
+  data: !!document.querySelector('.bar-list'),
+}));
+check('the panel has a tablist', tabs.role, 'tablist');
+check('tabs are Data / Related content', tabs.labels.join('|'), 'Data|Related content');
+check('Data is the default tab', tabs.selected, 'Data');
+check('Sources compared is gone', tabs.sourcesCompared, false);
+check('Data shows the candidate rows', tabs.data, true);
+await page.locator('.drawer-tab').nth(1).click();
+await page.waitForTimeout(400);
+const related = await page.evaluate(() => ({
+  panel: document.querySelector('#drawer-tabpanel')?.getAttribute('aria-labelledby'),
+  related: !!document.querySelector('.related'),
+  data: !!document.querySelector('.bar-list'),
+}));
+check('Related content renders the state feed', related.related, true);
+check('Related content hides the numbers', related.data, false);
+check('tabpanel is labelled by the active tab', related.panel, 'drawer-tab-related');
+await page.locator('.drawer-tab').nth(1).focus();
+await page.keyboard.press('ArrowLeft');
+await page.waitForTimeout(300);
+check(
+  'ArrowLeft returns to Data',
+  await page.evaluate(() => document.querySelector('.drawer-tab[aria-selected="true"]')?.textContent.trim()),
+  'Data'
+);
 await page.keyboard.press('Escape');
 await page.waitForTimeout(600);
 

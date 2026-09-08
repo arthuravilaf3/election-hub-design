@@ -375,17 +375,6 @@ button,
      every camera target. 1312 - 2*6% = 1154 wide map, x 610/975 = 722 tall,
      + 120 + 52 = 894. */
   padding: 120px clamp(32px, 6%, 80px) 52px;
-  transition: padding var(--camera-ms) cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.map-wrap.is-zoomed {
-  padding: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .map-wrap {
-    transition: none;
-  }
 }
 
 .election-map {
@@ -671,27 +660,46 @@ button,
   max-width: 68ch;
 }
 
-/* ---------- Camera (zoom + blur) ---------- */
+/* ---------- Open state (dim the rest) ---------- */
 
+/* The camera is gone (Sep 2026): opening a state no longer moves the map.
+   The group still exists — and stays untransformed — because the SVG paint
+   order and the rest/focus partition hang off it. */
 .map-camera {
   transform-origin: 0 0;
 }
 
-/* One filter on one group. Blurring each path separately allocates a filter
-   region per path, which is the expensive way to get the same picture. */
+/* One opacity on the un-focused group, not fifty per-path styles. 30% by
+   request — the open state keeps full ink and its neighbours recede. Same
+   easing family as the fill transition so it reads as one move. */
 .map-rest {
-  will-change: filter, opacity;
+  will-change: opacity;
+  transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.map-wrap.is-zoomed .map-rest,
+.map-wrap.is-zoomed .trust-markers,
+.map-wrap.is-zoomed .state-label:not(.state-label--open) {
+  opacity: 0.3;
+}
+
+.state-label,
+.trust-markers {
+  transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-rest,
+  .state-label,
+  .trust-markers {
+    transition: none;
+  }
 }
 
 .map-and-panel {
   position: relative;
   display: grid;
   gap: 12px;
-}
-
-/* States with no race in this chamber: inert — no lift, no hover feedback. */
-.state-shape.is-empty {
-  cursor: default;
 }
 
 /* ---------- Utilities ---------- */
@@ -884,18 +892,19 @@ button,
   color: var(--brand-hover);
 }
 
-/* 29 across at 24px + 4px gaps = 808, the comp's grid width; 435 seats fill
-   fifteen rows. Other chambers wrap to fewer rows on the same pitch. */
+/* Column count and gap come from the component per chamber (--dot-cols,
+   --dot-gap): the grid always spans its 808px, so fewer seats mean bigger
+   dots — 24px for the House's 435, 48px for the Senate's 100. */
 .dots-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 24px);
-  justify-content: end;
-  gap: 4px;
+  grid-template-columns: repeat(var(--dot-cols, 29), minmax(0, 1fr));
+  gap: var(--dot-gap, 4px);
+  width: 100%;
 }
 
 .dot {
-  width: 24px;
-  height: 24px;
+  aspect-ratio: 1;
+  width: 100%;
   border-radius: 999px;
   /* Same easing family as the map's fill transition, so a race switch reads
      as one recalculation here too. */
@@ -1009,13 +1018,7 @@ button,
 
 .trust-markers {
   transition: opacity 150ms ease-out;
-}
-
-.trust-markers.is-hidden {
-  opacity: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
+}@media (prefers-reduced-motion: reduce) {
   .trust-markers {
     transition: none;
   }
@@ -1249,17 +1252,16 @@ button,
   color: var(--ink-subtlest);
 }
 
-/* The local reading toggle — which provider's numbers this panel shows.
-   Underline marks the active one, with the row's own hairline underneath,
-   so the selection reads the same way the page's race tabs do. */
-.drawer-sources {
+/* The panel's two views — Data, Related content. Underline marks the active
+   one, with the row's own hairline underneath. */
+.drawer-tabs {
   display: flex;
   gap: 24px;
   padding: 0 24px;
   border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
-.drawer-src {
+.drawer-tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1275,25 +1277,16 @@ button,
   transition: color 140ms ease-out, border-color 140ms ease-out;
 }
 
-.drawer-src:hover {
+.drawer-tab:hover {
   color: var(--ink);
 }
 
-.drawer-src.is-active {
+.drawer-tab.is-active {
   color: var(--ink);
   font-weight: 600;
   border-bottom-color: var(--ink);
-}
-
-.drawer-src-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
-  flex: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .drawer-src {
+}@media (prefers-reduced-motion: reduce) {
+  .drawer-tab {
     transition: none;
   }
 }
@@ -1355,10 +1348,6 @@ button,
 }
 
 /* Cross-source comparison + trust picker */
-.drawer-reads {
-  display: grid;
-  gap: 8px;
-}
 
 /* Each comparison card IS the trust control (role=radio). Same row shape as
    before — the card only gained a right-hand slot and a picked state. */
@@ -1373,119 +1362,9 @@ button,
  * side padding — the tracks then overflow the card and the dot collides with
  * the label.)
  */
-.source-card {
-  font: inherit;
-  text-align: left;
-  display: grid;
-  grid-template-columns: 10px 108px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--ink) 6%, transparent);
-  border-radius: 12px;
-  font-size: 12px;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  transition: border-color 150ms ease-out, background 150ms ease-out;
-}
 
-.source-card:hover {
-  background: color-mix(in srgb, var(--ink) 4%, transparent);
-}
-
-/* Picked: accent border, no color-only signal — the badge says it in words. */
-.source-card.is-picked {
-  border-color: var(--brand);
-  background: color-mix(in srgb, var(--brand) 10%, transparent);
-}
-
-/* Right slot stacks state over freshness: the "as of" line moves down
-   instead of being squeezed out. */
-.source-card-slot {
-  display: grid;
-  justify-items: end;
-  gap: 3px;
-  text-align: right;
-}
-
-.trust-badge {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--brand);
-  color: var(--ink);
-  white-space: nowrap;
-}
-
-.trust-default {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  color: var(--ink-soft);
-  white-space: nowrap;
-}
-
-/* Idle cards stay quiet: the invitation only appears on hover/focus. */
-.trust-hint {
-  font-size: 10px;
-  color: var(--ink-soft);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 150ms ease-out;
-}
-
-.source-card:hover .trust-hint,
-.source-card:focus-visible .trust-hint {
-  opacity: 1;
-}
-
-/* Microcopy under the section title, and its inline reset action. */
-.trust-copy {
-  margin: 10px 0 12px;
-  font-size: 12px;
-  color: var(--ink-soft);
-}
-
-.trust-reset {
-  font: inherit;
-  font-size: 12px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.trust-reset:hover {
-  color: var(--brand-hover);
-}
-
-.trust-warn {
-  color: var(--warning);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .source-card,
-  .trust-hint {
-    transition: none;
-  }
-}
-
-.drawer-read-label {
-  font-weight: 600;
-  font-size: 13px;
-}
-
-/* The kind disclaimer, same words as the map's source control. */
+/* Picked: accent border, no color-only signal — the badge says it in words. *//* Right slot stacks state over freshness: the "as of" line moves down
+   instead of being squeezed out. *//* Idle cards stay quiet: the invitation only appears on hover/focus. *//* Microcopy under the section title, and its inline reset action. */@media (prefers-reduced-motion: reduce) {}/* The kind disclaimer, same words as the map's source control. */
 .source-kind {
   display: block;
   font-style: normal;
@@ -1494,23 +1373,7 @@ button,
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-soft);
-}
-
-.drawer-read-value {
-  color: var(--ink);
-}
-
-.drawer-read-meta {
-  color: var(--ink-soft);
-  font-size: 10px;
-}
-
-.drawer-read-meta.is-stale {
-  color: var(--warning);
-  font-weight: 600;
-}
-
-/* Lean chips (comparison rows + district rows) */
+}/* Lean chips (comparison rows + district rows) */
 .district-chip {
   width: 10px;
   height: 10px;
@@ -1805,13 +1668,7 @@ button,
 .state-labels {
   pointer-events: none;
   transition: opacity 250ms ease-out;
-}
-
-.state-labels.is-hidden {
-  opacity: 0;
-}
-
-.state-label {
+}.state-label {
   font-size: 11px;
   font-weight: 600;
   text-anchor: middle;
@@ -3216,47 +3073,6 @@ button,
   outline-offset: 1px;
 }
 
-/* ---------- Mock counties in the zoomed state (Aug 2026) ---------- */
-
-/* County cells: pure fills from the rating/results palette (inline) — no
-   divider strokes, the color steps ARE the division. The cells bloom in
-   sync with the camera flight (550ms = CAMERA_MS); only the text labels
-   wait for landing (their raster cost is the expensive part). */
-.county-layer {
-  pointer-events: none;
-  animation: county-in var(--camera-ms) cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.county-labels {
-  pointer-events: none;
-  animation: county-in 220ms ease-out both;
-}
-
-@keyframes county-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .county-layer,
-  .county-labels {
-    animation: none;
-  }
-}
-
-.county-cell {
-  stroke: none;
-}
-
-.county-label {
-  font-weight: 600;
-  text-anchor: middle;
-  dominant-baseline: central;
-  letter-spacing: 0.02em;
-  opacity: 0.75;
-}
-
 /* The drawer's scrollable middle: content scrolls under the fixed chrome;
    negative margins keep the scrollbar at the panel edge. */
 .drawer-scroll {
@@ -3426,14 +3242,8 @@ button,
   }
 
   .dots-grid {
-    grid-template-columns: repeat(auto-fill, 12px);
-    justify-content: start;
-    gap: 3px;
-  }
-
-  .dot {
-    width: 12px;
-    height: 12px;
+    grid-template-columns: repeat(var(--dot-cols-m, 20), minmax(0, 1fr));
+    gap: var(--dot-gap-m, 3px);
   }
 
   .map-card .pill {
@@ -4253,10 +4063,6 @@ button,
 }
 
 /* The comparison without the control (phases where the picker has no place). */
-.source-card.is-static {
-  cursor: default;
-  list-style: none;
-}
 
 @media (prefers-reduced-motion: reduce) {
   .phase-chip {

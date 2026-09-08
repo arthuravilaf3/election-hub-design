@@ -14,7 +14,7 @@
  * reporting, feed attribution) — no estimates beside a live count.
  */
 import { useEffect, useRef, useState } from 'react';
-import { DrawerNav, SourceTabs, type StateRef } from './DrawerChrome';
+import { DrawerNav, DrawerTabs, type DrawerTab, type StateRef } from './DrawerChrome';
 import {
   PARTY_LABEL,
   RATING_LABEL,
@@ -25,7 +25,7 @@ import {
   readLine,
   statusLine,
 } from '../data/encoding';
-import { SOURCES, sourceKind, sourceLabel } from '../data/sources';
+import { sourceKind } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 
 /** Long form for the panel title — the comp names the body, not the tab. */
@@ -36,6 +36,7 @@ const CHAMBER_TITLE: Record<Chamber, string> = {
 };
 import { districtLabel } from '../data/districts';
 import { asset } from '../data/assets';
+import { RelatedContent } from './RelatedContent';
 import type { Candidate, Chamber, District, StateRace } from '../data/types';
 
 const GROW_MS = 800;
@@ -106,172 +107,6 @@ function CandidateRows({ candidates }: { candidates: Candidate[] }) {
   );
 }
 
-interface TrustPickerProps {
-  race: StateRace;
-  stateName: string;
-  chamber: Chamber;
-  /** What colors the map everywhere else — the "Default" chip follows it. */
-  globalSourceId: string;
-  trustedSourceId?: string;
-  /** False = the comparison without the control: same three reads, no radio
-   *  semantics, no pick. The picker has no phase in the roadmap yet. */
-  pickable: boolean;
-  onTrust: (sourceId: string) => void;
-  onResetTrust: () => void;
-}
-
-/**
- * "Which read do you trust": the comparison cards ARE the control. One radio
- * group, one pick per state+race; picking re-points this state at that
- * provider on the map. Choosing the current pick again clears it.
- *
- * TENET GUARD: the pick never becomes a source of its own — the card still
- * shows that provider's own number in that provider's own units.
- */
-function TrustPicker({
-  race,
-  stateName,
-  chamber,
-  globalSourceId,
-  trustedSourceId,
-  pickable,
-  onTrust,
-  onResetTrust,
-}: TrustPickerProps) {
-  const groupRef = useRef<HTMLDivElement>(null);
-  const trustedRead = trustedSourceId ? readFor(race, trustedSourceId) : undefined;
-  const trustedMissing = !!trustedSourceId && !trustedRead;
-
-  // Radio-group keyboard contract: arrows move AND select, wrapping at the
-  // ends; Space/Enter is the button's own default (it toggles).
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    const dir = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
-      : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1
-      : 0;
-    if (!dir) return;
-    e.preventDefault();
-    const cards = [...(groupRef.current?.querySelectorAll<HTMLButtonElement>('.source-card') ?? [])];
-    const from = cards.findIndex((c) => c === document.activeElement);
-    const next = cards[(((from < 0 ? 0 : from) + dir) + cards.length) % cards.length];
-    if (!next) return;
-    next.focus({ preventScroll: true });
-    const id = next.dataset.source;
-    if (id && id !== trustedSourceId) onTrust(id);
-  };
-
-  if (!pickable) {
-    return (
-      <ul className="drawer-reads">
-        {SOURCES.map((s) => {
-          const read = readFor(race, s.id);
-          const freshness = freshnessOf(read);
-          return (
-            <li key={s.id} className="source-card is-static">
-              <span
-                className={`district-chip district-chip-${read ? leanOf(read) : 'tossup'}`}
-                aria-hidden="true"
-              />
-              <span className="drawer-read-label">
-                {s.label}
-                <em className="source-kind">{sourceKind(s.id)}</em>
-              </span>
-              <span className="drawer-read-value">
-                {read ? `${RATING_LABEL[ratingOf(read)]} — ${readLine(read)}` : 'Not rated'}
-              </span>
-              <span className="source-card-slot">
-                <span className={`drawer-read-meta${freshness.stale ? ' is-stale' : ''}`}>
-                  {freshness.stale ? '⚠ ' : ''}
-                  {freshness.label}
-                </span>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    );
-  }
-
-  return (
-    <>
-      <p className="trust-copy">
-        {trustedSourceId ? (
-          <>
-            Your map shows {stateName} per {sourceLabel(trustedSourceId)}.{' '}
-            <button type="button" className="trust-reset" onClick={onResetTrust}>
-              Reset to default
-            </button>
-            {trustedMissing && (
-              <span className="trust-warn"> {sourceLabel(trustedSourceId)} has no data for this race.</span>
-            )}
-          </>
-        ) : (
-          <>Tap a source to use it for {stateName} on your map.</>
-        )}
-      </p>
-
-      <div
-        className="drawer-reads"
-        role="radiogroup"
-        aria-label={`Choose a trusted source for ${stateName} ${CHAMBER_LABEL[chamber]}`}
-        ref={groupRef}
-        // Roving tabindex (ARIA APG): the RADIOS carry the tab stop, not the
-        // group — the group only routes the arrow keys.
-        tabIndex={-1}
-        onKeyDown={onKeyDown}
-      >
-        {SOURCES.map((s, i) => {
-          const read = readFor(race, s.id);
-          const freshness = freshnessOf(read);
-          const picked = trustedSourceId === s.id;
-          const isDefault = !trustedSourceId && s.id === globalSourceId;
-          return (
-            <button
-              key={s.id}
-              type="button"
-              role="radio"
-              aria-checked={picked}
-              data-source={s.id}
-              // Roving tab stop: the group is one stop, the pick (or the
-              // first card) is the entry point.
-              tabIndex={picked || (!trustedSourceId && i === 0) ? 0 : -1}
-              className={`source-card${picked ? ' is-picked' : ''}`}
-              onClick={() => onTrust(s.id)}
-            >
-              <span
-                className={`district-chip district-chip-${read ? leanOf(read) : 'tossup'}`}
-                aria-hidden="true"
-              />
-              {/* Same disclaimer the map's source control carries: what KIND
-                  of number this provider publishes. */}
-              <span className="drawer-read-label">
-                {s.label}
-                <em className="source-kind">{sourceKind(s.id)}</em>
-              </span>
-              <span className="drawer-read-value">
-                {read ? `${RATING_LABEL[ratingOf(read)]} — ${readLine(read)}` : 'Not rated'}
-              </span>
-              {/* Right slot stacks pick state over freshness, so the "as of"
-                  line is pushed down, never clipped or dropped. */}
-              <span className="source-card-slot">
-                {picked ? (
-                  <span className="trust-badge">✓ Your pick</span>
-                ) : isDefault ? (
-                  <span className="trust-default">Default</span>
-                ) : (
-                  <span className="trust-hint" aria-hidden="true">Trust this source</span>
-                )}
-                <span className={`drawer-read-meta${freshness.stale ? ' is-stale' : ''}`}>
-                  {freshness.stale ? '⚠ ' : ''}
-                  {freshness.label}
-                </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </>
-  );
-}
 
 /** How many district blocks show before the expander. */
 const DISTRICTS_PREVIEW = 10;
@@ -391,16 +226,10 @@ interface RacePanelProps {
   chamber: Chamber;
   prev: StateRef;
   next: StateRef;
-  /** This state+race's trusted source, if the reader declared one. */
-  trustedSourceId?: string;
-  /** Phase gates: what this delivery of the panel carries. */
-  showTrustPicker?: boolean;
   showFollow?: boolean;
   showDistricts?: boolean;
   onNavigate: (stateId: string) => void;
   onClose: () => void;
-  onTrust: (sourceId: string) => void;
-  onResetTrust: () => void;
 }
 
 export function RacePanel({
@@ -410,14 +239,10 @@ export function RacePanel({
   chamber,
   prev,
   next,
-  trustedSourceId,
-  showTrustPicker = true,
   showFollow = true,
   showDistricts = true,
   onNavigate,
   onClose,
-  onTrust,
-  onResetTrust,
 }: RacePanelProps) {
   const isResults = race.mode === 'results';
   // Follow is per-visit prototype state (the panel is keyed by state id).
@@ -425,12 +250,11 @@ export function RacePanel({
   const [following, setFollowing] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
 
-  /* Which provider's read this panel shows. Local to the drawer — the map
-     keeps the global source. Follows the global source when THAT changes, so
-     opening a state always starts on what the map is painting. */
-  const [viewSourceId, setViewSourceId] = useState(sourceId);
-  useEffect(() => setViewSourceId(sourceId), [sourceId]);
-  const viewRead = readFor(race, viewSourceId);
+  /* The panel reads whatever source the map is painting — the provider
+     toggle that used to live here is gone (Sep 2026). */
+  const viewRead = readFor(race, sourceId);
+  /* Which view: the numbers, or the coverage about this state. */
+  const [tab, setTab] = useState<DrawerTab>('data');
 
   /* The panel is a modal now (the page behind is frozen — see useScrollLock),
      so Tab must stay inside it: focus landing on the page behind would drag
@@ -539,38 +363,20 @@ export function RacePanel({
           </section>
         ) : (
           <>
-            {/* Local reading toggle. Never repaints the map. */}
-            <SourceTabs race={race} value={viewSourceId} onChange={setViewSourceId} />
+            <DrawerTabs value={tab} onChange={setTab} />
 
+            <div role="tabpanel" id="drawer-tabpanel" aria-labelledby={`drawer-tab-${tab}`}>
+            {tab === 'related' ? (
+              <section className="drawer-block drawer-block--related">
+                <RelatedContent stateId={race.id} />
+              </section>
+            ) : (
+            <>
             <section className="drawer-block">
-              <BlockHead title="Candidates" read={viewRead} sourceId={viewSourceId} />
+              <BlockHead title="Candidates" read={viewRead} sourceId={sourceId} />
               {race.candidates && <CandidateRows candidates={race.candidates} />}
               <p className="drawer-note">
                 Support shares from the polling average. {CHAMBER_LABEL[race.chamber]} race, 2026.
-              </p>
-            </section>
-
-            <hr className="drawer-divider" />
-
-            {/* Kept, against the comp, which collapses the three providers
-                into the row above. The side-by-side comparison IS hub tenet
-                2 — no single source may look like the truth — and the
-                disclaimer under it is tenet 4. */}
-            <section className="drawer-block">
-              <h3 className="drawer-sec">Sources compared</h3>
-              <TrustPicker
-                race={race}
-                stateName={stateName}
-                chamber={chamber}
-                globalSourceId={sourceId}
-                trustedSourceId={trustedSourceId}
-                pickable={showTrustPicker}
-                onTrust={onTrust}
-                onResetTrust={onResetTrust}
-              />
-              <p className="drawer-note">
-                Estimates, not results — measured in different units (points vs implied
-                probability) and never combined.
               </p>
             </section>
 
@@ -584,12 +390,15 @@ export function RacePanel({
                   <BlockHead
                     title={`Districts (${race.districts.length})`}
                     read={viewRead}
-                    sourceId={viewSourceId}
+                    sourceId={sourceId}
                   />
-                  <DistrictGrid districts={race.districts} sourceId={viewSourceId} />
+                  <DistrictGrid districts={race.districts} sourceId={sourceId} />
                 </section>
               </>
             )}
+            </>
+            )}
+            </div>
           </>
         )}
       </div>

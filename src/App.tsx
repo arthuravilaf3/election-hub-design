@@ -64,32 +64,6 @@ export default function App() {
     () => (features.trustPicks ? picksForChamber(state.trust, state.chamber) : {}),
     [state.trust, state.chamber, features.trustPicks]
   );
-  const trustedForZoomed = state.zoomedId ? trustPicks[state.zoomedId] : undefined;
-
-  const setTrust = (sourceId: string) => {
-    const stateId = state.zoomedId;
-    if (!stateId) return;
-    const previous = trustPicks[stateId];
-    dispatch({ type: 'SET_TRUST', stateId, sourceId });
-    if (previous === sourceId) {
-      track('trust_pick_cleared', { state: stateId, race: state.chamber, source: sourceId });
-    } else {
-      track('trust_pick_set', {
-        state: stateId,
-        race: state.chamber,
-        source: sourceId,
-        previous: previous ?? null,
-      });
-    }
-  };
-
-  const resetTrust = () => {
-    const stateId = state.zoomedId;
-    if (!stateId) return;
-    const previous = trustPicks[stateId];
-    dispatch({ type: 'CLEAR_TRUST', stateId });
-    track('trust_pick_reset', { state: stateId, race: state.chamber, source: previous ?? null });
-  };
 
   /* The page keeps scrolling behind the panel (design decision Sep 2026).
      Opening a state still brings the card into view — the panel is anchored
@@ -258,7 +232,6 @@ export default function App() {
               emitMapEvent('usmap-select', { stateId, chamber: state.chamber });
             }}
             onClearZoom={() => dispatch({ type: 'CLEAR_ZOOM' })}
-            showCounties={features.zoomDepth}
             panel={
               zoomedRace && prevState && nextState ? (
                 <RacePanel
@@ -269,14 +242,10 @@ export default function App() {
                   chamber={state.chamber}
                   prev={prevState}
                   next={nextState}
-                  trustedSourceId={trustedForZoomed}
-                  showTrustPicker={features.trustPicks}
                   showFollow={features.followState}
                   showDistricts={features.zoomDepth}
                   onNavigate={navigateState}
                   onClose={() => dispatch({ type: 'CLEAR_ZOOM' })}
-                  onTrust={setTrust}
-                  onResetTrust={resetTrust}
                 />
               ) : null
             }

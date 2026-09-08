@@ -110,8 +110,19 @@ interface DotsProps {
  * comp's: Republican dots first, from the top; Democratic dots fill from the
  * bottom; the contested seats sit where the two meet.
  */
+/* Columns per chamber, so the grid always spans the comp's 808px and a
+   smaller body gets bigger dots: 435 seats at 29 across (24px), 100 at 15
+   across (48px, per the Senate comp), governorships at 12 across. The mobile
+   pair keeps the same idea on a 358px card. */
+const DOT_GRID: Record<Chamber, { cols: number; gap: number; colsM: number; gapM: number }> = {
+  house: { cols: 29, gap: 4, colsM: 20, gapM: 3 },
+  senate: { cols: 15, gap: 6, colsM: 10, gapM: 4 },
+  governor: { cols: 12, gap: 8, colsM: 9, gapM: 4 },
+};
+
 function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
   const total = forecast.dem + forecast.rep;
+  const grid = DOT_GRID[chamber];
   const gap = forecast.tossupShare;
   const demShare = Math.max(0, forecast.demShare - gap / 2);
   const dem = Math.round((total * demShare) / 100);
@@ -151,6 +162,14 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
           noise. The sentence is the seat bar's, unchanged. */}
       <div
         className="dots-grid"
+        style={
+          {
+            '--dot-cols': grid.cols,
+            '--dot-gap': `${grid.gap}px`,
+            '--dot-cols-m': grid.colsM,
+            '--dot-gap-m': `${grid.gapM}px`,
+          } as React.CSSProperties
+        }
         role="img"
         aria-label={`Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${total}. ${forecast.seatsUp} seats up, ${tail}.`}
       >

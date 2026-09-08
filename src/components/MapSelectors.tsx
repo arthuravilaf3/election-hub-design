@@ -181,21 +181,21 @@ export function MapSelectors({
   onSource,
 }: MapSelectorsProps) {
   /* Redesign Sep 2026 ("fixed chips"): the pills are FIXED to the centre of
-     the viewport, not pinned to a corner of the card. Fixed chrome floating
-     over the seat dots above or the feed below would be a defect, so the
-     gate is geometric: they show exactly while the point they occupy — the
-     viewport's vertical centre — lies within the map card. The rootMargin
-     collapses the observer's root to that centreline, so "intersecting"
-     means "the card crosses the middle of the screen" and nothing looser.
-     The DOM position is unchanged — still inside the card — so the zoom fade
-     and the mobile in-flow rule keep matching. */
+     the viewport. They are on screen from the moment the page loads until
+     the reader has scrolled PAST the map — never over the feed below. The
+     observer's root is everything from the viewport's centreline downward
+     (a generous 200% below, so the card counts as "not passed yet" while
+     it is still below the fold), so "intersecting" means "the card's bottom
+     has not crossed the middle of the screen going up". The DOM position is
+     unchanged — still inside the card — so the open-state fade and the
+     mobile in-flow rule keep matching. */
   const ref = useRef<HTMLDivElement>(null);
-  const [offscreen, setOffscreen] = useState(true);
+  const [offscreen, setOffscreen] = useState(false);
   useEffect(() => {
     const card = ref.current?.closest('.map-card');
     if (!card || typeof IntersectionObserver === 'undefined') return;
     const io = new IntersectionObserver(([e]) => setOffscreen(!e.isIntersecting), {
-      rootMargin: '-50% 0px -50% 0px',
+      rootMargin: '-50% 0px 200% 0px',
       threshold: 0,
     });
     io.observe(card);

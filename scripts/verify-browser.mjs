@@ -1,6 +1,6 @@
 // Dev-time verification harness (not part of the deliverable): drives the
 // redesigned prototype in system Chrome — scroll chrome, race tabs, sources,
-// drawer with candidate bars, zoom camera, cutover, message API — captures
+// drawer with candidate bars, open-state dim, cutover, message API — captures
 // axe console output and screenshots to /tmp.
 import { chromium } from 'playwright';
 
@@ -236,27 +236,29 @@ const drawer = await page.evaluate(() => {
   const svg = document.querySelector('.election-map').getBoundingClientRect();
   const card = document.querySelector('.map-card').getBoundingClientRect();
   return {
-    camera: document.querySelector('.map-camera').style.transform !== '',
-    blur: document.querySelector('.map-rest').style.filter,
+    // Sep 2026: opening a state no longer moves the map or blurs the rest.
+    mapStill: getComputedStyle(document.querySelector('.map-camera')).transform === 'none',
+    restOpacity: getComputedStyle(document.querySelector('.map-rest')).opacity,
     bars: [...document.querySelectorAll('.bar-list:not(.district-list) .bar-fill')].map(
       (el) => el.style.width
     ),
     pcts: [...document.querySelectorAll('.bar-list:not(.district-list) .bar-value')].map(
       (el) => el.textContent
     ),
-    // Redesign: the panel's tab row is the SOURCE row now, not chambers.
-    sources: [...document.querySelectorAll('.drawer-src')].map((t) => t.textContent.trim()),
+    // The panel's tab row: Data / Related content.
+    tabs: [...document.querySelectorAll('.drawer-tab')].map((t) => t.textContent.trim()),
     breadcrumb: document.querySelector('.drawer-breadcrumb')?.textContent.trim(),
     flag: document.querySelector('.drawer-flag')?.naturalWidth > 0,
     photos: [...document.querySelectorAll('.cand-photo')].map((i) => i.naturalWidth > 0),
-    counties: document.querySelectorAll('.county-cell').length > 0,
-    mapFillsCard: Math.abs(svg.width - card.width) < 3,
+    counties: document.querySelectorAll('.county-cell').length,
+    // No reflow: the map keeps its padding instead of filling the card.
+    mapKeepsPadding: svg.width < card.width - 60,
   };
 });
 console.log(
   'drawer:',
   JSON.stringify(drawer),
-  '(3 SOURCE tabs, breadcrumb chamber/state, flag + photos loaded, counties, fills card)'
+  '(map still, rest at 0.3, Data/Related tabs, breadcrumb, flag + photos loaded, 0 counties, padding kept)'
 );
 // The page tabs stay (they are page chrome now); the source control steps
 // aside so the zoomed frame belongs to the state and its panel.
@@ -268,32 +270,34 @@ console.log(
       // The chamber tabs are GONE from the panel — the chamber is a label in
       // the breadcrumb now, and this row belongs to the source.
       chamberTabsInPanel: document.querySelectorAll('.drawer .race-tab').length,
-      sourceRow: document.querySelectorAll('.drawer-src').length,
-      sourceRowIsRadiogroup:
-        document.querySelector('.drawer-sources')?.getAttribute('role') === 'radiogroup',
+      tabRow: document.querySelectorAll('.drawer-tab').length,
+      tabRowIsTablist: document.querySelector('.drawer-tabs')?.getAttribute('role') === 'tablist',
     }))
   )
 );
-// The source row is a LOCAL reading toggle: it must not repaint the map.
-const beforePick = await page.evaluate(
+// The second tab swaps the numbers for the coverage about this state, and
+// back. Neither touches the map.
+const beforeTab = await page.evaluate(
   () => document.querySelector('.state-shape[data-state="TX"]')?.style.fill
 );
-await page.locator('.drawer-src').nth(1).click();
+await page.locator('.drawer-tab').nth(1).click();
 await page.waitForTimeout(400);
 console.log(
-  'drawer source row (local only):',
+  'drawer tabs:',
   JSON.stringify(
     await page.evaluate((before) => ({
-      checked: [...document.querySelectorAll('.drawer-src')].map(
-        (t) => `${t.textContent.trim()}:${t.getAttribute('aria-checked')}`
+      selected: [...document.querySelectorAll('.drawer-tab')].map(
+        (t) => `${t.textContent.trim()}:${t.getAttribute('aria-selected')}`
       ),
-      meta: document.querySelector('.drawer-meta')?.textContent.trim(),
-      // The map keeps the GLOBAL source — this row never repaints it.
+      related: !!document.querySelector('.related'),
+      numbersGone: !document.querySelector('.bar-list'),
       mapUnchanged: document.querySelector('.state-shape[data-state="TX"]')?.style.fill === before,
       globalSegStillActive: [...document.querySelectorAll('.pill-value')][1]?.textContent.trim(),
-    }), beforePick)
+    }), beforeTab)
   )
 );
+await page.locator('.drawer-tab').nth(0).click();
+await page.waitForTimeout(300);
 // Follow toggles primary -> secondary.
 await page.locator('.drawer .btn-follow').click();
 console.log(
@@ -320,78 +324,9 @@ console.log(
 );
 await page.screenshot({ path: SHOT('4-senate-drawer') });
 
-// 6b. TRUST PICKS: the comparison cards are a radio group; a pick re-points
-// ONE state at ONE provider (never blended, never silently backfilled).
-const fillOf = (id) =>
-  page.evaluate((s) => document.querySelector(`[data-state="${s}"]`).style.fill, id);
-const trustBefore = await fillOf('GA');
-await page.locator('.drawer-nav-btn').nth(0).click(); // back to Georgia
-await page.waitForTimeout(700);
-await page.locator('.source-card[data-source="kalshi"]').click();
-await page.waitForTimeout(400);
-console.log(
-  'trust pick:',
-  JSON.stringify({
-    checked: await page.evaluate(() =>
-      [...document.querySelectorAll('.source-card')].map(
-        (c) => `${c.dataset.source}:${c.getAttribute('aria-checked')}`
-      )
-    ),
-    badge: await page.evaluate(
-      () => document.querySelector('.source-card.is-picked .trust-badge')?.textContent
-    ),
-    copy: await page.evaluate(() => document.querySelector('.trust-copy')?.textContent.trim()),
-    fillBefore: trustBefore,
-    fillAfter: await fillOf('GA'),
-    markers: await page.evaluate(() => document.querySelectorAll('.trust-dot').length),
-    legend: await page.evaluate(() =>
-      [...document.querySelectorAll('.legend-strip li')].some((l) =>
-        l.textContent.includes('Your trusted source')
-      )
-    ),
-  }),
-  '(GA recolors to Kalshi, 1 marker, legend documents it)'
-);
-// Arrow keys move AND select; Space on the pick clears it (radio toggle).
-await page.locator('.source-card.is-picked').focus();
-await page.keyboard.press('ArrowRight');
-await page.waitForTimeout(250);
-const arrowed = await page.evaluate(() => document.activeElement?.dataset.source);
-await page.keyboard.press(' ');
-await page.waitForTimeout(300);
-console.log(
-  'trust keyboard:',
-  JSON.stringify({
-    arrowMovedTo: arrowed,
-    clearedBySpace: await page.evaluate(
-      () => ![...document.querySelectorAll('.source-card')].some((c) => c.getAttribute('aria-checked') === 'true')
-    ),
-    markersAfterClear: await page.evaluate(() => document.querySelectorAll('.trust-dot').length),
-  })
-);
-// A pick with no data stays empty — striped, never backfilled.
+// (6b, the trust-pick cards, left with "Sources compared" — Sep 2026.)
 await page.keyboard.press('Escape');
 await page.waitForTimeout(500);
-await page.locator('[data-state="WV"]').click();
-await page.waitForTimeout(800);
-await page.locator('.source-card[data-source="kalshi"]').click();
-await page.waitForTimeout(400);
-console.log(
-  'trust no-data:',
-  JSON.stringify({
-    note: await page.evaluate(() => document.querySelector('.trust-warn')?.textContent.trim()),
-    fill: await fillOf('WV'),
-    striped: await page.evaluate(
-      () => !!document.querySelector('[data-state="WV"]')?.parentElement.querySelector('[fill="url(#hatch-no-data)"]')
-    ),
-  }),
-  '(no-read gray + stripes, never the global source)'
-);
-await page.locator('.trust-reset').click();
-await page.waitForTimeout(300);
-await page.screenshot({ path: SHOT('4c-trust-picks') });
-await page.keyboard.press('Escape');
-await page.waitForTimeout(400);
 
 // 7. House drawer: SAME layout as the others + a Districts section.
 await pick(page, 'race', 'house');
@@ -403,7 +338,6 @@ console.log(
   JSON.stringify(
     await page.evaluate(() => ({
       candidates: document.querySelectorAll('.bar-list:not(.district-list) .bar-row').length,
-      sources: document.querySelectorAll('.source-card').length,
       districts: document.querySelectorAll('.district-list .bar-row').length,
       districtsTotal: document.querySelector('.district-expander')?.textContent ?? 'no expander',
       // Candidates and districts are the SAME row shape now (the comp's), so
@@ -494,8 +428,8 @@ console.log(
 await page.keyboard.press('Enter');
 await page.waitForTimeout(600);
 console.log(
-  'Enter zooms:',
-  await page.evaluate(() => document.querySelector('.map-camera').style.transform !== '')
+  'Enter opens the state:',
+  await page.evaluate(() => !!document.querySelector('.drawer'))
 );
 await page.keyboard.press('Escape');
 
@@ -548,7 +482,7 @@ for (const phase of [1, 2, 3, 4]) {
   const seen = await probe.evaluate(() => ({
     follow: !!document.querySelector('.drawer .btn-follow'),
     zoomDepth: !!document.querySelector('.district-list'),
-    picker: !!document.querySelector('.drawer-reads[role="radiogroup"]'),
+    relatedTab: !!document.querySelector('.drawer-tab'),
     electionNight: !!document.querySelector('button[class*="dev"]'),
     raceTags: document.querySelectorAll('.feed-tag').length > 0,
   }));

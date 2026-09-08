@@ -13,7 +13,7 @@ import { ElectionMap } from './ElectionMap';
 import { Legend } from './Legend';
 import { MapSelectors } from './MapSelectors';
 import type { Chamber, StateRace } from '../data/types';
-import { CAMERA_MS, DRAWER_INSET, DRAWER_W } from '../data/layout';
+import { DRAWER_INSET, DRAWER_W } from '../data/layout';
 import { CHAMBER_LABEL } from '../data/summary';
 
 interface MapCardProps {
@@ -29,7 +29,6 @@ interface MapCardProps {
   resultsMode: boolean;
   resultsSource?: string;
   /** Phase gate: the county choropleth is depth, not the base map. */
-  showCounties?: boolean;
   /** The state detail panel, injected so the card owns no app state. */
   panel?: React.ReactNode;
   onChamber: (chamber: Chamber) => void;
@@ -50,7 +49,6 @@ export function MapCard({
   flash,
   resultsMode,
   resultsSource,
-  showCounties = true,
   panel,
   onChamber,
   onSource,
@@ -68,7 +66,6 @@ export function MapCard({
           {
             '--drawer-w': `${DRAWER_W}px`,
             '--drawer-inset': `${DRAWER_INSET}px`,
-            '--camera-ms': `${CAMERA_MS}ms`,
           } as React.CSSProperties
         }
       >
@@ -98,7 +95,6 @@ export function MapCard({
           zoomedId={zoomedId}
           staggering={staggering}
           flash={flash}
-          showCounties={showCounties}
           onSelect={onSelect}
           onZoom={onZoom}
           onClearZoom={onClearZoom}

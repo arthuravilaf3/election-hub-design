@@ -8,57 +8,57 @@
 // Arrows are the design system's Tabler icons (the DS icon set — the promo
 // bar's arrow is `tabler-icon-arrow-right`), drawn with Tabler's official
 // paths.
-import { SOURCES, sourceLabel } from '../data/sources';
-import { fillFor } from '../data/encoding';
-import type { StateRace } from '../data/types';
 
 export interface StateRef {
   id: string;
   name: string;
 }
 
-interface SourceTabsProps {
-  race: StateRace;
-  /** Which read the drawer is currently showing. */
-  value: string;
-  onChange: (sourceId: string) => void;
-}
+/** The panel's two views (redesign Sep 2026): the numbers, or the coverage. */
+export type DrawerTab = 'data' | 'related';
+
+const DRAWER_TABS: Array<{ id: DrawerTab; label: string }> = [
+  { id: 'data', label: 'Data' },
+  { id: 'related', label: 'Related content' },
+];
 
 /**
- * Which provider's read this panel is showing. LOCAL to the drawer: it does
- * NOT repaint the map and it is NOT the trust pick — the map keeps the global
- * source, and "Sources compared" below still shows all three side by side, so
- * no single provider gets to look like the truth (hub tenet 2).
- *
- * A radiogroup, not a tablist: the row switches values inside one view rather
- * than swapping panels, and tab semantics would need tabpanel plumbing that
- * would be a lie about the structure below.
+ * A real tablist: two tabs over one panel, arrows move between them, the
+ * active one is underlined. Replaces the provider toggle that sat here — the
+ * panel follows the map's source now, and this row chooses what KIND of
+ * thing you are reading about the state, not whose numbers.
  */
-export function SourceTabs({ race, value, onChange }: SourceTabsProps) {
+export function DrawerTabs({ value, onChange }: { value: DrawerTab; onChange: (t: DrawerTab) => void }) {
+  const onKey = (e: React.KeyboardEvent<HTMLButtonElement>, i: number) => {
+    const n = DRAWER_TABS.length;
+    let next = -1;
+    if (e.key === 'ArrowRight') next = (i + 1) % n;
+    else if (e.key === 'ArrowLeft') next = (i - 1 + n) % n;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = n - 1;
+    if (next < 0) return;
+    e.preventDefault();
+    onChange(DRAWER_TABS[next].id);
+    (e.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus({ preventScroll: true });
+  };
   return (
-    <div className="drawer-sources" role="radiogroup" aria-label="Reading from">
-      {SOURCES.map((src) => {
-        const active = src.id === value;
-        return (
-          <button
-            key={src.id}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            className={`drawer-src${active ? ' is-active' : ''}`}
-            onClick={() => onChange(src.id)}
-          >
-            {/* The dot is this provider's own read of THIS race — the row
-                previews the disagreement before you switch to it. */}
-            <span
-              className="drawer-src-dot"
-              style={{ background: fillFor(race, src.id) }}
-              aria-hidden="true"
-            />
-            {sourceLabel(src.id)}
-          </button>
-        );
-      })}
+    <div className="drawer-tabs" role="tablist" aria-label="Panel view">
+      {DRAWER_TABS.map((t, i) => (
+        <button
+          key={t.id}
+          type="button"
+          role="tab"
+          id={`drawer-tab-${t.id}`}
+          aria-selected={t.id === value}
+          aria-controls="drawer-tabpanel"
+          tabIndex={t.id === value ? 0 : -1}
+          className={`drawer-tab${t.id === value ? ' is-active' : ''}`}
+          onClick={() => onChange(t.id)}
+          onKeyDown={(e) => onKey(e, i)}
+        >
+          {t.label}
+        </button>
+      ))}
     </div>
   );
 }
