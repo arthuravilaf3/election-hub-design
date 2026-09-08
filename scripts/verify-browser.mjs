@@ -16,6 +16,14 @@ const PILL = { race: 0, source: 1 };
    card crosses that centreline — anywhere else they are pointer-events:none
    and a click would be refused. Bring the card to the middle first. */
 async function revealPills(page) {
+  // The pills sit 40px above the bottom of the viewport (z-index 20). The
+  // dev toolbar, when a step leaves it expanded, is fixed to the same edge
+  // at z-index 30 and swallows the click — collapse it first.
+  const hide = page.getByRole('button', { name: 'Hide' });
+  if (await hide.count()) {
+    await hide.first().click();
+    await page.waitForTimeout(250);
+  }
   await page.evaluate(() => document.querySelector('.map-card').scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(350);
 }
@@ -389,6 +397,11 @@ await page.waitForTimeout(400);
 
 // 9. Cutover to results — sources disabled, hardening intact
 await pick(page, 'race', 'senate');
+// revealPills collapses the dev toolbar; the cutover needs it open again.
+if (await page.locator('.dev-toolbar--collapsed').count()) {
+  await page.locator('.dev-fab').click();
+  await page.waitForTimeout(300);
+}
 await page.getByRole('button', { name: 'Results', exact: true }).click();
 await page.waitForTimeout(1600);
 console.log(

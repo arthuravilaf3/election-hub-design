@@ -54,7 +54,8 @@ check('camera transform-origin', statics.cameraOrigin, '0px 0px');
 check('map-card overflow', statics.cardOverflow, 'clip');
 check('state fill transition', statics.stateTransition, '0.35s');
 check('statement crossfade', statics.statementAnim, '0.2s');
-check('seat bar width transition', statics.seatBarTransition, '0.3s');
+// .dot carries two transitions now: background (the recolour, 300ms) and transform (the hover goo, 220ms).
+check('dot recolour + goo transitions', statics.seatBarTransition, '0.3s, 0.22s');
 check('no SVG ancestor transform', statics.svgAncestorTransforms.length, 0);
 check(
   'sticky chrome is the nav only',
