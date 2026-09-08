@@ -14,6 +14,7 @@
  * (dem / the neutral toss-up gap / rep) laid out as a grid instead of a
  * track, so a race switch recolours exactly what the bar used to resize.
  */
+import { useEffect, useRef } from 'react';
 import { Countdown } from './Countdown';
 import { asset } from '../data/assets';
 import type { ForecastData } from '../data/hero';
@@ -90,7 +91,16 @@ export function RaceHeader({
         <Countdown />
       </header>
 
-      <Dots forecast={forecast} chamber={chamber} headline={headline} resultsMode={resultsMode} called={called} />
+      {/* Keyed on the filters so every race/source change replays the entry
+          sweep — the dots come in from nothing, per the motion reference. */}
+      <Dots
+        key={`${chamber}:${resultsMode ? 'results' : sourceId}`}
+        forecast={forecast}
+        chamber={chamber}
+        headline={headline}
+        resultsMode={resultsMode}
+        called={called}
+      />
     </>
   );
 }
@@ -123,6 +133,36 @@ const DOT_GRID: Record<Chamber, { cols: number; gap: number; colsM: number; gapM
 function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
   const total = forecast.dem + forecast.rep;
   const grid = DOT_GRID[chamber];
+
+  /* HOVER GOO. A dot the pointer crosses grows for a moment; the SVG goo
+     filter on the grid fuses anything that overlaps, so the dots you swept
+     over melt into one another and let go again as they shrink back (the
+     reference screenshot). Imperative on purpose: a 435-item re-render per
+     pointer move is the wrong tool, a class and a timer per dot is the
+     right one. Dots at rest never touch — the filter's threshold is tuned
+     to leave the 4px gap alone. */
+  const timers = useRef(new Map<Element, number>());
+  useEffect(() => {
+    const t = timers.current;
+    return () => {
+      for (const id of t.values()) window.clearTimeout(id);
+      t.clear();
+    };
+  }, []);
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const dot = (e.target as HTMLElement).closest?.('.dot');
+    if (!dot) return;
+    dot.classList.add('is-goo');
+    const prev = timers.current.get(dot);
+    if (prev) window.clearTimeout(prev);
+    timers.current.set(
+      dot,
+      window.setTimeout(() => {
+        dot.classList.remove('is-goo');
+        timers.current.delete(dot);
+      }, 520)
+    );
+  };
   const gap = forecast.tossupShare;
   const demShare = Math.max(0, forecast.demShare - gap / 2);
   const dem = Math.round((total * demShare) / 100);
@@ -172,11 +212,26 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
         }
         role="img"
         aria-label={`Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${total}. ${forecast.seatsUp} seats up, ${tail}.`}
+        onPointerMove={onPointerMove}
       >
+        {/* --i drives the entry stagger: a sweep across the grid in reading
+            order, each dot a hair after the last. */}
         {seats.map((party, i) => (
-          <span key={i} className={`dot dot--${party}`} />
+          <span key={i} className={`dot dot--${party}`} style={{ '--i': i } as React.CSSProperties} />
         ))}
       </div>
+      {/* The goo filter: blur, then push alpha through a steep contrast so
+          two blurred shapes that overlap read as one solid one. Sized so a
+          resting 4px gap stays a gap. */}
+      <svg className="dots-goo-defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="dots-goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
     </section>
   );
 }

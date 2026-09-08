@@ -305,10 +305,37 @@ check(
 );
 check('pills are fixed', await page.evaluate(() => getComputedStyle(document.querySelector('.map-selectors')).position), 'fixed');
 check(
-  'pills sit on the viewport centre',
-  await page.evaluate(() => { const r = document.querySelector('.map-selectors').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)].join(','); }),
-  `${Math.round(1440 / 2)},${Math.round(1000 / 2)}`
+  'pills centred, 40px above the bottom of the viewport',
+  await page.evaluate(() => { const r = document.querySelector('.map-selectors').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(innerHeight - r.bottom)].join(','); }),
+  `${Math.round(1440 / 2)},40`
 );
+// The dots come in from nothing, in a stagger, on every filter change.
+await page.locator('.map-selectors .pill').nth(1).click();
+await page.locator('.pill-option[data-option="kalshi"]').click();
+const entry = await page.evaluate(() => {
+  const d = document.querySelectorAll('.dot');
+  const cs = (i) => getComputedStyle(d[i]);
+  return { anim: cs(0).animationName, fill: cs(0).animationFillMode, d0: cs(0).animationDelay, d100: cs(100).animationDelay, goo: getComputedStyle(document.querySelector('.dots-grid')).filter };
+});
+check('dots replay an entry animation on filter change', entry.anim, 'dot-in');
+check('entry animation releases scale when done (backwards, not both)', entry.fill, 'backwards');
+check('entry is staggered across the grid', entry.d0 !== entry.d100, true);
+check('the grid carries the goo filter', /dots-goo/.test(entry.goo), true);
+await page.waitForTimeout(1200);
+// Hover: crossed dots grow (and the goo fuses them); untouched ones do not.
+// The grid is above the fold at this point (the card was centred earlier):
+// bring it on screen, or the pointer moves land off-viewport and touch nothing.
+await page.evaluate(() => document.querySelector('.dots-grid').scrollIntoView({ block: 'center' }));
+await page.waitForTimeout(400);
+const dotBox = await page.locator('.dot').nth(40).boundingBox();
+await page.mouse.move(dotBox.x + 2, dotBox.y + dotBox.height / 2);
+await page.mouse.move(dotBox.x + dotBox.width * 3, dotBox.y + dotBox.height / 2, { steps: 6 });
+await page.waitForTimeout(120);
+const goo = await page.evaluate(() => { const h = document.querySelector('.dot.is-goo'); return { hot: document.querySelectorAll('.dot.is-goo').length, scale: h ? getComputedStyle(h).transform : 'none' }; });
+check('the dots the pointer crossed go gooey', goo.hot >= 2 && goo.hot <= 6, true);
+check('a gooey dot grows', /matrix\(1\.[3-6]/.test(goo.scale), true);
+await page.waitForTimeout(800);
+check('they let go again', await page.evaluate(() => document.querySelectorAll('.dot.is-goo').length), 0);
 const raceBefore = await page.evaluate(() => document.querySelector('.pill-value').textContent.trim());
 await page.locator('.map-selectors .pill').nth(0).focus();
 await page.keyboard.press('ArrowDown'); // opens

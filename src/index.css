@@ -900,20 +900,50 @@ button,
   grid-template-columns: repeat(var(--dot-cols, 29), minmax(0, 1fr));
   gap: var(--dot-gap, 4px);
   width: 100%;
+  /* Metaball goo (defined inline in RaceHeader). Only overlapping shapes
+     fuse, and only hovered dots grow enough to overlap. */
+  filter: url(#dots-goo);
+}
+
+.dots-goo-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
 }
 
 .dot {
   aspect-ratio: 1;
   width: 100%;
   border-radius: 999px;
-  /* Same easing family as the map's fill transition, so a race switch reads
-     as one recalculation here too. */
-  transition: background 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* Entry: from nothing, smaller, in a stagger that sweeps the grid in
+     reading order (--i is the dot's index). `backwards`, not `both`, so
+     the animation lets go of `scale` when it ends and the hover transform
+     below is free to run. Same easing family as the map's fill transition. */
+  animation: dot-in 360ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 1.4ms);
+  transition:
+    background 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes dot-in {
+  from {
+    scale: 0.15;
+    opacity: 0;
+  }
+}
+
+/* Under the pointer (and for a beat after): big enough to reach into the
+   neighbours, which the goo filter then fuses. */
+.dot.is-goo {
+  transform: scale(1.6);
+  z-index: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dot {
     transition: none;
+    animation: none;
   }
 }
 
@@ -3548,14 +3578,14 @@ button,
  * a toolbar, and a toolbar belongs on an edge.
  */
 .map-selectors {
-  /* "fixed chips": pinned to the centre of the viewport, above the page but
+  /* "fixed chips": pinned 40px above the bottom of the viewport, centred, above the page but
      under the site chrome (400) and the drawer's mobile sheet (600). The
      is-offscreen class (an IntersectionObserver on .map-section) hides them
      when the map is not on screen, so they never float over the feed. */
   position: fixed;
-  top: 50%;
+  bottom: 40px;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   z-index: 20;
   display: flex;
   align-items: center;
@@ -3623,10 +3653,11 @@ button,
   color: var(--ink);
 }
 
-/* The menu hangs off the pill it belongs to. */
+/* The menu opens UPWARD off its pill: the pills sit 40px from the bottom of
+   the viewport, so downward would fall off the screen. */
 .pill-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  bottom: calc(100% + 8px);
   left: 0;
   z-index: 4;
   min-width: 100%;
