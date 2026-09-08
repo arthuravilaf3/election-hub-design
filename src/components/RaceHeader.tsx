@@ -229,7 +229,9 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
                 fuse, and the neck between them stays thin. */}
             <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" result="blur" />
             <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -13" result="goo" />
-            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+            {/* `over`, not `atop`: the neck exists only in the blurred layer — the
+                source has no pixels there — and atop would discard it. */}
+            <feComposite in="SourceGraphic" in2="goo" operator="over" />
           </filter>
         </defs>
       </svg>
