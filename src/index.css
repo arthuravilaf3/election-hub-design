@@ -3486,23 +3486,12 @@ button,
     font-size: 11px;
   }
 
-  /* Feed rows: same pattern, smaller still. */
-  .feed-item,
+  /* Feed rows: the DS card's Mobile breakpoint is declared above this
+     block (32px mark, 16px title); only the skeleton needs a hand. */
   .feed-skeleton {
-    grid-template-columns: 120px minmax(0, 1fr);
+    grid-template-columns: 32px minmax(0, 1fr);
     gap: 12px;
     padding: 0;
-  }
-
-
-  .feed-body {
-    gap: 8px;
-  }
-
-  /* Phone: the DS scale's sm step. */
-  .feed-headline {
-    font-size: 16px;
-    line-height: 1.2;
   }
 
   .feed-meta {
