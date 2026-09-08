@@ -255,7 +255,7 @@ const drawer = await page.evaluate(() => {
     ),
     // The panel's tab row: Data / Related content.
     tabs: [...document.querySelectorAll('.drawer-tab')].map((t) => t.textContent.trim()),
-    breadcrumb: document.querySelector('.drawer-breadcrumb')?.textContent.trim(),
+    title: document.querySelector('.drawer-title')?.textContent.trim(),
     flag: document.querySelector('.drawer-flag')?.naturalWidth > 0,
     photos: [...document.querySelectorAll('.cand-photo')].map((i) => i.naturalWidth > 0),
     counties: document.querySelectorAll('.county-cell').length,
@@ -319,7 +319,7 @@ const nextName = await page.evaluate(
 );
 await page.locator('.drawer-nav-btn').nth(1).click();
 await page.waitForTimeout(900);
-const landed = await page.evaluate(() => document.querySelector('.drawer-breadcrumb').textContent);
+const landed = await page.evaluate(() => document.querySelector('.drawer-title').textContent);
 console.log('drawer nav: next said', JSON.stringify(nextName), '→ landed on', JSON.stringify(landed));
 await page.screenshot({ path: SHOT('4b-drawer-nav') });
 console.log(

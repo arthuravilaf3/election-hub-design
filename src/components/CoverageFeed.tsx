@@ -507,7 +507,6 @@ export function CoverageFeed() {
     () => (opinionView ? filtered.filter((i) => i.kind === 'opinion') : []),
     [opinionView, filtered]
   );
-  const latestShorts = useMemo(() => ALL_ITEMS.filter((i) => i.kind === 'short').slice(0, 8), []);
 
   // Rows with ads: cadence runs on the FILTERED, visible list; an ad never
   // sits adjacent to a day divider (pushed one slot down instead).
@@ -861,28 +860,6 @@ export function CoverageFeed() {
           </div>
         ) : (
           <>
-            {/* Latest shorts shortcut row — browse mode only: any active
-                filter means the reader asked for something specific. */}
-            {filter === 'all' && (
-              <div className="shorts-row-block">
-                <h3 className="shorts-row-title">Latest shorts</h3>
-                <div className="shorts-row">
-                  {latestShorts.map((item) => (
-                    <ShortCard
-                      key={item.id}
-                      item={item}
-                      playing={playingId === item.id}
-                      hoverMode={hoverMode}
-                      reducedMotion={reducedMotion}
-                      onRequestPlay={requestPlay}
-                      onRequestStop={requestStop}
-                      onVisibility={hoverMode ? undefined : onVisibility}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
             {visible.length === 0 && (
               <div className="feed-empty">
                 <p>Nothing matches those filters.</p>

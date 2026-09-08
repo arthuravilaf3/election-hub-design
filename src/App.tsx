@@ -10,6 +10,7 @@ import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { SiteFooter } from './components/SiteFooter';
+import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
 import { useElectionData } from './state/useElectionData';
 import { activeRaces } from './state/electionReducer';
@@ -237,7 +238,6 @@ export default function App() {
                   stateName={zoomedName}
                   race={zoomedRace}
                   sourceId={state.sourceId}
-                  chamber={state.chamber}
                   prev={prevState}
                   next={nextState}
                   showFollow={features.followState}
@@ -280,6 +280,10 @@ export default function App() {
 
       {/* Full-bleed: the footer runs edge to edge with its own inner rail. */}
       <SiteFooter />
+
+      {/* Fixed to the bottom edge; last in the DOM so it stays out of the
+          reading order. */}
+      <PolymarketTicker />
 
     </>
   );

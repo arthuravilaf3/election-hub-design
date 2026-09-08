@@ -32,6 +32,10 @@
      so the page shares one left edge. */
   --rail: 1440px;
   --rail-pad: 64px;
+
+  /* The Polymarket ticker, fixed to the bottom of the viewport. Read by the
+     page tail and by the pills that sit above it. */
+  --ticker-h: 68px;
 }
 
 body {
@@ -1281,25 +1285,6 @@ button,
 /* Sticky top bar. "Sticky" needs no positioning: .drawer is a fixed-height
    flex column, this is flex:none at the top and .drawer-nav pins to the
    bottom with margin-top:auto — only .drawer-scroll between them moves. */
-.drawer-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: 80px;
-  padding: 0 24px;
-  background: var(--surface);
-}
-
-/* Where you are. The chamber is a LABEL here, not a control — switching
-   races is the page header's job. */
-.drawer-breadcrumb {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--ink);
-}
-
 .drawer-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -1332,38 +1317,54 @@ button,
   border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
 }
 
-/* Flag + Follow + share, then the title block. */
+/* The head: flag, title block, actions (Follow, share, close). Sticky to
+   the top of the scroller. EXPANDED it is two rows — flag and actions on
+   the first, the title across the second; COMPACT (once the title has
+   scrolled under it) everything sits on one row at a smaller scale, per the
+   comp's "Frame 1618875371". Same three elements, one grid, two templates. */
 .drawer-headblock {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 16px 24px 20px;
-}
-
-.drawer-headrow {
-  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template:
+    'flag actions' auto
+    'title title' auto / auto 1fr;
   align-items: center;
-  gap: 12px;
-}
-
-/* Flag left, controls right — the comp hangs them off opposite ends. */
-.drawer-headrow .btn-follow {
-  margin-left: auto;
-  border-radius: 999px;
+  column-gap: 12px;
+  row-gap: 14px;
+  padding: 16px 24px 20px;
+  background: var(--surface);
+  transition: padding 200ms ease-out;
 }
 
 .drawer-flag {
-  flex: none;
+  grid-area: flag;
   width: 54px;
   height: 36px;
   object-fit: cover;
   border-radius: 2px;
+  transition: width 200ms ease-out, height 200ms ease-out;
 }
 
 .drawer-titleblock {
+  grid-area: title;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+}
+
+.drawer-headrow {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.drawer-headrow .btn-follow {
+  border-radius: 999px;
 }
 
 .drawer-title {
@@ -1371,12 +1372,49 @@ button,
   font-size: 32px;
   line-height: 38px;
   font-weight: 500;
+  transition: font-size 200ms ease-out, line-height 200ms ease-out;
 }
 
 .drawer-subtitle {
   margin: 0;
   font-size: 16px;
   color: var(--ink-subtlest);
+  transition: font-size 200ms ease-out;
+}
+
+.drawer.is-compact .drawer-headblock {
+  grid-template: 'flag title actions' auto / auto 1fr auto;
+  padding: 12px 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.drawer.is-compact .drawer-flag {
+  width: 48px;
+  height: 32px;
+}
+
+.drawer.is-compact .drawer-title {
+  font-size: 20px;
+  line-height: 24px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drawer.is-compact .drawer-subtitle {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-headblock,
+  .drawer-flag,
+  .drawer-title,
+  .drawer-subtitle {
+    transition: none;
+  }
 }
 
 /* The panel's two views — Data, Related content. Underline marks the active
@@ -3748,7 +3786,8 @@ button,
      is-offscreen class (an IntersectionObserver on .map-section) hides them
      when the map is not on screen, so they never float over the feed. */
   position: fixed;
-  bottom: 40px;
+  /* 40px above the Polymarket ticker that owns the bottom edge. */
+  bottom: calc(var(--ticker-h) + 40px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
@@ -4274,4 +4313,28 @@ button,
   .feed-ad-rail {
     display: none;
   }
+}
+
+/* ---------- Polymarket ticker (fixed, bottom) ---------- */
+
+/* Third-party embed, the full width of the viewport, pinned to the bottom
+   edge under the pills (z 20) and the site chrome (400). The page reserves
+   its height so the footer stays reachable. */
+.poly-ticker {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 15;
+  height: var(--ticker-h);
+  background: var(--surface-dim);
+}
+
+.poly-ticker iframe {
+  display: block;
+  width: 100%;
+  height: var(--ticker-h);
+  border: 0;
+}
+
+body {
+  padding-bottom: var(--ticker-h);
 }

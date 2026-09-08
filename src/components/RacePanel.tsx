@@ -223,7 +223,6 @@ interface RacePanelProps {
   race: StateRace;
   /** The global map source — what the "Default" chip points at. */
   sourceId: string;
-  chamber: Chamber;
   prev: StateRef;
   next: StateRef;
   showFollow?: boolean;
@@ -236,7 +235,6 @@ export function RacePanel({
   stateName,
   race,
   sourceId,
-  chamber,
   prev,
   next,
   showFollow = true,
@@ -255,6 +253,13 @@ export function RacePanel({
   const viewRead = readFor(race, sourceId);
   /* Which view: the numbers, or the coverage about this state. */
   const [tab, setTab] = useState<DrawerTab>('data');
+  /* Head compacts once the title has scrolled under it. Hysteresis so a
+     scroll position that sits right on the threshold does not flicker. */
+  const [compact, setCompact] = useState(false);
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const y = e.currentTarget.scrollTop;
+    setCompact((c) => (c ? y > 12 : y > 56));
+  };
 
   /* The panel is a modal now (the page behind is frozen — see useScrollLock),
      so Tab must stay inside it: focus landing on the page behind would drag
@@ -296,32 +301,27 @@ export function RacePanel({
 
   return (
     <section
-      className="drawer"
+      className={`drawer${compact ? ' is-compact' : ''}`}
       ref={panelRef}
       role="dialog"
       aria-modal="true"
       aria-label={`${stateName} race detail`}
     >
-      {/* Sticky top bar: where you are, and the way out. */}
-      <header className="drawer-topbar">
-        <p className="drawer-breadcrumb">
-          {CHAMBER_LABEL[chamber]}
-          <span aria-hidden="true"> / </span>
-          {stateName}
-        </p>
-        <button type="button" className="drawer-icon-btn" aria-label="Close" onClick={onClose}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <path d="m4 4 10 10M14 4 4 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-        </button>
-      </header>
-
-      {/* Only the body scrolls — the top bar and the state navigation stay
-          fixed in the modal frame. */}
-      <div className="drawer-scroll">
-        <div className="drawer-headblock">
+      {/* Only the body scrolls; the head sticks to its top and compacts into
+          one row once the reader has scrolled past the title (Sep 2026 —
+          the top bar with the breadcrumb is gone, the X sits by share). */}
+      <div className="drawer-scroll" onScroll={onScroll}>
+        <header className="drawer-headblock">
+          <img className="drawer-flag" src={asset(`flags/${race.id}.png`)} alt="" aria-hidden="true" />
+          <div className="drawer-titleblock">
+            <h2 className="drawer-title">
+              {stateName} · {CHAMBER_TITLE[race.chamber]}
+            </h2>
+            {!isResults && viewRead && (
+              <p className="drawer-subtitle">Rated {RATING_LABEL[ratingOf(viewRead)]}</p>
+            )}
+          </div>
           <div className="drawer-headrow">
-            <img className="drawer-flag" src={asset(`flags/${race.id}.png`)} alt="" aria-hidden="true" />
             {/* Follow a State: one state, all of its races. */}
             {showFollow && (
               <button
@@ -344,17 +344,13 @@ export function RacePanel({
                 />
               </svg>
             </button>
+            <button type="button" className="drawer-icon-btn" aria-label="Close" onClick={onClose}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path d="m4 4 10 10M14 4 4 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </button>
           </div>
-
-          <div className="drawer-titleblock">
-            <h2 className="drawer-title">
-              {stateName} · {CHAMBER_TITLE[race.chamber]}
-            </h2>
-            {!isResults && viewRead && (
-              <p className="drawer-subtitle">Rated {RATING_LABEL[ratingOf(viewRead)]}</p>
-            )}
-          </div>
-        </div>
+        </header>
 
         {isResults ? (
           <section className="drawer-block">

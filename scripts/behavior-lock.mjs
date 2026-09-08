@@ -227,7 +227,7 @@ check('states are not announced disabled while a state is open', live.ariaDisabl
 
 // Clicking another state swaps the panel to it.
 const beforeClick = await page.evaluate(
-  () => document.querySelector('.drawer-breadcrumb').textContent.trim()
+  () => document.querySelector('.drawer-title').textContent.trim()
 );
 await page.evaluate(() =>
   document
@@ -237,7 +237,7 @@ await page.evaluate(() =>
 await page.waitForTimeout(600);
 check(
   'clicking another state swaps the panel',
-  await page.evaluate(() => document.querySelector('.drawer-breadcrumb')?.textContent.trim()),
+  await page.evaluate(() => document.querySelector('.drawer-title')?.textContent.trim()),
   (v) => v !== beforeClick && /California/.test(v)
 );
 check('the map still did not move', await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform), 'none');
@@ -259,12 +259,12 @@ await page.waitForTimeout(900);
 check(
   'the next arrow moves to another state',
   await page.evaluate(
-    () => document.querySelector('.drawer-breadcrumb')?.textContent.trim() !== null
+    () => document.querySelector('.drawer-title')?.textContent.trim() !== null
   ),
   true
 );
 const afterArrow = await page.evaluate(() =>
-  document.querySelector('.drawer-breadcrumb').textContent.trim()
+  document.querySelector('.drawer-title').textContent.trim()
 );
 check('the arrow actually changed state', afterArrow !== beforeClick, true);
 
@@ -340,9 +340,9 @@ check(
 );
 check('pills are fixed', await page.evaluate(() => getComputedStyle(document.querySelector('.map-selectors')).position), 'fixed');
 check(
-  'pills centred, 40px above the bottom of the viewport',
-  await page.evaluate(() => { const r = document.querySelector('.map-selectors').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(innerHeight - r.bottom)].join(','); }),
-  `${Math.round(1440 / 2)},40`
+  'pills centred, 40px above the ticker, ticker on the bottom edge',
+  await page.evaluate(() => { const r = document.querySelector('.map-selectors').getBoundingClientRect(); const t = document.querySelector('.poly-ticker').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(t.top - r.bottom), Math.round(innerHeight - t.bottom)].join(','); }),
+  `${Math.round(1440 / 2)},40,0`
 );
 // A SOURCE change keeps the same dots and recolours them; a RACE change
 // rebuilds the grid and replays the entry sweep.
@@ -373,7 +373,8 @@ await page.waitForTimeout(400);
 const dotBox = await page.locator('.dot').nth(40).boundingBox();
 await page.mouse.move(dotBox.x + 2, dotBox.y + dotBox.height / 2);
 await page.mouse.move(dotBox.x + dotBox.width * 3, dotBox.y + dotBox.height / 2, { steps: 6 });
-await page.waitForTimeout(120);
+// Past the 220ms transform transition, inside the 520ms hot window.
+await page.waitForTimeout(260);
 const goo = await page.evaluate(() => { const h = document.querySelector('.dot.is-goo'); return { hot: document.querySelectorAll('.dot.is-goo').length, scale: h ? getComputedStyle(h).transform : 'none' }; });
 check('the dots the pointer crossed go gooey', goo.hot >= 2 && goo.hot <= 6, true);
 check('the goo filter is on only while dots are hot', await page.evaluate(() => /dots-goo/.test(getComputedStyle(document.querySelector('.dots-grid')).filter)), true);
@@ -415,6 +416,31 @@ check('Escape commits nothing', esc.value, raceKb.value);
 // A race switch still runs the stagger wave over the map.
 await page.evaluate(() => document.body.click());
 await page.waitForTimeout(200);
+
+// ---- Drawer head: X beside share, compacts on scroll ----------------------
+await page.click('.state-shape[data-state=TX]');
+await page.waitForTimeout(900);
+const head = await page.evaluate(() => {
+  const row = document.querySelector('.drawer-headrow');
+  const btns = [...row.querySelectorAll('button')].map((b) => b.getAttribute('aria-label') || b.textContent.trim());
+  return { btns: btns.join('|'), topbar: !!document.querySelector('.drawer-topbar'), compact: document.querySelector('.drawer').classList.contains('is-compact'), sticky: getComputedStyle(document.querySelector('.drawer-headblock')).position, title: getComputedStyle(document.querySelector('.drawer-title')).fontSize };
+});
+check('close sits beside share in the head row', /Share [^|]*\|Close$/.test(head.btns), true);
+check('no top bar', head.topbar, false);
+check('head starts expanded', head.compact, false);
+check('head is sticky', head.sticky, 'sticky');
+check('expanded title is 32px', head.title, '32px');
+await page.evaluate(() => { document.querySelector('.drawer-scroll').scrollTop = 200; });
+await page.waitForTimeout(400);
+const compact = await page.evaluate(() => ({ compact: document.querySelector('.drawer').classList.contains('is-compact'), title: getComputedStyle(document.querySelector('.drawer-title')).fontSize, cols: getComputedStyle(document.querySelector('.drawer-headblock')).gridTemplateColumns.split(' ').length }));
+check('head compacts after scrolling', compact.compact, true);
+check('compact title is 20px', compact.title, '20px');
+check('compact head is one row of three', compact.cols, 3);
+await page.evaluate(() => { document.querySelector('.drawer-scroll').scrollTop = 0; });
+await page.waitForTimeout(400);
+check('head expands again at the top', await page.evaluate(() => document.querySelector('.drawer').classList.contains('is-compact')), false);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(600);
 
 // ---- Drawer tabs: Data / Related content --------------------------------
 await page.click('.state-shape[data-state=TX]');
