@@ -234,8 +234,8 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
           <filter id="dots-goo">
             {/* Small blur + hard threshold: only circles that actually overlap
                 fuse, and the neck between them stays thin. */}
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11" result="goo" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -12" result="goo" />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
         </defs>

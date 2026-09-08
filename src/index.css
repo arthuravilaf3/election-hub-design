@@ -940,7 +940,10 @@ button,
 /* Under the pointer (and for a beat after): just big enough to touch the
    neighbours, so the goo fuses them with a thin neck rather than a blob. */
 .dot.is-goo {
-  transform: scale(1.28);
+  /* 1.12x: with a 4px gap a 24px dot grows to just touch its neighbours —
+     tangent, not overlapping. Overlapping circles already have a wide waist;
+     tangent ones only get the thin bridge the blur draws between them. */
+  transform: scale(1.12);
   z-index: 1;
 }
 
