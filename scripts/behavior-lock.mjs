@@ -188,8 +188,8 @@ check('drawer is a modal dialog', `${zoom.dialog}/${zoom.modal}`, 'dialog/true')
 check('no county subdivision', zoom.counties, 0);
 check('source control hidden while a state is open', zoom.segHidden, '0');
 
-// ---- with the panel open, the map is inert ------------------------------
-const inert = await page.evaluate(() => {
+// ---- with the panel open, the map stays LIVE (Sep 2026) ------------------
+const live = await page.evaluate(() => {
   const shape = document.querySelector('.state-shape[data-state="CA"]');
   return {
     pointerEvents: getComputedStyle(document.querySelector('.election-map')).pointerEvents,
@@ -197,16 +197,14 @@ const inert = await page.evaluate(() => {
     ariaDisabled: shape.getAttribute('aria-disabled'),
   };
 });
-check('map ignores the pointer while zoomed', inert.pointerEvents, 'none');
-check('states leave the tab order while zoomed', inert.tabIndex, '-1');
-check('states announce as disabled while zoomed', inert.ariaDisabled, 'true');
+check('map still takes the pointer while a state is open', live.pointerEvents, 'auto');
+check('states stay in the tab order while a state is open', live.tabIndex, '0');
+check('states are not announced disabled while a state is open', live.ariaDisabled, null);
 
-// Clicking another state must NOT move the camera: the arrows own that.
+// Clicking another state swaps the panel to it.
 const beforeClick = await page.evaluate(
   () => document.querySelector('.drawer-breadcrumb').textContent.trim()
 );
-// A synthetic event ignores pointer-events, so this exercises the JS guard
-// in ElectionMap rather than the CSS that merely hides the affordance.
 await page.evaluate(() =>
   document
     .querySelector('.state-shape[data-state="CA"]')
@@ -214,10 +212,38 @@ await page.evaluate(() =>
 );
 await page.waitForTimeout(600);
 check(
-  'clicking a state behind the panel changes nothing',
+  'clicking another state swaps the panel',
   await page.evaluate(() => document.querySelector('.drawer-breadcrumb')?.textContent.trim()),
-  beforeClick
+  (v) => v !== beforeClick && /California/.test(v)
 );
+check('the map still did not move', await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform), 'none');
+
+// ---- drag to pan: four directions, never a zoom ---------------------------
+const svgBox = await page.locator('.election-map').boundingBox();
+const cx = svgBox.x + svgBox.width * 0.5;
+const cy = svgBox.y + svgBox.height * 0.15; // ocean above the states
+await page.mouse.move(cx, cy);
+await page.mouse.down();
+await page.mouse.move(cx + 120, cy + 60, { steps: 8 });
+await page.mouse.up();
+await page.waitForTimeout(150);
+const panned = await page.evaluate(() => {
+  const m = new DOMMatrix(getComputedStyle(document.querySelector('.map-camera')).transform);
+  return { dx: Math.round(m.e), dy: Math.round(m.f), scale: +m.a.toFixed(3), cursor: getComputedStyle(document.querySelector('.election-map')).cursor };
+});
+check('a drag pans the map right', panned.dx > 20, true);
+check('a drag pans the map down', panned.dy > 10, true);
+check('panning never scales', panned.scale, 1);
+check('the map is a grab surface', panned.cursor, 'grab');
+check('a drag does not open the state it ends on', await page.evaluate(() => document.querySelector('.drawer-breadcrumb')?.textContent.trim()), (v) => /California/.test(v));
+// Start the return drag well left of the panel: after the first drag the
+// old start point can sit over the drawer, which is not a grab surface.
+await page.mouse.move(cx, cy + 60);
+await page.mouse.down();
+await page.mouse.move(cx - 120, cy, { steps: 8 });
+await page.mouse.up();
+await page.waitForTimeout(150);
+check('and pans back the other way', await page.evaluate(() => { const m = new DOMMatrix(getComputedStyle(document.querySelector('.map-camera')).transform); return Math.abs(m.e) < 6 && Math.abs(m.f) < 6; }), true);
 
 // The arrows DO move it.
 await page.locator('.drawer-nav-btn').nth(1).click();
@@ -321,7 +347,7 @@ const entry = await page.evaluate(() => {
 check('dots replay an entry animation on filter change', entry.anim, 'dot-in');
 check('entry animation releases scale when done (backwards, not both)', entry.fill, 'backwards');
 check('entry is staggered across the grid', entry.d0 !== entry.d100, true);
-check('the grid carries the goo filter', /dots-goo/.test(entry.goo), true);
+check('the grid has no filter at rest (perfect circles)', entry.goo, 'none');
 await page.waitForTimeout(1200);
 // Hover: crossed dots grow (and the goo fuses them); untouched ones do not.
 // The grid is above the fold at this point (the card was centred earlier):
@@ -334,9 +360,11 @@ await page.mouse.move(dotBox.x + dotBox.width * 3, dotBox.y + dotBox.height / 2,
 await page.waitForTimeout(120);
 const goo = await page.evaluate(() => { const h = document.querySelector('.dot.is-goo'); return { hot: document.querySelectorAll('.dot.is-goo').length, scale: h ? getComputedStyle(h).transform : 'none' }; });
 check('the dots the pointer crossed go gooey', goo.hot >= 2 && goo.hot <= 6, true);
-check('a gooey dot grows', /matrix\(1\.[3-6]/.test(goo.scale), true);
+check('the goo filter is on only while dots are hot', await page.evaluate(() => /dots-goo/.test(getComputedStyle(document.querySelector('.dots-grid')).filter)), true);
+check('a gooey dot grows a little', /matrix\(1\.[2-3]/.test(goo.scale), true);
 await page.waitForTimeout(800);
 check('they let go again', await page.evaluate(() => document.querySelectorAll('.dot.is-goo').length), 0);
+check('and the filter switches off again', await page.evaluate(() => getComputedStyle(document.querySelector('.dots-grid')).filter), 'none');
 const raceBefore = await page.evaluate(() => document.querySelector('.pill-value').textContent.trim());
 await page.locator('.map-selectors .pill').nth(0).focus();
 await page.keyboard.press('ArrowDown'); // opens

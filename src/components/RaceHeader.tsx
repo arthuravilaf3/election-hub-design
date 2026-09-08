@@ -149,10 +149,15 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       t.clear();
     };
   }, []);
+  /* The goo filter is on the GRID only while some dot is hot. At rest the
+     filter's alpha threshold would leave faint nubs on otherwise perfect
+     circles; switching it off between hovers keeps them perfect. */
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const dot = (e.target as HTMLElement).closest?.('.dot');
     if (!dot) return;
+    const gridEl = e.currentTarget;
     dot.classList.add('is-goo');
+    gridEl.classList.add('is-gooing');
     const prev = timers.current.get(dot);
     if (prev) window.clearTimeout(prev);
     timers.current.set(
@@ -160,6 +165,7 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       window.setTimeout(() => {
         dot.classList.remove('is-goo');
         timers.current.delete(dot);
+        if (timers.current.size === 0) gridEl.classList.remove('is-gooing');
       }, 520)
     );
   };
@@ -226,8 +232,10 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       <svg className="dots-goo-defs" width="0" height="0" aria-hidden="true" focusable="false">
         <defs>
           <filter id="dots-goo">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+            {/* Small blur + hard threshold: only circles that actually overlap
+                fuse, and the neck between them stays thin. */}
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11" result="goo" />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
         </defs>

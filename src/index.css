@@ -900,8 +900,12 @@ button,
   grid-template-columns: repeat(var(--dot-cols, 29), minmax(0, 1fr));
   gap: var(--dot-gap, 4px);
   width: 100%;
-  /* Metaball goo (defined inline in RaceHeader). Only overlapping shapes
-     fuse, and only hovered dots grow enough to overlap. */
+}
+
+/* Metaball goo (defined inline in RaceHeader), switched on only while a dot
+   is hot: only overlapping shapes fuse, and at rest the filter is off so the
+   circles stay geometrically perfect. */
+.dots-grid.is-gooing {
   filter: url(#dots-goo);
 }
 
@@ -933,10 +937,10 @@ button,
   }
 }
 
-/* Under the pointer (and for a beat after): big enough to reach into the
-   neighbours, which the goo filter then fuses. */
+/* Under the pointer (and for a beat after): just big enough to touch the
+   neighbours, so the goo fuses them with a thin neck rather than a blob. */
 .dot.is-goo {
-  transform: scale(1.6);
+  transform: scale(1.28);
   z-index: 1;
 }
 
@@ -3717,12 +3721,20 @@ button,
   color: var(--ink-subtlest);
 }
 
-/* The map is INERT while the panel is open — the panel's prev/next arrows are
-   the only way between states. The JS guard in ElectionMap is what enforces
-   it; this stops the cursor from advertising a control that will not answer.
-   The wheel-to-leave listener is on window, so it is unaffected. */
-.map-card.is-zoomed .election-map {
-  pointer-events: none;
+/* Drag to pan: the whole SVG is a grab surface; states keep their pointer
+   cursor on top of it. touch-action pan-y leaves vertical page scrolling to
+   the browser on touch — a horizontal drag pans the map. */
+.election-map {
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.election-map.is-panning {
+  cursor: grabbing;
+}
+
+.election-map.is-panning .state-shape {
+  cursor: grabbing;
 }
 
 /* The zoomed frame belongs to the state and its panel — same fade the source
