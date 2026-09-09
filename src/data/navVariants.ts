@@ -1,27 +1,14 @@
-// Nav identity explorations (Sep 2026). Seven treatments of the same
-// "Header (Web)" bar, switchable from the NavSwitcher so they can be
-// compared in place. `comp` is the Figma as drawn; the rest borrow a motif
-// from the hub page itself. Remembered like the phase: ?nav= wins, then
-// localStorage, then the comp.
-export const NAV_VARIANTS = [
-  'comp',
-  'live',
-  'goo',
-  'clock',
-  'progress',
-  'marquee',
-  'mark26',
-] as const;
+// Nav identity options (Sep 2026). Two treatments of the same "Header (Web)"
+// bar, switchable from the NavSwitcher so they can be compared in place:
+//   comp      the Figma as drawn — the 3×3 dot mark beside "The Midterms"
+//   gradient  no mark; "The Midterms" itself set in the blue→red gradient
+// Remembered like the phase: ?nav= wins, then localStorage, then the comp.
+export const NAV_VARIANTS = ['comp', 'gradient'] as const;
 export type NavVariant = (typeof NAV_VARIANTS)[number];
 
 export const NAV_VARIANT_LABEL: Record<NavVariant, string> = {
-  comp: 'Figma (base)',
-  live: 'Bolinhas = placar',
-  goo: 'Goo no hover',
-  clock: 'Countdown na nav',
-  progress: 'Hairline de scroll',
-  marquee: 'Dots em marcha',
-  mark26: "Logo vira '26",
+  comp: 'Bolinhas (Figma)',
+  gradient: 'Texto em gradiente',
 };
 
 const KEY = 'dw-hub-nav-variant';

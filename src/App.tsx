@@ -183,7 +183,7 @@ export default function App() {
           there was nothing to keep in view, and the race selector it also
           carried now lives on the map card. */}
       <header className="site-chrome">
-        <DWNav variant={navVariant} forecast={forecast} />
+        <DWNav variant={navVariant} />
       </header>
 
       <div

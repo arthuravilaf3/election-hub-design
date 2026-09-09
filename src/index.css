@@ -228,154 +228,22 @@ button,
   }
 }
 
-/* ---------- Nav identity explorations (data/navVariants.ts) ---------- */
+/* ---------- Nav identity options (data/navVariants.ts) ---------- */
 
-/* live: toss-ups are the same neutral as the big grid. */
-.nav-dots {
-  --nav-dot-g: #9ca3b0;
-}
-.nav-dot--g { --rest: var(--nav-dot-g); }
-
-/* goo: instead of hopping, the dots slide toward the centre one and fuse
-   through #nav-goo while the pointer is on the label, then release. The
-   colour flip is kept. */
-.dw-nav-bar--goo .nav-dots {
-  transition: filter 0s 240ms;
-}
-.dw-nav-bar--goo .dw-nav-link--midterms:hover .nav-dots,
-.dw-nav-bar--goo .dw-nav-link--midterms:focus-visible .nav-dots {
-  filter: url(#nav-goo);
-  transition-delay: 0s;
-}
-.dw-nav-bar--goo .dw-nav-link--midterms:hover .nav-dot,
-.dw-nav-bar--goo .dw-nav-link--midterms:focus-visible .nav-dot {
-  animation: none;
-  transform: translate(var(--dx), var(--dy)) scale(1.08);
-  transition-delay: calc(var(--i) * 20ms);
+/* gradient: no mark; the label itself carries the comp's blue→red linear
+   gradient (#2A60F7 → #FC002C, left to right, edge to edge). Painted through
+   background-clip so the type stays live text; the pill's own hover
+   background is the pointer response. */
+.dw-nav-link--gradient {
+  gap: 0;
 }
 
-/* clock: the wordmark and the compact countdown share the centre slot; the
-   clock fades in beside the mark once the big one has scrolled away. */
-.dw-nav-center {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex: none;
-}
-.dw-nav-clock {
-  display: none;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 13px;
-  line-height: 1;
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 240ms ease, transform 240ms ease;
-}
-.dw-nav-bar--clock .dw-nav-clock {
-  display: inline-flex;
-}
-.dw-nav-clock.is-shown {
-  opacity: 1;
-  transform: none;
-}
-.dw-nav-clock-unit {
-  display: inline-flex;
-  align-items: center;
-}
-.dw-nav-clock .countdown-num {
-  font-size: 13px;
+.dw-nav-link--gradient .dw-nav-midterms-label {
   font-weight: 600;
-  letter-spacing: 0;
-  color: var(--ink);
-}
-
-/* progress: the hairline becomes a gauge — a 1px brand-red line grows from
-   the left edge as the page scrolls. */
-.dw-nav-bar--progress {
-  position: relative;
-}
-.dw-nav-progress {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 1px;
-  width: 100%;
-  background: var(--brand);
-  transform-origin: 0 50%;
-  transform: scaleX(var(--nav-progress, 0));
-  pointer-events: none;
-}
-
-/* marquee: a fine dot pattern marches behind the Midterms label on hover —
-   the ticker idea, at pill scale. Dots keep their hop and flip. */
-.dw-nav-bar--marquee .dw-nav-link--midterms {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-.dw-nav-bar--marquee .dw-nav-link--midterms::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--ink) 22%, transparent) 1px, transparent 1.5px);
-  background-size: 8px 8px;
-  opacity: 0;
-  transition: opacity 200ms ease;
-}
-.dw-nav-bar--marquee .dw-nav-link--midterms:hover::before,
-.dw-nav-bar--marquee .dw-nav-link--midterms:focus-visible::before {
-  opacity: 1;
-  animation: nav-marquee 900ms linear infinite;
-}
-@keyframes nav-marquee {
-  from { background-position: 0 0; }
-  to { background-position: -8px 0; }
-}
-
-/* mark26: the wordmark yields to the '26 mark on hover. */
-.dw-nav-bar--mark26 .dw-nav-logo {
-  position: relative;
-}
-.dw-nav-bar--mark26 .dw-logo {
-  transition: opacity 200ms ease, transform 200ms ease;
-}
-.dw-nav-mark26 {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  height: 22px;
-  width: auto;
-  transform: translate(-50%, -50%) scale(0.85);
-  opacity: 0;
-  transition: opacity 200ms ease, transform 200ms ease;
-  pointer-events: none;
-}
-.dw-nav-bar--mark26 .dw-nav-logo:hover .dw-logo,
-.dw-nav-bar--mark26 .dw-nav-logo:focus-visible .dw-logo {
-  opacity: 0;
-  transform: scale(0.95);
-}
-.dw-nav-bar--mark26 .dw-nav-logo:hover .dw-nav-mark26,
-.dw-nav-bar--mark26 .dw-nav-logo:focus-visible .dw-nav-mark26 {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dw-nav-bar--marquee .dw-nav-link--midterms:hover::before,
-  .dw-nav-bar--marquee .dw-nav-link--midterms:focus-visible::before {
-    animation: none;
-  }
-  .dw-nav-clock,
-  .dw-nav-mark26,
-  .dw-nav-bar--mark26 .dw-logo,
-  .dw-nav-bar--goo .nav-dot {
-    transition-duration: 0s;
-  }
+  background: linear-gradient(90deg, #2a60f7 0%, #fc002c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* The switcher: same pill as the phase switcher, one step up the stack. */
