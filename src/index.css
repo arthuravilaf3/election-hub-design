@@ -35,7 +35,7 @@
 
   /* The Polymarket ticker, fixed to the bottom of the viewport. Read by the
      page tail and by the pills that sit above it. */
-  --ticker-h: 68px;
+  --ticker-h: 32px;
 }
 
 body {
@@ -4581,19 +4581,11 @@ button,
   background: var(--surface-dim);
 }
 
-.poly-ticker iframe,
-.poly-ticker-img {
+.poly-ticker iframe {
   display: block;
   width: 100%;
   height: var(--ticker-h);
   border: 0;
-}
-
-/* The stand-in capture is 1440 wide: pin it left and crop the right edge on
-   narrower viewports, never squash it. */
-.poly-ticker-img {
-  object-fit: cover;
-  object-position: left center;
 }
 
 body {
