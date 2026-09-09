@@ -12,16 +12,21 @@
 // dot mark's and the gradient's colours are the comp's own literals, kept
 // as an identity palette (see .nav-dot / .dw-nav-link--gradient), not as a
 // reading of any race.
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties, type MouseEvent } from 'react';
 import type { NavVariant } from '../data/navVariants';
 import { DWLogo } from './DWLogo';
 
+// Section links. In the prototype a click does not leave the page: it moves
+// the "current page" so the nav can be seen from another section — The
+// Midterms drops from 600 to the DS label/500/md weight but keeps its
+// gradient, and the clicked section takes the bold.
 const SECTIONS = [
-  { label: 'News', href: 'https://www.dailywire.com/', active: true },
-  { label: 'Shows & Movies', href: 'https://www.dailywire.com/watch' },
-  { label: 'All Access', href: 'https://www.dailywire.com/all-access' },
-  { label: 'Sports & State', href: 'https://www.dailywire.com/sports-and-state' },
+  { id: 'news', label: 'News', href: 'https://www.dailywire.com/' },
+  { id: 'shows', label: 'Shows & Movies', href: 'https://www.dailywire.com/watch' },
+  { id: 'all-access', label: 'All Access', href: 'https://www.dailywire.com/all-access' },
+  { id: 'sports', label: 'Sports & State', href: 'https://www.dailywire.com/sports-and-state' },
 ];
+const MIDTERMS_ID = 'midterms';
 
 // The mark, row by row, as drawn in the comp: r = red, c = crimson,
 // b = blue, n = navy. On hover every dot hops a little and swaps to the
@@ -91,6 +96,13 @@ interface DWNavProps {
 }
 
 export function DWNav({ variant = 'comp' }: DWNavProps) {
+  // Which page the nav believes it is on. The hub IS the map page, so it
+  // starts on The Midterms.
+  const [current, setCurrent] = useState(MIDTERMS_ID);
+  const go = (id: string) => (e: MouseEvent) => {
+    e.preventDefault();
+    setCurrent(id);
+  };
   return (
     <div className={`dw-nav-bar dw-nav-bar--${variant}`}>
       <div className="dw-nav-inner">
@@ -98,9 +110,11 @@ export function DWNav({ variant = 'comp' }: DWNavProps) {
           <div className="dw-nav-sections">
             {SECTIONS.map((s) => (
               <a
-                key={s.label}
+                key={s.id}
                 href={s.href}
-                className={`dw-nav-link${s.active ? ' is-active' : ''}`}
+                className={`dw-nav-link${current === s.id ? ' is-active' : ''}`}
+                aria-current={current === s.id ? 'page' : undefined}
+                onClick={go(s.id)}
               >
                 {s.label}
               </a>
@@ -109,8 +123,9 @@ export function DWNav({ variant = 'comp' }: DWNavProps) {
               href="https://www.dailywire.com/midterms"
               className={`dw-nav-link dw-nav-link--midterms${
                 variant === 'gradient' ? ' dw-nav-link--gradient' : ''
-              }`}
-              aria-current="page"
+              }${current === MIDTERMS_ID ? ' is-active' : ''}`}
+              aria-current={current === MIDTERMS_ID ? 'page' : undefined}
+              onClick={go(MIDTERMS_ID)}
             >
               {variant === 'comp' && <MidtermsDots />}
               <span className="dw-nav-midterms-label">The Midterms</span>

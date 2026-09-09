@@ -173,6 +173,12 @@ button,
   font-weight: 600;
 }
 
+/* The Midterms item: DS label/500/md when the reader is elsewhere on the
+   site, 600 when this is the current page. (.is-active supplies the 600.) */
+.dw-nav-link--midterms {
+  font-weight: 500;
+}
+
 /* The Midterms mark: a 3×3 grid of 5px dots in a 15px box, gap 6 to the
    label. Each dot carries its rest colour by class and its hover colour in
    --flip (set inline, the opposite family); on hover the dots hop along
@@ -244,7 +250,6 @@ button,
 }
 
 .dw-nav-link--gradient .dw-nav-midterms-label {
-  font-weight: 600;
   background-image: linear-gradient(
     90deg,
     #2a60f7 0%,
