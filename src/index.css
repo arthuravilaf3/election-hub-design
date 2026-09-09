@@ -35,7 +35,7 @@
 
   /* The Polymarket ticker, fixed to the bottom of the viewport. Read by the
      page tail and by the pills that sit above it. */
-  --ticker-h: 32px;
+  --ticker-h: 48px;
 }
 
 body {
