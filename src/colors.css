@@ -62,7 +62,10 @@
   --rating-safe-dem: #1041b7;
   --rating-likely-dem: #0065f4;
   --rating-lean-dem: #86c7ff;
-  --rating-tossup: #9ca3b0;
+  /* Toss-up is PURPLE (design decision Sep 9 2026): the midpoint of the two
+     seat-bar party colours, so it reads as "both, undecided" — grey is
+     reserved for not-on-ballot. */
+  --rating-tossup: #a260a7;
   --rating-lean-rep: #ffa0a3;
   --rating-likely-rep: #ee2532;
   --rating-safe-rep: #a8000f;
