@@ -244,8 +244,8 @@ const drawer = await page.evaluate(() => {
   const svg = document.querySelector('.election-map').getBoundingClientRect();
   const card = document.querySelector('.map-card').getBoundingClientRect();
   return {
-    // Sep 2026: opening a state no longer moves the map or blurs the rest.
-    mapStill: getComputedStyle(document.querySelector('.map-camera')).transform === 'none',
+    // Sep 2026: the camera flies to the state; no blur on the rest.
+    cameraScale: (/matrix\(([-\d.]+)/.exec(getComputedStyle(document.querySelector('.map-camera')).transform) || [])[1],
     restOpacity: getComputedStyle(document.querySelector('.map-rest')).opacity,
     bars: [...document.querySelectorAll('.bar-list:not(.district-list) .bar-fill')].map(
       (el) => el.style.width
@@ -266,7 +266,7 @@ const drawer = await page.evaluate(() => {
 console.log(
   'drawer:',
   JSON.stringify(drawer),
-  '(map still, rest at 0.3, Data/Related tabs, breadcrumb, flag + photos loaded, 0 counties, padding kept)'
+  '(camera scale > 1, rest at 0.3, Data/Related tabs, title, flag + photos loaded, 0 counties, padding kept)'
 );
 // The page tabs stay (they are page chrome now); the source control steps
 // aside so the zoomed frame belongs to the state and its panel.

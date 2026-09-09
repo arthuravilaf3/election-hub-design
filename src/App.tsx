@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DWNav } from './components/DWNav';
-import { NavSwitcher } from './components/NavSwitcher';
-import { initialNavVariant, type NavVariant } from './data/navVariants';
 import { RaceHeader } from './components/RaceHeader';
 import { MapCard } from './components/MapCard';
 import { DevToolbar } from './components/DevToolbar';
-import { MobilePreview, IS_PREVIEW_FRAME } from './components/MobilePreview';
+import { IS_PREVIEW_FRAME } from './components/MobilePreview';
 import { ThemeToggle } from './components/ThemeToggle';
-import { PhaseSwitcher } from './components/PhaseSwitcher';
 import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
@@ -34,9 +31,7 @@ export default function App() {
   const [devOpen, setDevOpen] = useState(false);
   /* Which delivery phase the prototype is showing. One map decides what a
      phase contains (data/phases.ts); every gate below reads off it. */
-  const [phase, setPhase] = useState<Phase>(initialPhase);
-  /* Which nav identity exploration is on screen (data/navVariants.ts). */
-  const [navVariant, setNavVariant] = useState<NavVariant>(initialNavVariant);
+  const [phase] = useState<Phase>(initialPhase);
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
@@ -183,7 +178,7 @@ export default function App() {
           there was nothing to keep in view, and the race selector it also
           carried now lives on the map card. */}
       <header className="site-chrome">
-        <DWNav variant={navVariant} />
+        <DWNav />
       </header>
 
       <div
@@ -277,10 +272,7 @@ export default function App() {
             onToggle={setDevOpen}
           />
         )}
-        <MobilePreview />
         <ThemeToggle />
-        <PhaseSwitcher phase={phase} onPhase={setPhase} />
-        <NavSwitcher variant={navVariant} onVariant={setNavVariant} />
       </div>
 
       {/* Full-bleed: the footer runs edge to edge with its own inner rail. */}

@@ -1,19 +1,16 @@
 // The dailywire.com site nav, redrawn from the DW WIP Q3 Figma "Header (Web)"
 // (Sep 2026): 64px bar, 64px side padding, hairline underneath, pill-shaped
-// 32px items on the left (News is the bold one), the wordmark dead centre,
-// Download App / Search / divider / avatar on the right. "The Midterms"
-// joins the section links — with its own 3×3 dot mark (`comp`), or set in
-// the blue→red gradient with no mark (`gradient`); see data/navVariants.ts.
+// 32px items on the left, the wordmark dead centre, Download App / Search /
+// divider / avatar on the right. "The Midterms" joins the section links set
+// in the blue→red gradient (decided Sep 2026 over the dot-mark option).
 //
 // The site renders this in light mode (#FAFAFA); the Election Hub is a DW+
 // dark-mode surface, so the same semantic tokens resolve dark here.
 //
 // Chrome only: nothing in this bar may use the party data-viz TOKENS. The
-// dot mark's and the gradient's colours are the comp's own literals, kept
-// as an identity palette (see .nav-dot / .dw-nav-link--gradient), not as a
-// reading of any race.
-import { useState, type CSSProperties, type MouseEvent } from 'react';
-import type { NavVariant } from '../data/navVariants';
+// gradient's colours are the comp's own literals, kept as an identity
+// palette (see .dw-nav-link--gradient), not as a reading of any race.
+import { useState, type MouseEvent } from 'react';
 import { DWLogo } from './DWLogo';
 
 // Section links. In the prototype a click does not leave the page: it moves
@@ -27,40 +24,6 @@ const SECTIONS = [
   { id: 'sports', label: 'Sports & State', href: 'https://www.dailywire.com/sports-and-state' },
 ];
 const MIDTERMS_ID = 'midterms';
-
-// The mark, row by row, as drawn in the comp: r = red, c = crimson,
-// b = blue, n = navy. On hover every dot hops a little and swaps to the
-// opposite family (red ↔ blue), so the mark "flips" while the eye is on it.
-type DotKey = 'r' | 'c' | 'b' | 'n';
-const COMP_DOTS: DotKey[] = ['r', 'b', 'n', 'b', 'b', 'c', 'n', 'r', 'c'];
-const DOT_FLIP: Record<DotKey, DotKey> = { r: 'b', c: 'n', b: 'r', n: 'c' };
-// Hop vectors, one per dot: a tight scatter that keeps the grid readable.
-const DOT_HOP = [
-  [-1.5, -1.5], [0, -2], [1.5, -1.5],
-  [-2, 0], [0, 0], [2, 0],
-  [-1.5, 1.5], [0, 2], [1.5, 1.5],
-];
-
-function MidtermsDots() {
-  return (
-    <span className="nav-dots" aria-hidden="true">
-      {COMP_DOTS.map((k, i) => (
-        <span
-          key={i}
-          className={`nav-dot nav-dot--${k}`}
-          style={
-            {
-              '--i': i,
-              '--flip': `var(--nav-dot-${DOT_FLIP[k]})`,
-              '--dx': `${DOT_HOP[i][0]}px`,
-              '--dy': `${DOT_HOP[i][1]}px`,
-            } as CSSProperties
-          }
-        />
-      ))}
-    </span>
-  );
-}
 
 // Tabler icons (download, search) at 20px, as in the comp.
 function DownloadIcon() {
@@ -91,11 +54,7 @@ function SearchIcon() {
   );
 }
 
-interface DWNavProps {
-  variant?: NavVariant;
-}
-
-export function DWNav({ variant = 'comp' }: DWNavProps) {
+export function DWNav() {
   // Which page the nav believes it is on. The hub IS the map page, so it
   // starts on The Midterms.
   const [current, setCurrent] = useState(MIDTERMS_ID);
@@ -104,7 +63,7 @@ export function DWNav({ variant = 'comp' }: DWNavProps) {
     setCurrent(id);
   };
   return (
-    <div className={`dw-nav-bar dw-nav-bar--${variant}`}>
+    <div className="dw-nav-bar">
       <div className="dw-nav-inner">
         <nav className="dw-nav" aria-label="Daily Wire">
           <div className="dw-nav-sections">
@@ -121,13 +80,12 @@ export function DWNav({ variant = 'comp' }: DWNavProps) {
             ))}
             <a
               href="https://www.dailywire.com/midterms"
-              className={`dw-nav-link dw-nav-link--midterms${
-                variant === 'gradient' ? ' dw-nav-link--gradient' : ''
-              }${current === MIDTERMS_ID ? ' is-active' : ''}`}
+              className={`dw-nav-link dw-nav-link--midterms dw-nav-link--gradient${
+                current === MIDTERMS_ID ? ' is-active' : ''
+              }`}
               aria-current={current === MIDTERMS_ID ? 'page' : undefined}
               onClick={go(MIDTERMS_ID)}
             >
-              {variant === 'comp' && <MidtermsDots />}
               <span className="dw-nav-midterms-label">The Midterms</span>
             </a>
           </div>

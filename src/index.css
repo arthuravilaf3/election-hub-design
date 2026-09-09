@@ -64,16 +64,6 @@ body {
 .app--dev-open {
   padding-bottom: 320px;
 }
-
-/* The drawer is a modal, and the dev FABs are fixed to the viewport's bottom
-   right — exactly where the panel's next-state button lands. Dev chrome has
-   no business sitting on top of a modal, so it steps out while one is open. */
-.app--zoomed .mobile-toggle,
-.app--zoomed .theme-toggle,
-.app--zoomed .phase-switcher {
-  display: none;
-}
-
 /* overflow-anchor: none — the collapsing sticky chrome changes page height,
    and scroll anchoring would "compensate" by mutating scrollY, which the
    scroll-direction handler reads as opposite-direction scroll: a feedback
@@ -177,149 +167,6 @@ button,
    site, 600 when this is the current page. (.is-active supplies the 600.) */
 .dw-nav-link--midterms {
   font-weight: 500;
-}
-
-/* The Midterms mark: a 3×3 grid of 5px dots in a 15px box, gap 6 to the
-   label. Each dot carries its rest colour by class and its hover colour in
-   --flip (set inline, the opposite family); on hover the dots hop along
-   --dx/--dy in a 40ms stagger and cross-fade to the flipped colour. */
-.dw-nav-link--midterms {
-  gap: 6px;
-}
-
-.nav-dots {
-  --nav-dot-r: #fc002c;
-  --nav-dot-c: #cc003b;
-  --nav-dot-b: #0f45db;
-  --nav-dot-n: #0017a3;
-  display: grid;
-  grid-template-columns: repeat(3, 5px);
-  grid-auto-rows: 5px;
-  width: 15px;
-  height: 15px;
-  flex: none;
-}
-
-.nav-dot {
-  display: block;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--rest);
-  transition: background-color 360ms ease, transform 240ms ease;
-}
-
-.nav-dot--r { --rest: var(--nav-dot-r); }
-.nav-dot--c { --rest: var(--nav-dot-c); }
-.nav-dot--b { --rest: var(--nav-dot-b); }
-.nav-dot--n { --rest: var(--nav-dot-n); }
-
-.dw-nav-link--midterms:hover .nav-dot,
-.dw-nav-link--midterms:focus-visible .nav-dot {
-  background: var(--flip);
-  animation: nav-dot-hop 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  animation-delay: calc(var(--i) * 40ms);
-}
-
-@keyframes nav-dot-hop {
-  0% { transform: translate(0, 0) scale(1); }
-  45% { transform: translate(var(--dx), var(--dy)) scale(1.25); }
-  100% { transform: translate(0, 0) scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dw-nav-link--midterms:hover .nav-dot,
-  .dw-nav-link--midterms:focus-visible .nav-dot {
-    animation: none;
-  }
-}
-
-/* ---------- Nav identity options (data/navVariants.ts) ---------- */
-
-/* gradient: no mark; the label itself carries the comp's gradient — solid
-   blue to 35%, a blend to 62%, solid red from there (#2A60F7 / #FC002C).
-   Painted through background-clip so the type stays live text.
-
-   Hover: the gradient SWEEPS through the word once. The strip is three
-   times the text: the first and last thirds are the resting gradient, the
-   middle third runs red back to blue, so sliding one full cycle sends red
-   rolling left to right through the letters, blue chasing it, and lands
-   exactly on the resting paint. Runs once per hover; reduced motion keeps
-   the resting paint. */
-.dw-nav-link--gradient {
-  gap: 0;
-}
-
-.dw-nav-link--gradient .dw-nav-midterms-label {
-  background-image: linear-gradient(
-    90deg,
-    /* third 1: rest (0–35 blue, 35–62 blend, 62–100 red) */
-    #2a60f7 0%,
-    #2a60f7 11.67%,
-    #fc002c 20.67%,
-    #fc002c 33.33%,
-    /* third 2: red back to blue */
-    #fc002c 45%,
-    #2a60f7 54%,
-    #2a60f7 66.67%,
-    /* third 3: rest again */
-    #2a60f7 78.33%,
-    #fc002c 87.33%,
-    #fc002c 100%
-  );
-  background-size: 300% 100%;
-  background-position: 0% 50%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.dw-nav-link--gradient:hover .dw-nav-midterms-label,
-.dw-nav-link--gradient:focus-visible .dw-nav-midterms-label {
-  animation: nav-gradient-sweep 1100ms cubic-bezier(0.65, 0, 0.35, 1) both;
-}
-
-/* Position runs 100% → 0%: the strip slides RIGHT, so the colours travel
-   left to right through the letters. */
-@keyframes nav-gradient-sweep {
-  from { background-position: 100% 50%; }
-  to { background-position: 0% 50%; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dw-nav-link--gradient:hover .dw-nav-midterms-label,
-  .dw-nav-link--gradient:focus-visible .dw-nav-midterms-label {
-    animation: none;
-  }
-}
-
-/* The switcher: same pill as the phase switcher, one step up the stack. */
-.nav-switcher {
-  position: fixed;
-  right: 24px;
-  bottom: 232px;
-  z-index: 640;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 8px 5px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
-  backdrop-filter: blur(8px);
-}
-.nav-switcher-select {
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink);
-  background: transparent;
-  border: 0;
-  padding: 2px 4px;
-  cursor: pointer;
-}
-.nav-switcher-select option {
-  color: #0a0909;
 }
 
 /* In flow between the two flex:1 groups so the wordmark centres in the
@@ -836,11 +683,18 @@ button,
 
 /* ---------- Open state (dim the rest) ---------- */
 
-/* The camera is gone (Sep 2026): opening a state no longer moves the map.
-   The group still exists — and stays untransformed — because the SVG paint
-   order and the rest/focus partition hang off it. */
+/* The camera: a 2D transform on the group, origin top-left so the fit
+   math is exact. Driven by ElectionMap (motion's animate, CAMERA_MS). Never
+   a 3D transform — that would rasterize the SVG. */
 .map-camera {
-  transform-origin: 0 0;
+  /* The flight is the SVG transform ATTRIBUTE (set by ElectionMap), so no
+     CSS transform, origin or transform-box applies here. Never a 3D
+     transform on this or any ancestor — that would rasterize the SVG. */
+  will-change: transform;
+}
+
+.state-labels.is-hidden {
+  opacity: 0;
 }
 
 /* One opacity on the un-focused group, not fifty per-path styles. 30% by
@@ -1277,16 +1131,6 @@ button,
 /* Metaball goo (defined inline in RaceHeader), switched on only while a dot
    is hot: only overlapping shapes fuse, and at rest the filter is off so the
    circles stay geometrically perfect. */
-.dots-grid.is-gooing {
-  filter: url(#dots-goo);
-}
-
-.dots-goo-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-}
-
 .dot {
   aspect-ratio: 1;
   width: 100%;
@@ -1297,9 +1141,8 @@ button,
      below is free to run. Same easing family as the map's fill transition. */
   animation: dot-in 520ms var(--dot-ease) backwards;
   animation-delay: var(--dot-delay, 0ms);
-  transition:
-    background 300ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* Colour only: the hover lens sets transform per frame from JS. */
+  transition: background 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* A soft overshoot rather than the shared ease: the dot settles into size
@@ -1322,19 +1165,6 @@ button,
 /* A re-deal (race change) is the same wave, short and flat. */
 .dot--redeal {
   animation-duration: 300ms;
-}
-
-/* Under the pointer (and for a beat after): just big enough to touch the
-   neighbours, so the goo fuses them with a thin neck rather than a blob. */
-.dot.is-goo {
-  /* 1.12x: with a 4px gap a 24px dot grows to just touch its neighbours —
-     tangent, not overlapping. Overlapping circles already have a wide waist;
-     tangent ones only get the thin bridge the blur draws between them. */
-  /* Deform, not just grow: a slight stretch toward the neighbours turns the
-     circle into an ellipse for the beat it is hot; the goo layer underneath
-     adds the bulge and the thin neck. */
-  transform: scale(1.22, 1.1);
-  z-index: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1780,7 +1610,6 @@ button,
   border: 0;
   border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
-
 
 .drawer-sec {
   margin: 0;
@@ -3693,7 +3522,6 @@ button,
   /* Phone: a headline truncated to five words says nothing — the pinned bar
      keeps the control and drops the echo. */
 
-
   .legend-strip ul {
     gap: 6px 12px;
     font-size: 12px;
@@ -3714,22 +3542,28 @@ button,
     padding: 10px 14px 16px;
   }
 
-
   /* The three-up row is too wide for a phone. Keep the two blocs on the
      ends where the bar puts them and drop the contested middle to its own
      centered line, rather than letting it wrap somewhere arbitrary. */
   /* Two 168px pills plus their insets do not fit a phone card: they drop out
      of the overlay and stack above the map, in normal flow. */
+  /* Fixed on phones too (Sep 2026): the pair spans the viewport width above
+     the ticker, one pill per column, and stays put the whole page — not
+     only while the map is on screen. */
   .map-card .map-selectors {
-    position: static;
+    left: 12px;
+    right: 12px;
     transform: none;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    padding: 12px 12px 0;
   }
 
-  /* In flow there is nothing to hide from. */
+  .map-card .map-selectors .pill {
+    width: 100%;
+  }
+
+  /* Always visible on phones: nothing gates them. */
   .map-card .map-selectors.is-offscreen {
     opacity: 1;
     pointer-events: auto;
@@ -4445,161 +4279,7 @@ button,
   }
 }
 
-/* ---------- Phase switcher (demo chrome) ---------- */
-
-/* The roadmap made demonstrable: which delivery phase the prototype is
-   showing. Sits with the other demo controls, never inside the framed
-   mobile copy. */
-.phase-switcher {
-  position: fixed;
-  right: 24px;
-  bottom: 180px;
-  z-index: 640;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
-  backdrop-filter: blur(8px);
-}
-
-.phase-chips {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.phase-chip-wrap {
-  position: relative;
-  display: inline-flex;
-}
-
-/* Names the phase on hover/focus and links out to the PRD it answers to.
-   Opens upward and right-aligned — the switcher lives in the bottom-right
-   corner, so there is only one direction with room. */
-.phase-card {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  right: -8px;
-  z-index: 10;
-  width: 248px;
-  display: grid;
-  gap: 4px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--surface-dim) 96%, transparent);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--surface-dim) 55%, transparent);
-  text-align: left;
-  animation: phase-card-in 140ms ease-out;
-}
-
-@keyframes phase-card-in {
-  from {
-    filter: opacity(0);
-    transform: translateY(4px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .phase-card {
-    animation: none;
-  }
-}
-
-.phase-card-eyebrow {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-subtlest);
-}
-
-.phase-card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.phase-card-job {
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--ink-subtle);
-}
-
-.phase-card-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--brand-hover);
-  text-decoration: none;
-}
-
-.phase-card-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-:root[data-theme='light'] .phase-card-link {
-  color: var(--brand-pressed);
-}
-
-.phase-switcher-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-subtlest);
-  padding-right: 2px;
-}
-
-.phase-chip {
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink-soft);
-  cursor: pointer;
-  transition: background 140ms ease-out, color 140ms ease-out;
-}
-
-.phase-chip:hover {
-  color: var(--ink);
-}
-
-.phase-chip.is-active {
-  background: var(--brand-pressed);
-  color: var(--ink);
-}
-
-/* The comparison without the control (phases where the picker has no place). */
-
-@media (prefers-reduced-motion: reduce) {
-  .phase-chip {
-    transition: none;
-  }
-}
-
-@media (max-width: 700px) {
-  .phase-switcher {
-    display: none;
-  }
-}
-
-/* Three feed columns need the whole 1312 rail. Below that: one column, no
+/* The comparison without the control (phases where the picker has no place). *//* Three feed columns need the whole 1312 rail. Below that: one column, no
    rails — the inline ad slots come back on their own. */
 @media (max-width: 1200px) {
   .feed-section {

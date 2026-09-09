@@ -54,8 +54,8 @@ check('camera transform-origin', statics.cameraOrigin, '0px 0px');
 check('map-card overflow', statics.cardOverflow, 'clip');
 check('state fill transition', statics.stateTransition, '0.35s');
 check('statement crossfade', statics.statementAnim, '0.2s');
-// .dot carries two transitions now: background (the recolour, 300ms) and transform (the hover goo, 220ms).
-check('dot recolour + goo transitions', statics.seatBarTransition, '0.3s, 0.22s');
+// .dot transitions colour only: the hover lens drives transform per frame from JS.
+check('dot recolour transition only', statics.seatBarTransition, '0.3s');
 check('no SVG ancestor transform', statics.svgAncestorTransforms.length, 0);
 // The countdown is a live clock: it ticks.
 {
@@ -179,7 +179,7 @@ await page.waitForTimeout(200);
 check('focus shows tooltip', await page.evaluate(() => !!document.querySelector('.map-tooltip')), true);
 await page.evaluate(() => document.querySelector('.state-shape[data-state=TX]').blur());
 
-// ---- opening a state (Sep 2026: no camera, no blur, no counties) ---------
+// ---- opening a state (Sep 2026: camera flies, no blur, no counties) ------
 const paddingBefore = await page.evaluate(() => getComputedStyle(document.querySelector('.map-wrap')).paddingTop);
 await page.click('.state-shape[data-state=TX]');
 await page.waitForTimeout(900);
@@ -190,8 +190,7 @@ const zoom = await page.evaluate(() => {
     camera: getComputedStyle(document.querySelector('.map-camera')).transform,
     restFilter: getComputedStyle(document.querySelector('.map-rest')).filter,
     restOpacity: getComputedStyle(document.querySelector('.map-rest')).opacity,
-    openLabel: getComputedStyle(document.querySelector('.state-label--open')).opacity,
-    otherLabel: other ? getComputedStyle(other).opacity : null,
+    labelsHidden: getComputedStyle(document.querySelector('.state-labels')).opacity,
     padding: getComputedStyle(document.querySelector('.map-wrap')).paddingTop,
     drawer: !!drawer,
     dialog: drawer?.getAttribute('role'),
@@ -201,12 +200,11 @@ const zoom = await page.evaluate(() => {
     locked: document.body.classList.contains('is-scroll-locked'),
   };
 });
-check('the map does not move', zoom.camera, 'none');
+// The camera flies to the state: a scale above 1 on the group (MAX 7).
+check('the camera flies to the state', zoom.camera, (v) => { const m = /matrix\(([-\d.]+)/.exec(v); return !!m && parseFloat(m[1]) > 1.05 && parseFloat(m[1]) <= 7.01; });
 check('no blur on the rest', zoom.restFilter, 'none');
 check('other states dim to 30%', zoom.restOpacity, '0.3');
-check('other labels dim with their states', zoom.otherLabel, '0.3');
-// Labels sit at 0.85/0.9 by tone; "full ink" means undimmed, not literally 1.
-check('the open state keeps its label undimmed', zoom.openLabel, (v) => parseFloat(v) >= 0.8);
+check('labels hide while zoomed (the scale would blow them up)', zoom.labelsHidden, '0');
 check('the map keeps its padding (no reflow)', zoom.padding, paddingBefore);
 check('drawer is a modal dialog', `${zoom.dialog}/${zoom.modal}`, 'dialog/true');
 check('no county subdivision', zoom.counties, 0);
@@ -240,17 +238,18 @@ check(
   await page.evaluate(() => document.querySelector('.drawer-title')?.textContent.trim()),
   (v) => v !== beforeClick && /California/.test(v)
 );
-check('the map still did not move', await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform), 'none');
+check('the camera re-fits to the new state', await page.evaluate(() => { const v = getComputedStyle(document.querySelector('.map-camera')).transform; const m = /matrix\(([-\d.]+)/.exec(v); return !!m && parseFloat(m[1]) > 1.05; }), true);
 
-// ---- no pan, no zoom: the map never moves under the pointer ----------------
+// ---- no pan: a drag never moves the camera (only a click flies it) --------
 {
+  const before = await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform);
   const sb = await page.locator('.election-map').boundingBox();
   await page.mouse.move(sb.x + sb.width * 0.5, sb.y + sb.height * 0.15);
   await page.mouse.down();
   await page.mouse.move(sb.x + sb.width * 0.5 + 120, sb.y + sb.height * 0.15 + 60, { steps: 8 });
   await page.mouse.up();
   await page.waitForTimeout(150);
-  check('a drag does not move the map', await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform), 'none');
+  check('a drag does not move the map', await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform), before);
 }
 
 // The arrows DO move it.
@@ -365,7 +364,9 @@ check('entry animation releases scale when done (backwards, not both)', entry.fi
 check('entry is staggered across the grid', entry.d0 !== entry.d100, true);
 check('the grid has no filter at rest (perfect circles)', entry.goo, 'none');
 await page.waitForTimeout(1200);
-// Hover: crossed dots grow (and the goo fuses them); untouched ones do not.
+// Hover lens: the dot under the pointer swells most, its neighbours less,
+// everything far away stays put; circles stay circles (uniform scale, no
+// filter); it all settles back to rest after the pointer leaves.
 // The grid is above the fold at this point (the card was centred earlier):
 // bring it on screen, or the pointer moves land off-viewport and touch nothing.
 await page.evaluate(() => document.querySelector('.dots-grid').scrollIntoView({ block: 'center' }));
@@ -373,15 +374,25 @@ await page.waitForTimeout(400);
 const dotBox = await page.locator('.dot').nth(40).boundingBox();
 await page.mouse.move(dotBox.x + 2, dotBox.y + dotBox.height / 2);
 await page.mouse.move(dotBox.x + dotBox.width * 3, dotBox.y + dotBox.height / 2, { steps: 6 });
-// Past the 220ms transform transition, inside the 520ms hot window.
-await page.waitForTimeout(260);
-const goo = await page.evaluate(() => { const h = document.querySelector('.dot.is-goo'); return { hot: document.querySelectorAll('.dot.is-goo').length, scale: h ? getComputedStyle(h).transform : 'none' }; });
-check('the dots the pointer crossed go gooey', goo.hot >= 2 && goo.hot <= 6, true);
-check('the goo filter is on only while dots are hot', await page.evaluate(() => /dots-goo/.test(getComputedStyle(document.querySelector('.dots-grid')).filter)), true);
-check('a gooey dot deforms into a stretched ellipse', /matrix\(1\.2[0-9]*, 0, 0, 1\.1/.test(goo.scale), true);
-await page.waitForTimeout(800);
-check('they let go again', await page.evaluate(() => document.querySelectorAll('.dot.is-goo').length), 0);
-check('and the filter switches off again', await page.evaluate(() => getComputedStyle(document.querySelector('.dots-grid')).filter), 'none');
+// Let the lerp settle (~80ms time constant).
+await page.waitForTimeout(400);
+const lens = await page.evaluate(() => {
+  const d = [...document.querySelectorAll('.dot')];
+  const sc = (el) => { const m = /matrix\(([-\d.]+), ([-\d.]+), ([-\d.]+), ([-\d.]+)/.exec(getComputedStyle(el).transform); return m ? { a: +m[1], b: +m[2], c: +m[3], d: +m[4] } : { a: 1, b: 0, c: 0, d: 1 }; };
+  // Governor grid: 12 columns, so dot 43 is row 3 / col 7; dot 0 is many pitches away.
+  const under = sc(d[43]); const next = sc(d[44]); const far = sc(d[0]);
+  return { under, next, far, hot: d.filter((el) => sc(el).a > 1.02).length, filter: getComputedStyle(document.querySelector('.dots-grid')).filter };
+});
+check('the dot under the pointer swells', lens.under.a > 1.15, true);
+check('it stays a circle (uniform scale, no shear)', Math.abs(lens.under.a - lens.under.d) < 0.01 && Math.abs(lens.under.b) < 0.01, true);
+check('a neighbour swells less', lens.next.a > 1.0 && lens.next.a < lens.under.a, true);
+check('a far dot stays put', lens.far.a, 1);
+check('only a handful are hot', lens.hot >= 3 && lens.hot <= 24, true);
+check('no filter on the grid, ever', lens.filter, 'none');
+// Fully off the grid (a point still inside it would just re-aim the lens).
+await page.mouse.move(8, 8);
+await page.waitForTimeout(700);
+check('they settle back to rest', await page.evaluate(() => [...document.querySelectorAll('.dot')].filter((el) => el.style.transform).length), 0);
 const raceBefore = await page.evaluate(() => document.querySelector('.pill-value').textContent.trim());
 await page.locator('.map-selectors .pill').nth(0).focus();
 await page.keyboard.press('ArrowDown'); // opens

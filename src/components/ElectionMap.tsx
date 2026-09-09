@@ -5,13 +5,15 @@
 // - results/called: full saturation, reached via the CSS "hardening"
 //   transition on fill (+ a one-shot WAAPI flash)
 //
-// OPENING A STATE (redesign Sep 2026). Clicking a state opens its panel and
-// dims every other state to 30% — the map does not move. The camera flight,
-// the blur and the mock county choropleth that used to come with it are gone
-// by decision: the state you chose stays exactly where your eye found it.
-// The dim is one opacity on the un-focused GROUP, not fifty per-path styles.
+// OPENING A STATE. Clicking a state opens its panel, the camera flies to it
+// (550ms, fitted into the region left of the drawer) and every other state
+// dims to 30%. The dim is one opacity on the un-focused GROUP, not fifty
+// per-path styles. No blur, no county subdivision (dropped Sep 2026); the
+// camera came back by request the same month.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { animate } from 'motion';
 import { MAP_VIEWBOX, STATE_SHAPES } from '../data/states';
+import { CAMERA_MS, ZOOM_REGION_W } from '../data/layout';
 import { describeRace, fillFor, isHatched, hasNoRead, labelToneFor } from '../data/encoding';
 import { CHAMBER_LABEL } from '../data/summary';
 import type { Chamber, StateRace } from '../data/types';
@@ -62,6 +64,29 @@ const LABEL_NUDGE: Record<string, { dx: number; dy: number }> = {
   FL: { dx: 36, dy: 20 },
 };
 
+const [, , VIEW_W, VIEW_H] = MAP_VIEWBOX.split(' ').map(Number);
+const ZOOM_FILL = 0.78; // fraction of the region the state fills
+const MAX_ZOOM = 7;
+
+/**
+ * How much of the frame is left of the drawer — the region the zoomed state
+ * has to fit inside, silhouette fully visible beside the panel. MEASURED:
+ * the drawer is absolutely positioned inside `.map-and-panel`, so its
+ * offsetLeft IS the left region's width. Falls back to the declared fraction
+ * before the panel mounts, and to the whole frame when the drawer is not in
+ * the frame's flow (mobile: a fixed bottom sheet).
+ */
+function measureRegionW(svg: SVGSVGElement | null): number {
+  const frame = svg?.closest('.map-and-panel') as HTMLElement | null;
+  if (!frame) return ZOOM_REGION_W;
+  const drawer = frame.querySelector('.drawer') as HTMLElement | null;
+  if (!drawer) return ZOOM_REGION_W;
+  if (drawer.offsetParent !== frame) return 1;
+  const frameW = frame.clientWidth;
+  if (!frameW) return ZOOM_REGION_W;
+  return Math.min(1, Math.max(0.2, drawer.offsetLeft / frameW));
+}
+
 export function ElectionMap({
   races,
   chamber,
@@ -76,6 +101,7 @@ export function ElectionMap({
   onClearZoom,
 }: ElectionMapProps) {
   const pathRefs = useRef(new Map<string, SVGPathElement>());
+  const cameraRef = useRef<SVGGElement>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   /** Geometry centers for the state-abbreviation labels (measured once). */
@@ -110,6 +136,56 @@ export function ElectionMap({
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Fly the camera. useLayoutEffect so the target geometry is measured after
+  // the focused state has moved into its own group. The SVG `transform`
+  // ATTRIBUTE, not a CSS transform: attribute transforms are plain user-space
+  // math from the viewBox origin, immune to transform-box/transform-origin
+  // (a CSS transform on this group landed every state off-centre). Motion
+  // tweens the three numbers; the dim on the rest is CSS on the same clock.
+  const camRef = useRef({ s: 1, x: 0, y: 0 });
+  useLayoutEffect(() => {
+    const camera = cameraRef.current;
+    if (!camera) return;
+    const from = { ...camRef.current };
+    const to = { s: 1, x: 0, y: 0 };
+    if (zoomedId) {
+      const target = pathRefs.current.get(zoomedId);
+      if (target) {
+        const box = target.getBBox();
+        const regionW = measureRegionW(camera.ownerSVGElement);
+        to.s = Math.min(
+          MAX_ZOOM,
+          Math.min((VIEW_W * regionW * ZOOM_FILL) / box.width, (VIEW_H * ZOOM_FILL) / box.height)
+        );
+        const cx = box.x + box.width / 2;
+        const cy = box.y + box.height / 2;
+        // CENTER the state in its region — no cover clamp: past the map's
+        // edge there is only transparent svg over the same card surface.
+        to.x = (VIEW_W * regionW) / 2 - to.s * cx;
+        to.y = VIEW_H / 2 - to.s * cy;
+      }
+    }
+    const apply = (c: { s: number; x: number; y: number }) => {
+      camRef.current = c;
+      camera.setAttribute('transform', `translate(${c.x} ${c.y}) scale(${c.s})`);
+    };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      apply(to);
+      return;
+    }
+    const anim = animate(0, 1, {
+      duration: CAMERA_MS / 1000,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (t) =>
+        apply({
+          s: from.s + (to.s - from.s) * t,
+          x: from.x + (to.x - from.x) * t,
+          y: from.y + (to.y - from.y) * t,
+        }),
+    });
+    return () => anim.stop();
+  }, [zoomedId, chamber]);
 
   // Escape closes the open state. The panel's own close button is the other
   // way back, on touch as well as pointer.
@@ -253,7 +329,7 @@ export function ElectionMap({
               </pattern>
             </defs>
 
-            <g className="map-camera">
+            <g ref={cameraRef} className="map-camera">
               <g className="map-rest">
                 {rest.map(([shape, index]) => renderState(shape, index))}
               </g>
@@ -263,10 +339,9 @@ export function ElectionMap({
               {/* State abbreviations at each centroid. Decorative (the path's
                   aria-label already names the state); tone flips per fill so
                   the code stays readable on light and dark ratings. Skipped
-                  where the shape is too small to hold two letters. While a
-                  state is open every other label dims with its state; the
-                  open one is marked so it stays at full ink. */}
-              <g className="state-labels" aria-hidden="true">
+                  where the shape is too small to hold two letters. Hidden
+                  while zoomed (the camera scale would blow them up). */}
+              <g className={`state-labels${zoomedId ? ' is-hidden' : ''}`} aria-hidden="true">
                 {STATE_SHAPES.map((shape) => {
                   const box = labelBoxes[shape.id];
                   if (!box || box.w < 30 || box.h < 22) return null;

@@ -125,41 +125,127 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
   const total = forecast.dem + forecast.rep;
   const grid = DOT_GRID[chamber];
 
-  /* HOVER GOO. A dot the pointer crosses grows for a moment; the SVG goo
-     filter on the grid fuses anything that overlaps, so the dots you swept
-     over melt into one another and let go again as they shrink back (the
-     reference screenshot). Imperative on purpose: a 435-item re-render per
-     pointer move is the wrong tool, a class and a timer per dot is the
-     right one. Dots at rest never touch — the filter's threshold is tuned
-     to leave the 4px gap alone. */
-  const timers = useRef(new Map<Element, number>());
+  /* HOVER LENS. The dots near the pointer swell and lean toward it, most
+     for the one underneath and less with distance (a Gaussian falloff two
+     pitches wide), so the ones you are over touch their neighbours while
+     everything else stays put. Driven per frame in JS with a lerp toward
+     the target — no CSS transition, no SVG filter — so the circles stay
+     perfect circles, the motion is continuous under a moving pointer and
+     it settles the same way it rose. 435 dots is fine: only the ones near
+     the pointer change, and the loop stops the moment everything is at rest.
+     Reduced motion: no lens at all. */
+  const gridRef = useRef<HTMLDivElement>(null);
+  const lens = useRef({
+    dots: [] as HTMLElement[],
+    cx: [] as number[],
+    cy: [] as number[],
+    s: [] as number[],
+    x: [] as number[],
+    y: [] as number[],
+    pitch: 28,
+    px: -1e9,
+    py: -1e9,
+    raf: 0,
+    measured: false,
+  });
+  const measure = () => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const L = lens.current;
+    const g = grid.getBoundingClientRect();
+    L.dots = Array.from(grid.querySelectorAll<HTMLElement>('.dot'));
+    L.cx = [];
+    L.cy = [];
+    L.dots.forEach((d, i) => {
+      const r = d.getBoundingClientRect();
+      L.cx[i] = r.left + r.width / 2 - g.left;
+      L.cy[i] = r.top + r.height / 2 - g.top;
+      L.s[i] = L.s[i] ?? 1;
+      L.x[i] = L.x[i] ?? 0;
+      L.y[i] = L.y[i] ?? 0;
+    });
+    const a = L.dots[0]?.getBoundingClientRect();
+    const b = L.dots[1]?.getBoundingClientRect();
+    L.pitch = a && b ? Math.max(8, b.left - a.left) : 28;
+    L.measured = true;
+  };
+  const tick = () => {
+    const L = lens.current;
+    L.raf = 0;
+    const R = L.pitch * 1.6; // reach
+    const A = 0.3; // swell of the dot under the pointer
+    const B = L.pitch * 0.18; // lean toward the pointer
+    const k = 0.2; // lerp per frame (~80ms time constant at 60fps)
+    let moving = false;
+    for (let i = 0; i < L.dots.length; i += 1) {
+      const dx = L.px - L.cx[i];
+      const dy = L.py - L.cy[i];
+      const d2 = dx * dx + dy * dy;
+      let ts = 1;
+      let tx = 0;
+      let ty = 0;
+      if (d2 < R * R * 4) {
+        const w = Math.exp(-d2 / (R * R));
+        ts = 1 + A * w;
+        const d = Math.sqrt(d2) || 1;
+        tx = (dx / d) * B * w;
+        ty = (dy / d) * B * w;
+      }
+      const ns = L.s[i] + (ts - L.s[i]) * k;
+      const nx = L.x[i] + (tx - L.x[i]) * k;
+      const ny = L.y[i] + (ty - L.y[i]) * k;
+      const rest = Math.abs(ns - 1) < 0.002 && Math.abs(nx) < 0.05 && Math.abs(ny) < 0.05;
+      if (rest) {
+        if (L.s[i] !== 1 || L.x[i] !== 0 || L.y[i] !== 0) {
+          L.s[i] = 1;
+          L.x[i] = 0;
+          L.y[i] = 0;
+          L.dots[i].style.transform = '';
+          L.dots[i].style.zIndex = '';
+        }
+        continue;
+      }
+      moving = true;
+      L.s[i] = ns;
+      L.x[i] = nx;
+      L.y[i] = ny;
+      L.dots[i].style.transform = `translate(${nx.toFixed(2)}px, ${ny.toFixed(2)}px) scale(${ns.toFixed(3)})`;
+      L.dots[i].style.zIndex = ns > 1.02 ? '1' : '';
+    }
+    if (moving) L.raf = window.requestAnimationFrame(tick);
+  };
+  const wake = () => {
+    if (!lens.current.raf) lens.current.raf = window.requestAnimationFrame(tick);
+  };
+  const reducedLens = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ).current;
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (reducedLens || e.pointerType === 'touch') return;
+    const L = lens.current;
+    if (!L.measured) measure();
+    const g = e.currentTarget.getBoundingClientRect();
+    L.px = e.clientX - g.left;
+    L.py = e.clientY - g.top;
+    wake();
+  };
+  const onPointerLeave = () => {
+    const L = lens.current;
+    L.px = -1e9;
+    L.py = -1e9;
+    wake();
+  };
   useEffect(() => {
-    const t = timers.current;
+    const L = lens.current;
+    const onResize = () => {
+      L.measured = false;
+    };
+    window.addEventListener('resize', onResize);
     return () => {
-      for (const id of t.values()) window.clearTimeout(id);
-      t.clear();
+      window.removeEventListener('resize', onResize);
+      if (L.raf) window.cancelAnimationFrame(L.raf);
     };
   }, []);
-  /* The goo filter is on the GRID only while some dot is hot. At rest the
-     filter's alpha threshold would leave faint nubs on otherwise perfect
-     circles; switching it off between hovers keeps them perfect. */
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const dot = (e.target as HTMLElement).closest?.('.dot');
-    if (!dot) return;
-    const gridEl = e.currentTarget;
-    dot.classList.add('is-goo');
-    gridEl.classList.add('is-gooing');
-    const prev = timers.current.get(dot);
-    if (prev) window.clearTimeout(prev);
-    timers.current.set(
-      dot,
-      window.setTimeout(() => {
-        dot.classList.remove('is-goo');
-        timers.current.delete(dot);
-        if (timers.current.size === 0) gridEl.classList.remove('is-gooing');
-      }, 520)
-    );
-  };
   // Only the first deal is an entrance (see the grid below).
   const firstDeal = useRef(!dotsDealt).current;
   useEffect(() => {
@@ -227,7 +313,9 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
         }
         role="img"
         aria-label={`Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${total}. ${forecast.seatsUp} seats up, ${tail}.`}
+        ref={gridRef}
         onPointerMove={onPointerMove}
+        onPointerLeave={onPointerLeave}
       >
         {/* Entry stagger, row by row, top to bottom. The row is the delay's
             main term, but a whole row landing on one frame draws a hard bar
@@ -253,22 +341,6 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
           );
         })}
       </div>
-      {/* The goo filter: blur, then push alpha through a steep contrast so
-          two blurred shapes that overlap read as one solid one. Sized so a
-          resting 4px gap stays a gap. */}
-      <svg className="dots-goo-defs" width="0" height="0" aria-hidden="true" focusable="false">
-        <defs>
-          <filter id="dots-goo">
-            {/* Small blur + hard threshold: only circles that actually overlap
-                fuse, and the neck between them stays thin. */}
-            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -12" result="goo" />
-            {/* `over`, not `atop`: the neck exists only in the blurred layer — the
-                source has no pixels there — and atop would discard it. */}
-            <feComposite in="SourceGraphic" in2="goo" operator="over" />
-          </filter>
-        </defs>
-      </svg>
     </section>
   );
 }
