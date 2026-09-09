@@ -1,33 +1,68 @@
-// The dailywire.com site nav, reproduced from the live site (Aug 2026):
-// sticky 68px bar, left section links, centered wordmark, right utilities +
-// LOG IN (ghost) + SIGN UP (brand). Structure, order, hrefs, type sizes and
-// the two button treatments match the production nav.
+// The dailywire.com site nav, redrawn from the DW WIP Q3 Figma "Header (Web)"
+// (Sep 2026): 64px bar, 64px side padding, hairline underneath, pill-shaped
+// 32px items on the left (News is the bold one), the wordmark dead centre,
+// Download App / Search / divider / avatar on the right. Midterms joins the
+// section links with its own 3×3 dot mark — the one place the hub's dots
+// leak into the chrome.
 //
 // The site renders this in light mode (#FAFAFA); the Election Hub is a DW+
-// dark-mode surface, so the same semantic tokens resolve dark here. Add
-// className="dw-nav--light" to see it exactly as dailywire.com shows it today.
+// dark-mode surface, so the same semantic tokens resolve dark here.
 //
-// Chrome only: nothing in this bar may use the party data-viz tokens.
+// Chrome only: nothing in this bar may use the party data-viz TOKENS. The
+// dot mark's four colours are the comp's own literals, kept as an icon
+// palette (see .nav-dot), not as a reading of any race.
 import { DWLogo } from './DWLogo';
 
-// Redesign (Aug 2026): section set from the DW WIP Q3 Figma — Shop and Kids
-// join, Election Hub leaves the nav (the purple promo bar is the entry point).
 const SECTIONS = [
   { label: 'News', href: 'https://www.dailywire.com/', active: true },
   { label: 'Shows & Movies', href: 'https://www.dailywire.com/watch' },
   { label: 'All Access', href: 'https://www.dailywire.com/all-access' },
   { label: 'Shop', href: 'https://store.dailywire.com/' },
   { label: 'Kids', href: 'https://www.dailywire.com/kids' },
-  { label: 'DWTV', href: 'https://www.dailywire.com/dwtv' },
 ];
 
+// The mark, row by row, as drawn in the comp: r = red, c = crimson,
+// b = blue, n = navy. On hover every dot hops a little and swaps to the
+// opposite family (red ↔ blue), so the mark "flips" while the eye is on it.
+const DOT_ROWS = ['rbn', 'bbc', 'nrc'] as const;
+const DOT_FLIP: Record<string, string> = { r: 'b', c: 'n', b: 'r', n: 'c' };
+// Hop vectors, one per dot: a tight scatter that keeps the grid readable.
+const DOT_HOP = [
+  [-1.5, -1.5], [0, -2], [1.5, -1.5],
+  [-2, 0], [0, 0], [2, 0],
+  [-1.5, 1.5], [0, 2], [1.5, 1.5],
+];
+
+function MidtermsDots() {
+  const dots = DOT_ROWS.join('').split('');
+  return (
+    <span className="nav-dots" aria-hidden="true">
+      {dots.map((k, i) => (
+        <span
+          key={i}
+          className={`nav-dot nav-dot--${k}`}
+          style={
+            {
+              '--i': i,
+              '--flip': `var(--nav-dot-${DOT_FLIP[k]})`,
+              '--dx': `${DOT_HOP[i][0]}px`,
+              '--dy': `${DOT_HOP[i][1]}px`,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </span>
+  );
+}
+
+// Tabler icons (download, search) at 20px, as in the comp.
 function DownloadIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M8 2v7.5M8 9.5 5 6.7M8 9.5l3-2.8M2.5 11v1.8c0 .4.3.7.7.7h9.6c.4 0 .7-.3.7-.7V11"
+        d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 11l5 5 5-5M12 4v12"
         stroke="currentColor"
-        strokeWidth="1.4"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -37,9 +72,14 @@ function DownloadIcon() {
 
 function SearchIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="7" cy="7" r="4.4" stroke="currentColor" strokeWidth="1.4" />
-      <path d="m10.4 10.4 3.1 3.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -59,6 +99,14 @@ export function DWNav() {
                 {s.label}
               </a>
             ))}
+            <a
+              href="https://www.dailywire.com/midterms"
+              className="dw-nav-link dw-nav-link--midterms"
+              aria-current="page"
+            >
+              <MidtermsDots />
+              Midterms
+            </a>
           </div>
 
           <a href="https://www.dailywire.com/" className="dw-nav-logo" aria-label="Daily Wire home">
@@ -75,13 +123,12 @@ export function DWNav() {
               Search
             </button>
             <span className="dw-nav-divider" aria-hidden="true" />
-            {/* Logged-in state per the redesign: avatar instead of LOG IN/SIGN UP. */}
             <a
               href="https://www.dailywire.com/account"
               className="dw-nav-avatar"
               aria-label="Account"
             >
-              ST
+              <span className="dw-nav-avatar-img">ST</span>
             </a>
           </div>
         </nav>
