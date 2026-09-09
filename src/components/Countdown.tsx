@@ -13,7 +13,7 @@ interface Parts {
   over: boolean;
 }
 
-function partsUntil(target: string, now: number): Parts {
+export function partsUntil(target: string, now: number): Parts {
   const ms = Math.max(0, new Date(target).getTime() - now);
   const s = Math.floor(ms / 1000);
   return {
@@ -25,7 +25,7 @@ function partsUntil(target: string, now: number): Parts {
   };
 }
 
-const pad = (n: number) => String(n).padStart(2, '0');
+export const pad = (n: number) => String(n).padStart(2, '0');
 
 /**
  * One digit that ROLLS when it changes: the new value rises in from below
@@ -59,7 +59,7 @@ function Roll({ value }: { value: string }) {
 }
 
 /** A figure as independent digits, so "19" -> "18" rolls only the 9. */
-function Figure({ value }: { value: string }) {
+export function Figure({ value }: { value: string }) {
   return (
     <span className="countdown-num">
       {value.split('').map((d, i) => (
