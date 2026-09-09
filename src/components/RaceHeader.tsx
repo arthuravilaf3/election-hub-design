@@ -69,16 +69,6 @@ export function RaceHeader({
               <em>Presented by</em>
               <img className="hub-logo" src={polymarketLogo} alt="Polymarket" />
             </span>
-            {(forecast.updated || resultsMode) && (
-              <>
-                <span className="hub-dot" aria-hidden="true">
-                  •
-                </span>
-                <span className="hub-updated">
-                  {resultsMode ? 'Updating live' : `Updated ${forecast.updated}`}
-                </span>
-              </>
-            )}
           </p>
         </div>
         <p className="hub-tagline intro-rise" style={introDelay(INTRO_AT.statement)}>
@@ -199,17 +189,28 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
         <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
           {headline}
         </h2>
+        {/* Chamber summary (PRD P1): current seats, seats up, toss-ups — one
+            line under the headline, with the freshness of the read below it. */}
         <p className="dots-seats intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
-          <span>
-            <b className="dots-num dots-num--dem">{forecast.dem}</b> democrat seats
-          </span>
+          <span className="dots-num dots-num--dem">{forecast.dem} D</span>
           <span className="hub-dot" aria-hidden="true">
             •
           </span>
-          <span>
-            <b className="dots-num dots-num--rep">{forecast.rep}</b> republican seats
+          <span className="dots-num dots-num--rep">{forecast.rep} R</span>
+          <span className="hub-dot" aria-hidden="true">
+            •
           </span>
+          <span>{forecast.seatsUp} seats up</span>
+          <span className="hub-dot" aria-hidden="true">
+            •
+          </span>
+          <span>{tail}</span>
         </p>
+        {(forecast.updated || resultsMode) && (
+          <p className="dots-updated intro-rise" style={introDelay(INTRO_AT.statement + 120)}>
+            {resultsMode ? 'Updating live' : `Updated ${forecast.updated}`}
+          </p>
+        )}
       </div>
 
       {/* The grid is one image to assistive tech — 435 list items would be
