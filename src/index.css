@@ -232,18 +232,48 @@ button,
 
 /* gradient: no mark; the label itself carries the comp's blue→red linear
    gradient (#2A60F7 → #FC002C, left to right, edge to edge). Painted through
-   background-clip so the type stays live text; the pill's own hover
-   background is the pointer response. */
+   background-clip so the type stays live text.
+
+   Hover: the gradient SWEEPS through the word once — the strip is three
+   times the text and repeats blue→red twice, so sliding it one full cycle
+   sends red rolling left to right through the letters, with blue chasing
+   it, and lands back exactly on the resting blue→red. Runs once per hover;
+   reduced motion keeps the resting paint. */
 .dw-nav-link--gradient {
   gap: 0;
 }
 
 .dw-nav-link--gradient .dw-nav-midterms-label {
   font-weight: 600;
-  background: linear-gradient(90deg, #2a60f7 0%, #fc002c 100%);
+  background-image: linear-gradient(
+    90deg,
+    #2a60f7 0%,
+    #fc002c 33.333%,
+    #2a60f7 66.666%,
+    #fc002c 100%
+  );
+  background-size: 300% 100%;
+  background-position: 0% 50%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.dw-nav-link--gradient:hover .dw-nav-midterms-label,
+.dw-nav-link--gradient:focus-visible .dw-nav-midterms-label {
+  animation: nav-gradient-sweep 1100ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+@keyframes nav-gradient-sweep {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dw-nav-link--gradient:hover .dw-nav-midterms-label,
+  .dw-nav-link--gradient:focus-visible .dw-nav-midterms-label {
+    animation: none;
+  }
 }
 
 /* The switcher: same pill as the phase switcher, one step up the stack. */
