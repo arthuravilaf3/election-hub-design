@@ -15,6 +15,7 @@
  * track, so a race switch recolours exactly what the bar used to resize.
  */
 import { useEffect, useRef } from 'react';
+import { INTRO_AT, Letters, introDelay } from './Intro';
 import { Countdown } from './Countdown';
 import { asset } from '../data/assets';
 import polymarketLogo from '../images/polymarketlogo.png';
@@ -52,12 +53,18 @@ export function RaceHeader({
       <header className="hub-header">
         <div className="hub-brand">
           <h1 className="hub-title">
-            The Midterms
+            {/* Entrance: the letters resolve one by one out of a blur. */}
+            <Letters text="The Midterms" base={INTRO_AT.title} step={26} className="hub-title-text" />
             {/* The '26 mark completes the name — it is part of the heading,
                 so its alt is the year the type is not spelling out. */}
-            <img className="hub-mark" src={asset('logos/midterms-26.svg')} alt="'26" />
+            <img
+              className="hub-mark intro-rise"
+              style={introDelay(INTRO_AT.mark)}
+              src={asset('logos/midterms-26.svg')}
+              alt="'26"
+            />
           </h1>
-          <p className="hub-byline">
+          <p className="hub-byline intro-rise" style={introDelay(INTRO_AT.presented)}>
             <span className="hub-presented">
               <em>Presented by</em>
               <img className="hub-logo" src={polymarketLogo} alt="Polymarket" />
@@ -74,7 +81,7 @@ export function RaceHeader({
             )}
           </p>
         </div>
-        <p className="hub-tagline">
+        <p className="hub-tagline intro-rise" style={introDelay(INTRO_AT.statement)}>
           The <strong>right</strong> place to be.
         </p>
       </header>
@@ -115,6 +122,9 @@ interface DotsProps {
    smaller body gets bigger dots: 435 seats at 29 across (24px), 100 at 15
    across (48px, per the Senate comp), governorships at 12 across. The mobile
    pair keeps the same idea on a 358px card. */
+/** Set once the grid has dealt for the first time this page load. */
+let dotsDealt = false;
+
 const DOT_GRID: Record<Chamber, { cols: number; gap: number; colsM: number; gapM: number }> = {
   house: { cols: 29, gap: 4, colsM: 20, gapM: 3 },
   senate: { cols: 15, gap: 6, colsM: 10, gapM: 4 },
@@ -160,6 +170,11 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       }, 520)
     );
   };
+  // Only the first deal is an entrance (see the grid below).
+  const firstDeal = useRef(!dotsDealt).current;
+  useEffect(() => {
+    dotsDealt = true;
+  }, []);
   const gap = forecast.tossupShare;
   const demShare = Math.max(0, forecast.demShare - gap / 2);
   const dem = Math.round((total * demShare) / 100);
@@ -181,8 +196,10 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       {/* Keyed on the headline so a race switch crossfades the copy, the way
           the old statement did. */}
       <div className="dots-copy" key={headline}>
-        <h2 className="dots-title">{headline}</h2>
-        <p className="dots-seats">
+        <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
+          {headline}
+        </h2>
+        <p className="dots-seats intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
           <span>
             <b className="dots-num dots-num--dem">{forecast.dem}</b> democrat seats
           </span>
@@ -211,11 +228,29 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
         aria-label={`Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${total}. ${forecast.seatsUp} seats up, ${tail}.`}
         onPointerMove={onPointerMove}
       >
-        {/* --i drives the entry stagger: a sweep across the grid in reading
-            order, each dot a hair after the last. */}
-        {seats.map((party, i) => (
-          <span key={i} className={`dot dot--${party}`} style={{ '--i': i } as React.CSSProperties} />
-        ))}
+        {/* Entry stagger, row by row, top to bottom. The row is the delay's
+            main term, but a whole row landing on one frame draws a hard bar
+            sweeping down the grid, so each dot also carries a small lean
+            across the row and a deterministic jitter — enough to break the
+            line without losing the downward read. The first deal is the
+            page's entrance (520ms, from INTRO_AT.dots); a re-deal on a race
+            change runs the same wave short and flat (300ms), so it reads as
+            the grid re-forming, not as the page opening again. */}
+        {seats.map((party, i) => {
+          const row = Math.floor(i / grid.cols);
+          const col = i % grid.cols;
+          const jitter = ((i * 2654435761) % 1000) / 1000;
+          const delay = firstDeal
+            ? INTRO_AT.dots + row * 30 + col * 1.6 + jitter * 26
+            : row * 12 + jitter * 90;
+          return (
+            <span
+              key={i}
+              className={`dot dot--${party}${firstDeal ? '' : ' dot--redeal'}`}
+              style={{ '--i': i, '--dot-delay': `${Math.round(delay)}ms` } as React.CSSProperties}
+            />
+          );
+        })}
       </div>
       {/* The goo filter: blur, then push alpha through a steep contrast so
           two blurred shapes that overlap read as one solid one. Sized so a

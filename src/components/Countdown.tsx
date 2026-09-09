@@ -2,6 +2,7 @@
 // hours, minutes, seconds — ticking once a second under the hub header.
 // The interval is the only timer in the app; it is cleared on unmount.
 import { useEffect, useRef, useState } from 'react';
+import { INTRO_AT, introDelay } from './Intro';
 
 export const ELECTION_DAY = '2026-11-03T00:00:00-05:00';
 
@@ -34,8 +35,11 @@ export const pad = (n: number) => String(n).padStart(2, '0');
  * kept for the length of the animation and then dropped. Reduced motion
  * collapses it to a plain swap (see the CSS pair).
  */
-function Roll({ value }: { value: string }) {
+function Roll({ value, intro }: { value: string; intro: number | null }) {
   const prev = useRef(value);
+  // The digit this slot was born with: it lands with the page's entrance
+  // (from above, on its own delay); every later value rolls normally.
+  const born = useRef(value);
   const [leaving, setLeaving] = useState<string | null>(null);
   useEffect(() => {
     if (prev.current === value) return;
@@ -44,9 +48,14 @@ function Roll({ value }: { value: string }) {
     const id = window.setTimeout(() => setLeaving(null), 450);
     return () => window.clearTimeout(id);
   }, [value]);
+  const entering = intro !== null && value === born.current && leaving === null;
   return (
     <span className="countdown-digit">
-      <span className="countdown-roll-in" key={`in-${value}`}>
+      <span
+        className={`countdown-roll-in${entering ? ' countdown-roll-in--intro' : ''}`}
+        style={entering ? introDelay(intro) : undefined}
+        key={`in-${value}`}
+      >
         {value}
       </span>
       {leaving !== null && (
@@ -59,11 +68,17 @@ function Roll({ value }: { value: string }) {
 }
 
 /** A figure as independent digits, so "19" -> "18" rolls only the 9. */
-export function Figure({ value }: { value: string }) {
+export function Figure({ value, order = null }: { value: string; order?: number | null }) {
+  // Entrance: the digits land one by one, 70ms apart, figure after figure.
+  const STEP = 70;
   return (
     <span className="countdown-num">
       {value.split('').map((d, i) => (
-        <Roll value={d} key={`${value.length}-${i}`} />
+        <Roll
+          value={d}
+          intro={order === null ? null : INTRO_AT.countdown + (order * value.length + i) * STEP}
+          key={`${value.length}-${i}`}
+        />
       ))}
     </span>
   );
@@ -102,10 +117,15 @@ export function Countdown({ now }: CountdownProps) {
           : `${t.days} days, ${t.hours} hours, ${t.minutes} minutes to Election Day`
       }
     >
-      {units.map(([value, label]) => (
+      {units.map(([value, label], order) => (
         <span className="countdown-unit" key={label}>
-          <Figure value={value} />
-          <span className="countdown-label">{label}</span>
+          <Figure value={value} order={order} />
+          <span
+            className="countdown-label intro-rise"
+            style={introDelay(INTRO_AT.countdown + order * 140)}
+          >
+            {label}
+          </span>
         </span>
       ))}
     </div>
