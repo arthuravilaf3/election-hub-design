@@ -37,29 +37,12 @@ const CHAMBER_TITLE: Record<Chamber, string> = {
 
 const CHAMBER_ORDER: Chamber[] = ['house', 'senate', 'governor'];
 
-/** Exploration switch (Sep 2026): where the source picker sits in the panel. */
-const SRC_VARIANT: 'a' | 'b' | 'c' | 'd' | null = (() => {
-  try {
-    const v = new URLSearchParams(window.location.search).get('drawersrc');
-    return v === 'a' || v === 'b' || v === 'c' || v === 'd' ? v : null;
-  } catch {
-    return null;
-  }
-})();
 
-/** A small pill-shaped native select: the listed sources, current one shown. */
-function SourcePicker({
-  value,
-  onChange,
-  compact = false,
-}: {
-  value: string;
-  onChange: (id: string) => void;
-  compact?: boolean;
-}) {
+/** A small pill-shaped native select: the listed sources, the current one
+    on its face. Native so the menu is the OS's and the keyboard just works. */
+function SourcePicker({ value, onChange }: { value: string; onChange: (id: string) => void }) {
   return (
-    <label className={`drawer-src-pick${compact ? ' drawer-src-pick--compact' : ''}`}>
-      {!compact && <span className="drawer-src-label">Source</span>}
+    <label className="drawer-src-pick">
       <span className="drawer-src-value">
         {sourceLabel(value)}
         <svg width="10" height="6" viewBox="0 0 12 6" fill="none" aria-hidden="true">
@@ -204,14 +187,13 @@ function DistrictGrid({ districts, sourceId }: { districts: District[]; sourceId
           return (
             <li
               key={d.id}
-              className={`bar-row bar-row--${lean}${d.curated ? ' is-curated' : ''}`}
+              className={`bar-row bar-row--${lean}`}
             >
               <span className="bar-fill" style={{ width: `${value.fill}%` }} aria-hidden="true" />
               <span className="bar-id">
                 <span className="bar-lines">
                   <span className="bar-title">
                     {districtLabel(d.id)}
-                    {d.curated && <span className="district-watch">Watchlist</span>}
                   </span>
                   <span className="bar-sub">
                     {RATING_LABEL[rating]} · {PARTY_LABEL[d.incumbent]} held
@@ -243,25 +225,14 @@ function DistrictGrid({ districts, sourceId }: { districts: District[]; sourceId
  * Districts carry it: every figure on this panel states whose it is and how
  * old it is (hub tenet), and the two sections can be read independently.
  */
-function BlockHead({
-  title,
-  read,
-  sourceId,
-  picker,
-}: {
-  title: string;
-  read: ReturnType<typeof readFor>;
-  sourceId: string;
-  /** Exploration b: the source word becomes the picker itself. */
-  picker?: React.ReactNode;
-}) {
+function BlockHead({ title, read, sourceId }: { title: string; read: ReturnType<typeof readFor>; sourceId: string }) {
   const freshness = freshnessOf(read);
   return (
     <div className="drawer-block-head">
       <h3 className="drawer-sec">{title}</h3>
       {read && (
         <p className="drawer-meta">
-          {picker ?? sourceKind(sourceId)}
+          {sourceKind(sourceId)}
           <span className="drawer-meta-dot" aria-hidden="true">·</span>
           {readLine(read)}
           <span className="drawer-meta-dot" aria-hidden="true">·</span>
@@ -310,12 +281,10 @@ export function RacePanel({
   const [tab, setTab] = useState<Chamber>(race.chamber);
   const shown = racesByChamber[tab] ?? race;
   const isResults = shown.mode === 'results';
-  /* SOURCE INSIDE THE PANEL — exploration (Sep 2026). Four placements
-     behind ?drawersrc=a|b|c|d; the pick is local to the panel and starts on
-     the map's source. None by default until one is chosen. */
-  const srcVariant = SRC_VARIANT;
-  const [srcId, setSrcId] = useState(sourceId);
-  const src = srcVariant ? srcId : sourceId;
+  /* SOURCE INSIDE THE PANEL (Sep 2026): a pill picker at the right end of
+     the tab row. Local to the panel — it starts on the map's source and
+     changes only what this panel reads, never the map. */
+  const [src, setSrcId] = useState(sourceId);
   // Follow is per-visit prototype state (the panel is keyed by state id).
   // PRD: anonymous follow first; a free account persists it — neither wired.
   const [following, setFollowing] = useState(false);
@@ -427,48 +396,21 @@ export function RacePanel({
           </section>
         ) : (
           <>
-            {srcVariant === 'c' && (
-              <div className="drawer-src-row drawer-src-row--head">
-                <SourcePicker value={src} onChange={setSrcId} />
-              </div>
-            )}
-            <div className={`drawer-tabrow${srcVariant === 'd' ? ' drawer-tabrow--split' : ''}`}>
+            {/* The tab row reads as "what you are looking at": the race on
+                the left, whose numbers on the right. */}
+            <div className="drawer-tabrow drawer-tabrow--split">
               <DrawerTabs
                 tabs={chambers.map((c) => ({ id: c, label: CHAMBER_TITLE[c] }))}
                 value={tab}
                 onChange={(id) => setTab(id as Chamber)}
               />
-              {srcVariant === 'd' && <SourcePicker value={src} onChange={setSrcId} compact />}
+              <SourcePicker value={src} onChange={setSrcId} />
             </div>
-            {srcVariant === 'a' && (
-              <div className="drawer-src-row">
-                <span className="drawer-src-label">Source</span>
-                <div className="drawer-seg" role="radiogroup" aria-label="Data source">
-                  {SOURCES.filter((o) => o.listed !== false).map((o) => (
-                    <button
-                      key={o.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={o.id === src}
-                      className={`drawer-seg-btn${o.id === src ? ' is-active' : ''}`}
-                      onClick={() => setSrcId(o.id)}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div role="tabpanel" id="drawer-tabpanel" aria-labelledby={`drawer-tab-${tab}`}>
             <>
             <section className="drawer-block">
-              <BlockHead
-                title="Candidates"
-                read={viewRead}
-                sourceId={src}
-                picker={srcVariant === 'b' ? <SourcePicker value={src} onChange={setSrcId} compact /> : undefined}
-              />
+              <BlockHead title="Candidates" read={viewRead} sourceId={src} />
               {shown.candidates && <CandidateRows candidates={shown.candidates} />}
               <p className="drawer-note">
                 Support shares from the polling average. {CHAMBER_LABEL[shown.chamber]} race, 2026.
