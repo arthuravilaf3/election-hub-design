@@ -240,16 +240,21 @@ check(
 );
 check('the camera re-fits to the new state', await page.evaluate(() => { const v = getComputedStyle(document.querySelector('.map-camera')).transform; const m = /matrix\(([-\d.]+)/.exec(v); return !!m && parseFloat(m[1]) > 1.05; }), true);
 
-// ---- no pan: a drag never moves the camera (only a click flies it) --------
+// ---- zoomed: a drag PANS the camera and does not open the state under it --
 {
-  const before = await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform);
+  const before = await page.evaluate(() => document.querySelector('.map-camera').getAttribute('transform'));
+  const title = await page.evaluate(() => document.querySelector('.drawer-title').textContent.trim());
   const sb = await page.locator('.election-map').boundingBox();
-  await page.mouse.move(sb.x + sb.width * 0.5, sb.y + sb.height * 0.15);
+  await page.mouse.move(sb.x + sb.width * 0.3, sb.y + sb.height * 0.5);
   await page.mouse.down();
-  await page.mouse.move(sb.x + sb.width * 0.5 + 120, sb.y + sb.height * 0.15 + 60, { steps: 8 });
+  await page.mouse.move(sb.x + sb.width * 0.3 + 120, sb.y + sb.height * 0.5 + 60, { steps: 8 });
   await page.mouse.up();
   await page.waitForTimeout(150);
-  check('a drag does not move the map', await page.evaluate(() => getComputedStyle(document.querySelector('.map-camera')).transform), before);
+  const after = await page.evaluate(() => document.querySelector('.map-camera').getAttribute('transform'));
+  check('a drag pans the zoomed map', after !== before, true);
+  check('the drag keeps the scale', (/scale\(([-\d.]+)/.exec(after) || [])[1], (/scale\(([-\d.]+)/.exec(before) || [])[1]);
+  check('a drag does not open the state it ends on', await page.evaluate(() => document.querySelector('.drawer-title').textContent.trim()), title);
+  check('the map paints past its own box (overflow visible)', await page.evaluate(() => getComputedStyle(document.querySelector('.election-map')).overflow), 'visible');
 }
 
 // The arrows DO move it.
@@ -271,6 +276,17 @@ check('the arrow actually changed state', afterArrow !== beforeClick, true);
 await page.keyboard.press('Escape');
 await page.waitForTimeout(700);
 check('Escape clears zoom', await page.evaluate(() => !document.querySelector('.drawer')), true);
+// Not zoomed: a drag does nothing — the map is still.
+{
+  const before = await page.evaluate(() => document.querySelector('.map-camera').getAttribute('transform'));
+  const sb = await page.locator('.election-map').boundingBox();
+  await page.mouse.move(sb.x + sb.width * 0.5, sb.y + sb.height * 0.15);
+  await page.mouse.down();
+  await page.mouse.move(sb.x + sb.width * 0.5 + 120, sb.y + sb.height * 0.15 + 60, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+  check('a drag does not move the map at rest', await page.evaluate(() => document.querySelector('.map-camera').getAttribute('transform')), before);
+}
 
 // ---- scrolling: the page behind keeps scrolling, the panel scrolls itself
 await page.click('.state-shape[data-state=TX]');
@@ -441,6 +457,7 @@ check('no top bar', head.topbar, false);
 check('head starts expanded', head.compact, false);
 check('head is sticky', head.sticky, 'sticky');
 check('expanded title is 32px', head.title, '32px');
+check('the title is the state alone (no chamber, no rating line)', await page.evaluate(() => ({ t: document.querySelector('.drawer-title').textContent.trim(), sub: !!document.querySelector('.drawer-subtitle') })), (v) => v.t === 'Texas' && v.sub === false);
 await page.evaluate(() => { document.querySelector('.drawer-scroll').scrollTop = 200; });
 await page.waitForTimeout(400);
 const compact = await page.evaluate(() => ({ compact: document.querySelector('.drawer').classList.contains('is-compact'), title: getComputedStyle(document.querySelector('.drawer-title')).fontSize, cols: getComputedStyle(document.querySelector('.drawer-headblock')).gridTemplateColumns.split(' ').length }));
@@ -453,7 +470,7 @@ check('head expands again at the top', await page.evaluate(() => document.queryS
 await page.keyboard.press('Escape');
 await page.waitForTimeout(600);
 
-// ---- Drawer tabs: Data / Related content --------------------------------
+// ---- Drawer tabs: the state's races (drive the map's chamber) ------------
 await page.click('.state-shape[data-state=TX]');
 await page.waitForTimeout(900);
 const tabs = await page.evaluate(() => ({
@@ -462,30 +479,41 @@ const tabs = await page.evaluate(() => ({
   selected: document.querySelector('.drawer-tab[aria-selected="true"]')?.textContent.trim(),
   sourcesCompared: document.body.innerText.includes('Sources compared'),
   data: !!document.querySelector('.bar-list'),
+  related: !!document.querySelector('.related'),
 }));
 check('the panel has a tablist', tabs.role, 'tablist');
-check('tabs are Data / Related content', tabs.labels.join('|'), 'Data|Related content');
-check('Data is the default tab', tabs.selected, 'Data');
+check('tabs are the races on the ballot', tabs.labels.every((l) => ['U.S. House', 'U.S. Senate', 'Governor'].includes(l)) && tabs.labels.length >= 1, true);
+check('the map\'s chamber is the selected tab', tabs.selected, 'U.S. House');
 check('Sources compared is gone', tabs.sourcesCompared, false);
-check('Data shows the candidate rows', tabs.data, true);
-await page.locator('.drawer-tab').nth(1).click();
-await page.waitForTimeout(400);
-const related = await page.evaluate(() => ({
-  panel: document.querySelector('#drawer-tabpanel')?.getAttribute('aria-labelledby'),
-  related: !!document.querySelector('.related'),
-  data: !!document.querySelector('.bar-list'),
-}));
-check('Related content renders the state feed', related.related, true);
-check('Related content hides the numbers', related.data, false);
-check('tabpanel is labelled by the active tab', related.panel, 'drawer-tab-related');
-await page.locator('.drawer-tab').nth(1).focus();
-await page.keyboard.press('ArrowLeft');
-await page.waitForTimeout(300);
-check(
-  'ArrowLeft returns to Data',
-  await page.evaluate(() => document.querySelector('.drawer-tab[aria-selected="true"]')?.textContent.trim()),
-  'Data'
-);
+check('no Related content view', tabs.related, false);
+check('the tab shows the candidate rows', tabs.data, true);
+if (tabs.labels.length > 1) {
+  await page.locator('.drawer-tab').nth(1).click();
+  await page.waitForTimeout(700);
+  const sw = await page.evaluate(() => ({ pill: document.querySelector('.pill-value').textContent.trim(), sel: document.querySelector('.drawer-tab[aria-selected="true"]').textContent.trim(), open: !!document.querySelector('.drawer') }));
+  check('picking a race tab switches the map\'s chamber', sw.pill !== 'House', true);
+  check('the tab row follows the map', sw.sel !== 'U.S. House', true);
+  check('the panel stays open on the same state', sw.open, true);
+}
+// After the race-tab switch above the panel sits on the second tab; the
+// tabpanel names it, and ArrowLeft walks back to the first (U.S. House).
+if ((await page.locator('.drawer-tab').count()) > 1) {
+  const panel = await page.evaluate(() => ({
+    labelledBy: document.querySelector('#drawer-tabpanel')?.getAttribute('aria-labelledby'),
+    selectedId: document.querySelector('.drawer-tab[aria-selected="true"]')?.id,
+    data: !!document.querySelector('.bar-list'),
+  }));
+  check('tabpanel is labelled by the active tab', panel.labelledBy, panel.selectedId);
+  check('every race tab shows the numbers', panel.data, true);
+  await page.locator('.drawer-tab[aria-selected="true"]').focus();
+  await page.keyboard.press('ArrowLeft');
+  await page.waitForTimeout(700);
+  check(
+    'ArrowLeft walks back to the first race',
+    await page.evaluate(() => document.querySelector('.drawer-tab[aria-selected="true"]')?.textContent.trim()),
+    'U.S. House'
+  );
+}
 await page.keyboard.press('Escape');
 await page.waitForTimeout(600);
 

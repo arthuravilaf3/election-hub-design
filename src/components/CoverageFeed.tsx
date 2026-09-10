@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { track } from '../data/analytics';
-import { ALL_ITEMS, FILTERS, HOSTS, HOST_FILTERABLE, TAGGED_STATE_IDS } from '../data/feedItems';
+import { ALL_ITEMS, FILTERS, HOSTS, HOST_FILTERABLE, STATE_FILTERABLE, TAGGED_STATE_IDS } from '../data/feedItems';
 import { STATE_SHAPES } from '../data/states';
 import type { FeedItem, ItemKind } from '../data/feedItems';
 import { isVisited, markVisited } from '../data/visited';
@@ -207,6 +207,7 @@ export function CoverageFeed() {
 
   /* ---- filtering + pagination ---- */
   const hostRowOpen = HOST_FILTERABLE.includes(filter);
+  const stateRowOpen = STATE_FILTERABLE.includes(filter);
   const filtered = useMemo(
     () =>
       ALL_ITEMS.filter(
@@ -214,9 +215,9 @@ export function CoverageFeed() {
           // Opinion filters by VOICE (flag spans formats); others by format.
           (filter === 'all' || (filter === 'opinion' ? !!i.opinion : i.kind === filter)) &&
           (!host || !hostRowOpen || i.host === host) &&
-          (!stateScope || (i.tag ?? '').startsWith(stateScope))
+          (!stateScope || !stateRowOpen || (i.tag ?? '').startsWith(stateScope))
       ),
-    [filter, host, hostRowOpen, stateScope]
+    [filter, host, hostRowOpen, stateRowOpen, stateScope]
   );
   // Memoized: a fresh array identity every render would tear down and
   // re-attach the impression observers constantly.
@@ -636,7 +637,8 @@ export function CoverageFeed() {
                   : undefined
               }
             >
-              {barKind !== 'opinion' && (
+              {/* Secondary HOST filter — every kind (Sep 2026). */}
+              {hostRowOpen && (
               <button
                 type="button"
                 className="host-trigger"
@@ -667,7 +669,8 @@ export function CoverageFeed() {
               </button>
               )}
 
-              {/* Secondary STATE filter — every kind gets one. */}
+              {/* Secondary STATE filter — articles only (Sep 2026). */}
+              {stateRowOpen && (
               <button
                 type="button"
                 className="host-trigger state-trigger"
@@ -693,7 +696,8 @@ export function CoverageFeed() {
                   />
                 </svg>
               </button>
-              {stateMenuOpen && (
+              )}
+              {stateRowOpen && stateMenuOpen && (
                 <div className="host-menu state-menu" role="menu" aria-label="Filter by state">
                   {/* Internal search: with a real 50-state list this menu
                       is typed into, not scanned. */}

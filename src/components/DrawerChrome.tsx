@@ -1,9 +1,8 @@
 // Shared drawer chrome (redesign Aug 2026): the source row under the title,
 // and the prev/next state navigation pinned to the drawer's bottom corners.
 //
-// The chamber tabs that used to sit here are gone — the redesign moves the
-// chamber into the top bar's breadcrumb as a label, and gives this row to the
-// source instead. Switching races is the page header's job now.
+// The tabs row is the state's races (Sep 2026): one tab per chamber the
+// state has on the ballot, driving the map's chamber.
 //
 // Arrows are the design system's Tabler icons (the DS icon set — the promo
 // bar's arrow is `tabler-icon-arrow-right`), drawn with Tabler's official
@@ -14,23 +13,31 @@ export interface StateRef {
   name: string;
 }
 
-/** The panel's two views (redesign Sep 2026): the numbers, or the coverage. */
-export type DrawerTab = 'data' | 'related';
-
-const DRAWER_TABS: Array<{ id: DrawerTab; label: string }> = [
-  { id: 'data', label: 'Data' },
-  { id: 'related', label: 'Related content' },
-];
+/** One tab per race the state has on the ballot (Sep 2026): U.S. House,
+    U.S. Senate, Governor. Picking one switches the whole map's chamber —
+    the panel and the map always show the same race. */
+export interface DrawerTabItem {
+  id: string;
+  label: string;
+}
 
 /**
- * A real tablist: two tabs over one panel, arrows move between them, the
- * active one is underlined. Replaces the provider toggle that sat here — the
- * panel follows the map's source now, and this row chooses what KIND of
- * thing you are reading about the state, not whose numbers.
+ * A real tablist over one panel: arrows move between tabs, the active one
+ * is underlined.
  */
-export function DrawerTabs({ value, onChange }: { value: DrawerTab; onChange: (t: DrawerTab) => void }) {
+export function DrawerTabs({
+  tabs,
+  value,
+  onChange,
+  label = 'Race',
+}: {
+  tabs: DrawerTabItem[];
+  value: string;
+  onChange: (id: string) => void;
+  label?: string;
+}) {
   const onKey = (e: React.KeyboardEvent<HTMLButtonElement>, i: number) => {
-    const n = DRAWER_TABS.length;
+    const n = tabs.length;
     let next = -1;
     if (e.key === 'ArrowRight') next = (i + 1) % n;
     else if (e.key === 'ArrowLeft') next = (i - 1 + n) % n;
@@ -38,12 +45,12 @@ export function DrawerTabs({ value, onChange }: { value: DrawerTab; onChange: (t
     else if (e.key === 'End') next = n - 1;
     if (next < 0) return;
     e.preventDefault();
-    onChange(DRAWER_TABS[next].id);
+    onChange(tabs[next].id);
     (e.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus({ preventScroll: true });
   };
   return (
-    <div className="drawer-tabs" role="tablist" aria-label="Panel view">
-      {DRAWER_TABS.map((t, i) => (
+    <div className="drawer-tabs" role="tablist" aria-label={label}>
+      {tabs.map((t, i) => (
         <button
           key={t.id}
           type="button"

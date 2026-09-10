@@ -122,8 +122,9 @@ export const ALL_ITEMS: FeedItem[] = Array.from({ length: 36 }, (_, i) => {
   // Articles deliberately never come from Crain & Co (a show, not a byline):
   // keeps one reachable empty filter combo so the empty state stays testable.
   const hostIdx = occurrence % HOSTS.length;
-  const host =
-    kind === 'opinion' ? undefined : kind === 'article' && hostIdx === 5 ? HOSTS[0] : HOSTS[hostIdx];
+  // Opinion carries a host too (the show that ran it) so its host filter has
+  // something to filter on; the byline stays the opinion author.
+  const host = kind === 'article' && hostIdx === 5 ? HOSTS[0] : HOSTS[hostIdx];
   const author = kind === 'opinion' ? OPINION_AUTHORS[i % OPINION_AUTHORS.length] : host ?? 'DW News';
   const base: FeedItem = {
     id: i + 1,
@@ -164,7 +165,11 @@ export const FILTERS: Array<{ id: ItemKind | 'all'; label: string }> = [
   { id: 'opinion', label: 'Opinion' },
 ];
 
-export const HOST_FILTERABLE: Array<ItemKind | 'all'> = ['article', 'short', 'episode'];
+/** Kinds that get the secondary HOST filter (Sep 2026: every kind). */
+export const HOST_FILTERABLE: Array<ItemKind | 'all'> = ['article', 'short', 'episode', 'opinion'];
+
+/** Kinds that get the secondary STATE filter (Sep 2026: articles only). */
+export const STATE_FILTERABLE: Array<ItemKind | 'all'> = ['article'];
 
 export const KIND_LABEL: Record<ItemKind, string> = {
   article: 'Article',

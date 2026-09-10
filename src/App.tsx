@@ -26,6 +26,9 @@ import type { Chamber } from './data/types';
 
 const POLL_CLOSING_INTERVAL_MS = 900;
 
+/** Tab order in the panel: the chambers as the RACE pill lists them. */
+const CHAMBERS: Chamber[] = ['house', 'senate', 'governor'];
+
 export default function App() {
   const { state, dispatch } = useElectionData();
   const [devOpen, setDevOpen] = useState(false);
@@ -241,6 +244,8 @@ export default function App() {
                   next={nextState}
                   showFollow={features.followState}
                   showDistricts={features.zoomDepth}
+                  chambers={CHAMBERS.filter((c) => !!state.ballot[c][zoomedRace.id])}
+                  onChamber={(c) => selectChamber(c, 'panel')}
                   onNavigate={navigateState}
                   onClose={() => dispatch({ type: 'CLEAR_ZOOM' })}
                 />

@@ -14,7 +14,7 @@
  * reporting, feed attribution) — no estimates beside a live count.
  */
 import { useEffect, useRef, useState } from 'react';
-import { DrawerNav, DrawerTabs, type DrawerTab, type StateRef } from './DrawerChrome';
+import { DrawerNav, DrawerTabs, type StateRef } from './DrawerChrome';
 import {
   PARTY_LABEL,
   RATING_LABEL,
@@ -36,7 +36,6 @@ const CHAMBER_TITLE: Record<Chamber, string> = {
 };
 import { districtLabel } from '../data/districts';
 import { asset } from '../data/assets';
-import { RelatedContent } from './RelatedContent';
 import type { Candidate, Chamber, District, StateRace } from '../data/types';
 
 const GROW_MS = 800;
@@ -227,6 +226,10 @@ interface RacePanelProps {
   next: StateRef;
   showFollow?: boolean;
   showDistricts?: boolean;
+  /** The chambers this state has on the ballot, in tab order. */
+  chambers: Chamber[];
+  /** Picking a tab switches the map's chamber. */
+  onChamber: (chamber: Chamber) => void;
   onNavigate: (stateId: string) => void;
   onClose: () => void;
 }
@@ -239,6 +242,8 @@ export function RacePanel({
   next,
   showFollow = true,
   showDistricts = true,
+  chambers,
+  onChamber,
   onNavigate,
   onClose,
 }: RacePanelProps) {
@@ -251,8 +256,6 @@ export function RacePanel({
   /* The panel reads whatever source the map is painting — the provider
      toggle that used to live here is gone (Sep 2026). */
   const viewRead = readFor(race, sourceId);
-  /* Which view: the numbers, or the coverage about this state. */
-  const [tab, setTab] = useState<DrawerTab>('data');
   /* Head compacts once the title has scrolled under it. Hysteresis so a
      scroll position that sits right on the threshold does not flicker. */
   const [compact, setCompact] = useState(false);
@@ -314,12 +317,9 @@ export function RacePanel({
         <header className="drawer-headblock">
           <img className="drawer-flag" src={asset(`flags/${race.id}.png`)} alt="" aria-hidden="true" />
           <div className="drawer-titleblock">
-            <h2 className="drawer-title">
-              {stateName} · {CHAMBER_TITLE[race.chamber]}
-            </h2>
-            {!isResults && viewRead && (
-              <p className="drawer-subtitle">Rated {RATING_LABEL[ratingOf(viewRead)]}</p>
-            )}
+            {/* The state alone: the race is the tab row's job, and the
+                rating is in the candidate block (Sep 2026). */}
+            <h2 className="drawer-title">{stateName}</h2>
           </div>
           <div className="drawer-headrow">
             {/* Follow a State: one state, all of its races. */}
@@ -359,14 +359,13 @@ export function RacePanel({
           </section>
         ) : (
           <>
-            <DrawerTabs value={tab} onChange={setTab} />
+            <DrawerTabs
+              tabs={chambers.map((c) => ({ id: c, label: CHAMBER_TITLE[c] }))}
+              value={race.chamber}
+              onChange={(id) => onChamber(id as Chamber)}
+            />
 
-            <div role="tabpanel" id="drawer-tabpanel" aria-labelledby={`drawer-tab-${tab}`}>
-            {tab === 'related' ? (
-              <section className="drawer-block drawer-block--related">
-                <RelatedContent stateId={race.id} />
-              </section>
-            ) : (
+            <div role="tabpanel" id="drawer-tabpanel" aria-labelledby={`drawer-tab-${race.chamber}`}>
             <>
             <section className="drawer-block">
               <BlockHead title="Candidates" read={viewRead} sourceId={sourceId} />
@@ -393,7 +392,6 @@ export function RacePanel({
               </>
             )}
             </>
-            )}
             </div>
           </>
         )}

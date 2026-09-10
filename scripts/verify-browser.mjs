@@ -253,7 +253,7 @@ const drawer = await page.evaluate(() => {
     pcts: [...document.querySelectorAll('.bar-list:not(.district-list) .bar-value')].map(
       (el) => el.textContent
     ),
-    // The panel's tab row: Data / Related content.
+    // The panel's tab row: the state's races.
     tabs: [...document.querySelectorAll('.drawer-tab')].map((t) => t.textContent.trim()),
     title: document.querySelector('.drawer-title')?.textContent.trim(),
     flag: document.querySelector('.drawer-flag')?.naturalWidth > 0,
@@ -266,7 +266,7 @@ const drawer = await page.evaluate(() => {
 console.log(
   'drawer:',
   JSON.stringify(drawer),
-  '(camera scale > 1, rest at 0.3, Data/Related tabs, title, flag + photos loaded, 0 counties, padding kept)'
+  '(camera scale > 1, rest at 0.3, race tabs, title, flag + photos loaded, 0 counties, padding kept)'
 );
 // The page tabs stay (they are page chrome now); the source control steps
 // aside so the zoomed frame belongs to the state and its panel.
@@ -283,29 +283,27 @@ console.log(
     }))
   )
 );
-// The second tab swaps the numbers for the coverage about this state, and
-// back. Neither touches the map.
-const beforeTab = await page.evaluate(
-  () => document.querySelector('.state-shape[data-state="TX"]')?.style.fill
-);
-await page.locator('.drawer-tab').nth(1).click();
-await page.waitForTimeout(400);
-console.log(
-  'drawer tabs:',
-  JSON.stringify(
-    await page.evaluate((before) => ({
-      selected: [...document.querySelectorAll('.drawer-tab')].map(
-        (t) => `${t.textContent.trim()}:${t.getAttribute('aria-selected')}`
-      ),
-      related: !!document.querySelector('.related'),
-      numbersGone: !document.querySelector('.bar-list'),
-      mapUnchanged: document.querySelector('.state-shape[data-state="TX"]')?.style.fill === before,
-      globalSegStillActive: [...document.querySelectorAll('.pill-value')][1]?.textContent.trim(),
-    }), beforeTab)
-  )
-);
-await page.locator('.drawer-tab').nth(0).click();
-await page.waitForTimeout(300);
+// A second race tab (when the state has one) switches the map's chamber and
+// keeps the panel on the state; the first tab brings it back.
+if ((await page.locator('.drawer-tab').count()) > 1) {
+  await page.locator('.drawer-tab').nth(1).click();
+  await page.waitForTimeout(700);
+  console.log(
+    'drawer race tabs:',
+    JSON.stringify(
+      await page.evaluate(() => ({
+        selected: [...document.querySelectorAll('.drawer-tab')].map(
+          (t) => `${t.textContent.trim()}:${t.getAttribute('aria-selected')}`
+        ),
+        racePill: document.querySelector('.pill-value')?.textContent.trim(),
+        stillOpen: !!document.querySelector('.drawer'),
+        title: document.querySelector('.drawer-title')?.textContent.trim(),
+      }))
+    )
+  );
+  await page.locator('.drawer-tab').nth(0).click();
+  await page.waitForTimeout(700);
+}
 // Follow toggles primary -> secondary.
 await page.locator('.drawer .btn-follow').click();
 console.log(

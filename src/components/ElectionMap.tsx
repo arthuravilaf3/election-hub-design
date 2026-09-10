@@ -144,6 +144,10 @@ export function ElectionMap({
   // (a CSS transform on this group landed every state off-centre). Motion
   // tweens the three numbers; the dim on the rest is CSS on the same clock.
   const camRef = useRef({ s: 1, x: 0, y: 0 });
+  const applyCamera = (camera: SVGGElement, c: { s: number; x: number; y: number }) => {
+    camRef.current = c;
+    camera.setAttribute('transform', `translate(${c.x} ${c.y}) scale(${c.s})`);
+  };
   useLayoutEffect(() => {
     const camera = cameraRef.current;
     if (!camera) return;
@@ -166,10 +170,7 @@ export function ElectionMap({
         to.y = VIEW_H / 2 - to.s * cy;
       }
     }
-    const apply = (c: { s: number; x: number; y: number }) => {
-      camRef.current = c;
-      camera.setAttribute('transform', `translate(${c.x} ${c.y}) scale(${c.s})`);
-    };
+    const apply = (c: { s: number; x: number; y: number }) => applyCamera(camera, c);
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       apply(to);
       return;
@@ -186,6 +187,55 @@ export function ElectionMap({
     });
     return () => anim.stop();
   }, [zoomedId, chamber]);
+
+  // DRAG TO PAN while zoomed (Sep 2026): the camera is the reader's to
+  // move, so the states beside the open one can be brought into view. A
+  // press that travels under 4px is still a click (opens that state); past
+  // it the click is swallowed. Pointer capture keeps the drag alive when the
+  // pointer leaves the svg; the pan is clamped so the map can never be
+  // pushed entirely out of the frame. Not zoomed: no pan, the map is still.
+  const drag = useRef({ on: false, id: -1, x0: 0, y0: 0, cx: 0, cy: 0, moved: false });
+  const [dragging, setDragging] = useState(false);
+  const onSvgPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!zoomedId || e.button !== 0) return;
+    const d = drag.current;
+    d.on = true;
+    d.id = e.pointerId;
+    d.x0 = e.clientX;
+    d.y0 = e.clientY;
+    d.cx = camRef.current.x;
+    d.cy = camRef.current.y;
+    d.moved = false;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onSvgPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    const d = drag.current;
+    if (!d.on || e.pointerId !== d.id) return;
+    const dxPx = e.clientX - d.x0;
+    const dyPx = e.clientY - d.y0;
+    if (!d.moved && Math.hypot(dxPx, dyPx) < 4) return;
+    if (!d.moved) {
+      d.moved = true;
+      setDragging(true);
+      setTooltip(null);
+    }
+    const svg = e.currentTarget;
+    const k = VIEW_W / svg.getBoundingClientRect().width; // px -> viewBox units
+    const c = camRef.current;
+    const margin = 120;
+    const x = Math.min(VIEW_W - margin, Math.max(-c.s * VIEW_W + margin, d.cx + dxPx * k));
+    const y = Math.min(VIEW_H - margin, Math.max(-c.s * VIEW_H + margin, d.cy + dyPx * k));
+    if (cameraRef.current) applyCamera(cameraRef.current, { s: c.s, x, y });
+  };
+  const onSvgPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    const d = drag.current;
+    if (!d.on || e.pointerId !== d.id) return;
+    d.on = false;
+    setDragging(false);
+    // The click that follows a real drag must not open a state: keep
+    // `moved` until it has fired (click comes right after pointerup).
+    if (d.moved) window.setTimeout(() => { d.moved = false; }, 0);
+  };
 
   // Escape closes the open state. The panel's own close button is the other
   // way back, on touch as well as pointer.
@@ -207,6 +257,8 @@ export function ElectionMap({
   };
 
   const handleActivate = (stateId: string) => {
+    // A drag that ended on a state is not a click on it.
+    if (drag.current.moved) return;
     // The open state itself: nothing to do (close is the X or Escape).
     if (stateId === zoomedId) return;
     if (!races[stateId]) {
@@ -288,7 +340,7 @@ export function ElectionMap({
   const selectedShape = selectedId ? STATE_SHAPES.find((s) => s.id === selectedId) : undefined;
 
   return (
-    <div className={`map-wrap${zoomedId ? ' is-zoomed' : ''}`}>
+    <div className={`map-wrap${zoomedId ? ' is-zoomed' : ''}${dragging ? ' is-dragging' : ''}`}>
       {/* Flat rendering on purpose: any 3D transform on an SVG ancestor makes
           the compositor rasterize + resample it, pixelating the borders. */}
           <svg
@@ -296,6 +348,10 @@ export function ElectionMap({
             className="election-map"
             role="group"
             aria-label={`United States ${CHAMBER_LABEL[chamber]} map. States are focusable; press Enter or Space to select.`}
+            onPointerDown={onSvgPointerDown}
+            onPointerMove={onSvgPointerMove}
+            onPointerUp={onSvgPointerUp}
+            onPointerCancel={onSvgPointerUp}
           >
             <defs>
               {/* Diagonal hatch: the non-color channel for "counting" (estimate). */}

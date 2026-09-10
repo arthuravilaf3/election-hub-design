@@ -402,6 +402,21 @@ button,
   display: block;
   width: 100%;
   height: auto;
+  /* The zoomed camera may paint past the svg's own box: the whole card is
+     the map's stage (the card clips). */
+  overflow: visible;
+}
+
+/* Zoomed: the map is draggable. touch-action none so a finger pans the
+   camera instead of the page (only while zoomed — at rest the page scrolls). */
+.map-wrap.is-zoomed .election-map {
+  cursor: grab;
+  touch-action: none;
+}
+
+.map-wrap.is-dragging .election-map,
+.map-wrap.is-dragging .state-shape {
+  cursor: grabbing;
 }
 
 /*
@@ -1500,14 +1515,6 @@ button,
   font-weight: 500;
   transition: font-size 200ms ease-out, line-height 200ms ease-out;
 }
-
-.drawer-subtitle {
-  margin: 0;
-  font-size: 16px;
-  color: var(--ink-subtlest);
-  transition: font-size 200ms ease-out;
-}
-
 .drawer.is-compact .drawer-headblock {
   grid-template: 'flag title actions' auto / auto 1fr auto;
   padding: 12px 24px;
@@ -1525,22 +1532,6 @@ button,
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.drawer.is-compact .drawer-subtitle {
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .drawer-headblock,
-  .drawer-flag,
-  .drawer-title,
-  .drawer-subtitle {
-    transition: none;
-  }
 }
 
 /* The panel's two views — Data, Related content. Underline marks the active
