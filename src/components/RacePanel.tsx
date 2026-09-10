@@ -25,7 +25,7 @@ import {
   readLine,
   statusLine,
 } from '../data/encoding';
-import { sourceKind } from '../data/sources';
+import { SOURCES, sourceKind, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 
 /** Long form for the panel title — the comp names the body, not the tab. */
@@ -34,6 +34,53 @@ const CHAMBER_TITLE: Record<Chamber, string> = {
   house: 'U.S. House',
   governor: 'Governor',
 };
+
+const CHAMBER_ORDER: Chamber[] = ['house', 'senate', 'governor'];
+
+/** Exploration switch (Sep 2026): where the source picker sits in the panel. */
+const SRC_VARIANT: 'a' | 'b' | 'c' | 'd' | null = (() => {
+  try {
+    const v = new URLSearchParams(window.location.search).get('drawersrc');
+    return v === 'a' || v === 'b' || v === 'c' || v === 'd' ? v : null;
+  } catch {
+    return null;
+  }
+})();
+
+/** A small pill-shaped native select: the listed sources, current one shown. */
+function SourcePicker({
+  value,
+  onChange,
+  compact = false,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+  compact?: boolean;
+}) {
+  return (
+    <label className={`drawer-src-pick${compact ? ' drawer-src-pick--compact' : ''}`}>
+      {!compact && <span className="drawer-src-label">Source</span>}
+      <span className="drawer-src-value">
+        {sourceLabel(value)}
+        <svg width="10" height="6" viewBox="0 0 12 6" fill="none" aria-hidden="true">
+          <path d="m1 1 5 4 5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <select
+        className="drawer-src-select"
+        aria-label="Data source"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {SOURCES.filter((o) => o.listed !== false).map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
 import { districtLabel } from '../data/districts';
 import { asset } from '../data/assets';
 import type { Candidate, Chamber, District, StateRace } from '../data/types';
@@ -196,14 +243,25 @@ function DistrictGrid({ districts, sourceId }: { districts: District[]; sourceId
  * Districts carry it: every figure on this panel states whose it is and how
  * old it is (hub tenet), and the two sections can be read independently.
  */
-function BlockHead({ title, read, sourceId }: { title: string; read: ReturnType<typeof readFor>; sourceId: string }) {
+function BlockHead({
+  title,
+  read,
+  sourceId,
+  picker,
+}: {
+  title: string;
+  read: ReturnType<typeof readFor>;
+  sourceId: string;
+  /** Exploration b: the source word becomes the picker itself. */
+  picker?: React.ReactNode;
+}) {
   const freshness = freshnessOf(read);
   return (
     <div className="drawer-block-head">
       <h3 className="drawer-sec">{title}</h3>
       {read && (
         <p className="drawer-meta">
-          {sourceKind(sourceId)}
+          {picker ?? sourceKind(sourceId)}
           <span className="drawer-meta-dot" aria-hidden="true">·</span>
           {readLine(read)}
           <span className="drawer-meta-dot" aria-hidden="true">·</span>
@@ -226,10 +284,10 @@ interface RacePanelProps {
   next: StateRef;
   showFollow?: boolean;
   showDistricts?: boolean;
-  /** The chambers this state has on the ballot, in tab order. */
-  chambers: Chamber[];
-  /** Picking a tab switches the map's chamber. */
-  onChamber: (chamber: Chamber) => void;
+  /** Every race this state has on the ballot, by chamber — the tab row.
+      Picking a tab changes only what THIS panel shows; the map, its pills
+      and the header stay on the page's chamber (Sep 2026). */
+  racesByChamber: Partial<Record<Chamber, StateRace>>;
   onNavigate: (stateId: string) => void;
   onClose: () => void;
 }
@@ -242,12 +300,22 @@ export function RacePanel({
   next,
   showFollow = true,
   showDistricts = true,
-  chambers,
-  onChamber,
+  racesByChamber,
   onNavigate,
   onClose,
 }: RacePanelProps) {
-  const isResults = race.mode === 'results';
+  /* The tab row is local: it opens on the page's chamber and switches the
+     panel's race without touching the map. */
+  const chambers = CHAMBER_ORDER.filter((c) => !!racesByChamber[c]);
+  const [tab, setTab] = useState<Chamber>(race.chamber);
+  const shown = racesByChamber[tab] ?? race;
+  const isResults = shown.mode === 'results';
+  /* SOURCE INSIDE THE PANEL — exploration (Sep 2026). Four placements
+     behind ?drawersrc=a|b|c|d; the pick is local to the panel and starts on
+     the map's source. None by default until one is chosen. */
+  const srcVariant = SRC_VARIANT;
+  const [srcId, setSrcId] = useState(sourceId);
+  const src = srcVariant ? srcId : sourceId;
   // Follow is per-visit prototype state (the panel is keyed by state id).
   // PRD: anonymous follow first; a free account persists it — neither wired.
   const [following, setFollowing] = useState(false);
@@ -255,7 +323,7 @@ export function RacePanel({
 
   /* The panel reads whatever source the map is painting — the provider
      toggle that used to live here is gone (Sep 2026). */
-  const viewRead = readFor(race, sourceId);
+  const viewRead = readFor(shown, src);
   /* Head compacts once the title has scrolled under it. Hysteresis so a
      scroll position that sits right on the threshold does not flicker. */
   const [compact, setCompact] = useState(false);
@@ -315,7 +383,7 @@ export function RacePanel({
           the top bar with the breadcrumb is gone, the X sits by share). */}
       <div className="drawer-scroll" onScroll={onScroll}>
         <header className="drawer-headblock">
-          <img className="drawer-flag" src={asset(`flags/${race.id}.png`)} alt="" aria-hidden="true" />
+          <img className="drawer-flag" src={asset(`flags/${shown.id}.png`)} alt="" aria-hidden="true" />
           <div className="drawer-titleblock">
             {/* The state alone: the race is the tab row's job, and the
                 rating is in the candidate block (Sep 2026). */}
@@ -354,40 +422,72 @@ export function RacePanel({
 
         {isResults ? (
           <section className="drawer-block">
-            <p className="race-panel-status">{statusLine(race, sourceId)}</p>
-            <p className="drawer-note">Source: {race.results?.source}</p>
+            <p className="race-panel-status">{statusLine(shown, src)}</p>
+            <p className="drawer-note">Source: {shown.results?.source}</p>
           </section>
         ) : (
           <>
-            <DrawerTabs
-              tabs={chambers.map((c) => ({ id: c, label: CHAMBER_TITLE[c] }))}
-              value={race.chamber}
-              onChange={(id) => onChamber(id as Chamber)}
-            />
+            {srcVariant === 'c' && (
+              <div className="drawer-src-row drawer-src-row--head">
+                <SourcePicker value={src} onChange={setSrcId} />
+              </div>
+            )}
+            <div className={`drawer-tabrow${srcVariant === 'd' ? ' drawer-tabrow--split' : ''}`}>
+              <DrawerTabs
+                tabs={chambers.map((c) => ({ id: c, label: CHAMBER_TITLE[c] }))}
+                value={tab}
+                onChange={(id) => setTab(id as Chamber)}
+              />
+              {srcVariant === 'd' && <SourcePicker value={src} onChange={setSrcId} compact />}
+            </div>
+            {srcVariant === 'a' && (
+              <div className="drawer-src-row">
+                <span className="drawer-src-label">Source</span>
+                <div className="drawer-seg" role="radiogroup" aria-label="Data source">
+                  {SOURCES.filter((o) => o.listed !== false).map((o) => (
+                    <button
+                      key={o.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={o.id === src}
+                      className={`drawer-seg-btn${o.id === src ? ' is-active' : ''}`}
+                      onClick={() => setSrcId(o.id)}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            <div role="tabpanel" id="drawer-tabpanel" aria-labelledby={`drawer-tab-${race.chamber}`}>
+            <div role="tabpanel" id="drawer-tabpanel" aria-labelledby={`drawer-tab-${tab}`}>
             <>
             <section className="drawer-block">
-              <BlockHead title="Candidates" read={viewRead} sourceId={sourceId} />
-              {race.candidates && <CandidateRows candidates={race.candidates} />}
+              <BlockHead
+                title="Candidates"
+                read={viewRead}
+                sourceId={src}
+                picker={srcVariant === 'b' ? <SourcePicker value={src} onChange={setSrcId} compact /> : undefined}
+              />
+              {shown.candidates && <CandidateRows candidates={shown.candidates} />}
               <p className="drawer-note">
-                Support shares from the polling average. {CHAMBER_LABEL[race.chamber]} race, 2026.
+                Support shares from the polling average. {CHAMBER_LABEL[shown.chamber]} race, 2026.
               </p>
             </section>
 
             {/* House: the state's WHOLE delegation. Long delegations
                 (California sends 52) stay behind an expander so the panel
                 still scans in one screen. */}
-            {showDistricts && race.districts && (
+            {showDistricts && shown.districts && (
               <>
                 <hr className="drawer-divider" />
                 <section className="drawer-block">
                   <BlockHead
-                    title={`Districts (${race.districts.length})`}
+                    title={`Districts (${shown.districts.length})`}
                     read={viewRead}
-                    sourceId={sourceId}
+                    sourceId={src}
                   />
-                  <DistrictGrid districts={race.districts} sourceId={sourceId} />
+                  <DistrictGrid districts={shown.districts} sourceId={src} />
                 </section>
               </>
             )}

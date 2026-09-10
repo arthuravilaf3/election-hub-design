@@ -283,8 +283,8 @@ console.log(
     }))
   )
 );
-// A second race tab (when the state has one) switches the map's chamber and
-// keeps the panel on the state; the first tab brings it back.
+// A second race tab (when the state has one) switches only the panel's race;
+// the map keeps its chamber. The first tab brings it back.
 if ((await page.locator('.drawer-tab').count()) > 1) {
   await page.locator('.drawer-tab').nth(1).click();
   await page.waitForTimeout(700);

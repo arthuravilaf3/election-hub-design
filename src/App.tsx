@@ -244,8 +244,12 @@ export default function App() {
                   next={nextState}
                   showFollow={features.followState}
                   showDistricts={features.zoomDepth}
-                  chambers={CHAMBERS.filter((c) => !!state.ballot[c][zoomedRace.id])}
-                  onChamber={(c) => selectChamber(c, 'panel')}
+                  racesByChamber={Object.fromEntries(
+                    CHAMBERS.flatMap((c) => {
+                      const r = state.ballot[c][zoomedRace.id];
+                      return r ? [[c, r]] : [];
+                    })
+                  )}
                   onNavigate={navigateState}
                   onClose={() => dispatch({ type: 'CLEAR_ZOOM' })}
                 />

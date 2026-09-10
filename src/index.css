@@ -1634,6 +1634,110 @@ button,
   padding: 24px;
 }
 
+/* ---- Source inside the panel: explorations a–d (?drawersrc=) ---- */
+
+/* The tab row can carry the picker on its right (d). */
+.drawer-tabrow--split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.drawer-tabrow--split .drawer-tabs {
+  border-bottom: 0;
+}
+
+/* a: a labelled segmented control on its own row under the tabs.
+   c: the same row, above the tabs, carrying a pill picker. */
+.drawer-src-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px 0;
+}
+
+.drawer-src-row--head {
+  padding: 0 24px 12px;
+}
+
+.drawer-src-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
+}
+
+.drawer-seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.drawer-seg-btn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-subtle);
+  cursor: pointer;
+  transition: background-color 140ms ease-out, color 140ms ease-out;
+}
+
+.drawer-seg-btn.is-active {
+  background: var(--ink);
+  color: var(--surface-dim);
+}
+
+/* The pill picker (b, c, d): a native select behind a styled face so the
+   menu is the OS's and the keyboard just works. */
+.drawer-src-pick {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drawer-src-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.drawer-src-pick--compact .drawer-src-value {
+  padding: 3px 8px;
+  font-size: 13px;
+  border-color: color-mix(in srgb, var(--ink) 18%, transparent);
+  background: transparent;
+}
+
+.drawer-src-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* b: the picker sits inline in the meta line, so it must not tower over it. */
+.drawer-meta .drawer-src-pick {
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
 .drawer-block-head {
   display: flex;
   flex-direction: column;
