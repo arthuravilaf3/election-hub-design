@@ -1051,20 +1051,10 @@ button,
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  min-width: 110px;
 }
 
-/* The outer figures sit flush with the rail, like everything above and
-   below them; only the inner two centre in their slots. */
-.countdown-unit:first-child {
-  align-items: flex-start;
-  text-align: left;
-}
-
-.countdown-unit:last-child {
-  align-items: flex-end;
-  text-align: right;
-}
+/* Every label centres under its figure. The units hug their content (no
+   min-width) so the outer figures still sit flush with the rail. */
 
 .countdown-num {
   display: flex;
@@ -1192,6 +1182,51 @@ button,
   font-size: 14px;
   line-height: 20px;
   color: var(--ink-subtlest);
+}
+
+/* ---- "Updated" placement explorations (?updated=a|b|c|d) ---- */
+
+/* a: back in the byline, after the sponsor. */
+.hub-updated {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ink-subtlest);
+}
+
+/* b: under the tagline, right-aligned, same column. */
+.hub-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex: none;
+}
+
+.hub-updated--right {
+  margin: 0;
+}
+
+/* c: an eyebrow over the headline. */
+.dots-eyebrow {
+  margin: 0 0 -8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
+}
+
+/* d: over the dots grid, at its right edge. */
+.dots-gridcol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dots-updated--grid {
+  text-align: right;
+  margin-top: -32px;
 }
 
 /* The figures carry party colour on the LIGHT end of each ramp — the bar
@@ -1447,7 +1482,7 @@ button,
      graceful degradation on mid widths. */
   top: var(--drawer-inset);
   right: var(--drawer-inset);
-  width: min(var(--drawer-w), 46%);
+  width: min(var(--drawer-w), 50%);
   /* Every drawer/modal is the SAME height — the maximum available — so
      switching surfaces never resizes the panel. Content scrolls inside;
      the prev/next nav pins to the bottom via margin-top auto. */
@@ -1665,18 +1700,16 @@ button,
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
-  font-size: 13px;
+  padding: 8px 0 10px;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--ink);
-  transition: border-color 140ms ease-out, background-color 140ms ease-out;
+  color: var(--ink-subtle);
+  transition: color 140ms ease-out;
 }
 
 .drawer-src-pick:hover .drawer-src-value,
 .drawer-src-select:focus-visible + .drawer-src-value {
-  background: var(--surface-2);
+  color: var(--ink);
 }
 
 .drawer-src-select {

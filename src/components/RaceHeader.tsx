@@ -16,6 +16,19 @@
  */
 import { useEffect, useRef } from 'react';
 import { INTRO_AT, Letters, introDelay } from './Intro';
+
+/** Exploration (Sep 2026): where the freshness line sits at the top.
+    a byline · b under the tagline · c eyebrow over the headline · d over the
+    dots grid, right. Default: under the chamber summary (as today). */
+type UpdatedAt = 'a' | 'b' | 'c' | 'd' | null;
+const UPDATED_AT: UpdatedAt = (() => {
+  try {
+    const v = new URLSearchParams(window.location.search).get('updated');
+    return v === 'a' || v === 'b' || v === 'c' || v === 'd' ? v : null;
+  } catch {
+    return null;
+  }
+})();
 import { Countdown } from './Countdown';
 import { asset } from '../data/assets';
 import polymarketLogo from '../images/polymarketlogo.png';
@@ -47,6 +60,7 @@ export function RaceHeader({
      "Presented by" is a partnership line, not a data attribution. The data
      source stays named where it lives: the SOURCE pill and the panel. */
   const headline = resultsMode ? `${called} of ${raceCount} races called` : forecast.headline;
+  const updatedLine = resultsMode ? 'Updating live' : `Updated ${forecast.updated}`;
 
   return (
     <>
@@ -69,11 +83,26 @@ export function RaceHeader({
               <em>Presented by</em>
               <img className="hub-logo" src={polymarketLogo} alt="Polymarket" />
             </span>
+            {UPDATED_AT === 'a' && (
+              <>
+                <span className="hub-dot" aria-hidden="true">
+                  •
+                </span>
+                <span className="hub-updated">{updatedLine}</span>
+              </>
+            )}
           </p>
         </div>
-        <p className="hub-tagline intro-rise" style={introDelay(INTRO_AT.statement)}>
-          The <strong>right</strong> place to be.
-        </p>
+        <div className="hub-right">
+          <p className="hub-tagline intro-rise" style={introDelay(INTRO_AT.statement)}>
+            The <strong>right</strong> place to be.
+          </p>
+          {UPDATED_AT === 'b' && (
+            <p className="hub-updated hub-updated--right intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
+              {updatedLine}
+            </p>
+          )}
+        </div>
       </header>
 
       <Countdown />
@@ -82,6 +111,7 @@ export function RaceHeader({
           the entry sweep; a source change keeps the same dots and just
           recolours them in place (the background transition). */}
       <Dots
+        updatedAt={UPDATED_AT}
         key={`${chamber}:${resultsMode ? 'results' : 'forecast'}`}
         forecast={forecast}
         chamber={chamber}
@@ -99,6 +129,7 @@ interface DotsProps {
   headline: string;
   resultsMode: boolean;
   called: number;
+  updatedAt: UpdatedAt;
 }
 
 /**
@@ -121,7 +152,8 @@ const DOT_GRID: Record<Chamber, { cols: number; gap: number; colsM: number; gapM
   governor: { cols: 12, gap: 8, colsM: 9, gapM: 4 },
 };
 
-function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
+function Dots({ forecast, chamber, headline, resultsMode, called, updatedAt }: DotsProps) {
+  const updatedLine = resultsMode ? 'Updating live' : `Updated ${forecast.updated}`;
   const total = forecast.dem + forecast.rep;
   const grid = DOT_GRID[chamber];
 
@@ -272,6 +304,11 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       {/* Keyed on the headline so a race switch crossfades the copy, the way
           the old statement did. */}
       <div className="dots-copy" key={headline}>
+        {updatedAt === 'c' && (
+          <p className="dots-eyebrow intro-rise" style={introDelay(INTRO_AT.statement - 60)}>
+            {updatedLine}
+          </p>
+        )}
         <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
           {headline}
         </h2>
@@ -292,13 +329,19 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
           </span>
           <span>{tail}</span>
         </p>
-        {(forecast.updated || resultsMode) && (
+        {updatedAt === null && (forecast.updated || resultsMode) && (
           <p className="dots-updated intro-rise" style={introDelay(INTRO_AT.statement + 120)}>
-            {resultsMode ? 'Updating live' : `Updated ${forecast.updated}`}
+            {updatedLine}
           </p>
         )}
       </div>
 
+      <div className="dots-gridcol">
+      {updatedAt === 'd' && (
+        <p className="dots-updated dots-updated--grid intro-rise" style={introDelay(INTRO_AT.dots - 80)}>
+          {updatedLine}
+        </p>
+      )}
       {/* The grid is one image to assistive tech — 435 list items would be
           noise. The sentence is the seat bar's, unchanged. */}
       <div
@@ -340,6 +383,7 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
             />
           );
         })}
+      </div>
       </div>
     </section>
   );

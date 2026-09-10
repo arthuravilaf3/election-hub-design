@@ -7,8 +7,9 @@
  * never disagree with the stylesheet.
  */
 
-/** Drawer width inside the map card (comp: 512 in a 1312 card). */
-export const DRAWER_W = 512;
+/** Drawer width inside the map card (Sep 2026: 600, up from the comp's 512,
+    so the race tabs and the source fit on one line). */
+export const DRAWER_W = 600;
 
 /** Its inset from the card's top/right/bottom edges (comp: 24). */
 export const DRAWER_INSET = 24;
