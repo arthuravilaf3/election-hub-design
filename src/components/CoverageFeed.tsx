@@ -208,6 +208,10 @@ export function CoverageFeed() {
   /* ---- filtering + pagination ---- */
   const hostRowOpen = HOST_FILTERABLE.includes(filter);
   const stateRowOpen = STATE_FILTERABLE.includes(filter);
+  /* The latest shorts, as a shortcut row above the filters (back by request,
+     Sep 2026). Browse mode only: an active filter means the reader asked for
+     something specific. */
+  const latestShorts = useMemo(() => ALL_ITEMS.filter((i) => i.kind === 'short').slice(0, 8), []);
   const filtered = useMemo(
     () =>
       ALL_ITEMS.filter(
@@ -551,7 +555,29 @@ export function CoverageFeed() {
           <h2>All Election Coverage</h2>
         </header>
 
-        {/* Collapsing-pill filter bar, on its own row below the title. */}
+        {filter === 'all' && (
+          <div className="shorts-row-block shorts-row-block--top">
+            <h3 className="shorts-row-title">Latest shorts</h3>
+            {/* A horizontal scroller: focusable so the keyboard can scroll
+                it (axe: scrollable-region-focusable). */}
+            <div className="shorts-row" role="region" aria-label="Latest shorts" tabIndex={0}>
+              {latestShorts.map((item) => (
+                <ShortCard
+                  key={item.id}
+                  item={item}
+                  playing={playingId === item.id}
+                  hoverMode={hoverMode}
+                  reducedMotion={reducedMotion}
+                  onRequestPlay={requestPlay}
+                  onRequestStop={requestStop}
+                  onVisibility={hoverMode ? undefined : onVisibility}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Collapsing-pill filter bar, on its own row below the shorts. */}
         <div className={`filter-bar filter-bar--${barMode}`} role="group" aria-label="Filter coverage">
           {/* ✕ — flow slot in selected mode; absolute ghost while animating. */}
           {barMode !== 'browse' && (

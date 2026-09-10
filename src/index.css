@@ -1137,10 +1137,6 @@ button,
   animation: statement-in 200ms ease-out;
 }
 
-.dots-copy .dots-updated {
-  margin-top: -8px; /* 16px under the summary, not the column's 24 */
-}
-
 /* Crossfade via filter, not opacity: @axe-core audits on re-render and can
    sample mid-animation — element opacity factors into its contrast math
    (false "serious" hit), filter does not. Visual result is identical. */
@@ -1176,57 +1172,11 @@ button,
   color: var(--ink);
 }
 
-/* Freshness of the read, under the summary: the one place it lives now. */
-.dots-updated {
-  margin: 0;
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--ink-subtlest);
-}
-
-/* ---- "Updated" placement explorations (?updated=a|b|c|d) ---- */
-
-/* a: back in the byline, after the sponsor. */
+/* Freshness of the read: in the byline, after the sponsor. */
 .hub-updated {
   font-size: 12px;
   line-height: 18px;
   color: var(--ink-subtlest);
-}
-
-/* b: under the tagline, right-aligned, same column. */
-.hub-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-  flex: none;
-}
-
-.hub-updated--right {
-  margin: 0;
-}
-
-/* c: an eyebrow over the headline. */
-.dots-eyebrow {
-  margin: 0 0 -8px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-subtlest);
-}
-
-/* d: over the dots grid, at its right edge. */
-.dots-gridcol {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-}
-
-.dots-updated--grid {
-  text-align: right;
-  margin-top: -32px;
 }
 
 /* The figures carry party colour on the LIGHT end of each ramp — the bar
