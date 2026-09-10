@@ -169,6 +169,65 @@ button,
   font-weight: 500;
 }
 
+/* ---------- Nav: The Midterms in gradient ---------- */
+
+/* gradient: no mark; the label itself carries the comp's gradient — solid
+   blue to 35%, a blend to 62%, solid red from there (#2A60F7 / #FC002C).
+   Painted through background-clip so the type stays live text.
+
+   Hover: the gradient SWEEPS through the word once. The strip is three
+   times the text: the first and last thirds are the resting gradient, the
+   middle third runs red back to blue, so sliding one full cycle sends red
+   rolling left to right through the letters, blue chasing it, and lands
+   exactly on the resting paint. Runs once per hover; reduced motion keeps
+   the resting paint. */
+.dw-nav-link--gradient {
+  gap: 0;
+}
+
+.dw-nav-link--gradient .dw-nav-midterms-label {
+  background-image: linear-gradient(
+    90deg,
+    /* third 1: rest (0–35 blue, 35–62 blend, 62–100 red) */
+    #2a60f7 0%,
+    #2a60f7 11.67%,
+    #fc002c 20.67%,
+    #fc002c 33.33%,
+    /* third 2: red back to blue */
+    #fc002c 45%,
+    #2a60f7 54%,
+    #2a60f7 66.67%,
+    /* third 3: rest again */
+    #2a60f7 78.33%,
+    #fc002c 87.33%,
+    #fc002c 100%
+  );
+  background-size: 300% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dw-nav-link--gradient:hover .dw-nav-midterms-label,
+.dw-nav-link--gradient:focus-visible .dw-nav-midterms-label {
+  animation: nav-gradient-sweep 1100ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+/* Position runs 100% → 0%: the strip slides RIGHT, so the colours travel
+   left to right through the letters. */
+@keyframes nav-gradient-sweep {
+  from { background-position: 100% 50%; }
+  to { background-position: 0% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dw-nav-link--gradient:hover .dw-nav-midterms-label,
+  .dw-nav-link--gradient:focus-visible .dw-nav-midterms-label {
+    animation: none;
+  }
+}
+
 /* In flow between the two flex:1 groups so the wordmark centres in the
    remaining space — overlap-proof at every width. */
 .dw-nav-logo {
@@ -995,6 +1054,18 @@ button,
   min-width: 110px;
 }
 
+/* The outer figures sit flush with the rail, like everything above and
+   below them; only the inner two centre in their slots. */
+.countdown-unit:first-child {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.countdown-unit:last-child {
+  align-items: flex-end;
+  text-align: right;
+}
+
 .countdown-num {
   display: flex;
   justify-content: center;
@@ -1467,25 +1538,21 @@ button,
   position: sticky;
   top: 0;
   z-index: 2;
+  /* One row (Sep 2026): flag, the state's name beside it, the actions. */
   display: grid;
-  grid-template:
-    'flag actions' auto
-    'title title' auto / auto 1fr;
+  grid-template: 'flag title actions' auto / auto 1fr auto;
   align-items: center;
   column-gap: 12px;
-  row-gap: 14px;
-  padding: 16px 24px 20px;
+  padding: 16px 24px;
   background: var(--surface);
-  transition: padding 200ms ease-out;
 }
 
 .drawer-flag {
   grid-area: flag;
-  width: 54px;
-  height: 36px;
+  width: 48px;
+  height: 32px;
   object-fit: cover;
   border-radius: 2px;
-  transition: width 200ms ease-out, height 200ms ease-out;
 }
 
 .drawer-titleblock {
@@ -1508,30 +1575,19 @@ button,
   border-radius: 999px;
 }
 
+/* DS heading: font-size-lg (20) / line-height-24 / Semibold, Libre Franklin. */
 .drawer-title {
   margin: 0;
-  font-size: 32px;
-  line-height: 38px;
-  font-weight: 500;
-  transition: font-size 200ms ease-out, line-height 200ms ease-out;
-}
-.drawer.is-compact .drawer-headblock {
-  grid-template: 'flag title actions' auto / auto 1fr auto;
-  padding: 12px 24px;
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
-}
-
-.drawer.is-compact .drawer-flag {
-  width: 48px;
-  height: 32px;
-}
-
-.drawer.is-compact .drawer-title {
   font-size: 20px;
   line-height: 24px;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* Scrolled: the head only gains a hairline — the layout is the same row. */
+.drawer.is-compact .drawer-headblock {
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 /* The panel's two views — Data, Related content. Underline marks the active

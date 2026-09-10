@@ -456,14 +456,14 @@ check('close sits beside share in the head row', /Share [^|]*\|Close$/.test(head
 check('no top bar', head.topbar, false);
 check('head starts expanded', head.compact, false);
 check('head is sticky', head.sticky, 'sticky');
-check('expanded title is 32px', head.title, '32px');
+check('title is the DS lg heading (20px)', head.title, '20px');
 check('the title is the state alone (no chamber, no rating line)', await page.evaluate(() => ({ t: document.querySelector('.drawer-title').textContent.trim(), sub: !!document.querySelector('.drawer-subtitle') })), (v) => v.t === 'Texas' && v.sub === false);
 await page.evaluate(() => { document.querySelector('.drawer-scroll').scrollTop = 200; });
 await page.waitForTimeout(400);
 const compact = await page.evaluate(() => ({ compact: document.querySelector('.drawer').classList.contains('is-compact'), title: getComputedStyle(document.querySelector('.drawer-title')).fontSize, cols: getComputedStyle(document.querySelector('.drawer-headblock')).gridTemplateColumns.split(' ').length }));
-check('head compacts after scrolling', compact.compact, true);
-check('compact title is 20px', compact.title, '20px');
-check('compact head is one row of three', compact.cols, 3);
+check('head marks itself compact after scrolling', compact.compact, true);
+check('the title keeps its size', compact.title, '20px');
+check('the head is always one row of three', compact.cols, 3);
 await page.evaluate(() => { document.querySelector('.drawer-scroll').scrollTop = 0; });
 await page.waitForTimeout(400);
 check('head expands again at the top', await page.evaluate(() => document.querySelector('.drawer').classList.contains('is-compact')), false);
