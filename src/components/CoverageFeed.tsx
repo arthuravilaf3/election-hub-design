@@ -131,7 +131,7 @@ function ShortCard({
  * edge: while the row can still scroll, hovering it fades the last cards
  * and shows the chevron; a click pages the row on. Hidden at the end.
  */
-function ShortsShelf({ children }: { children: React.ReactNode }) {
+function ShortsShelf({ children, label = 'Latest shorts' }: { children: React.ReactNode; label?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState(true);
   const [back, setBack] = useState(false);
@@ -160,7 +160,7 @@ function ShortsShelf({ children }: { children: React.ReactNode }) {
       )}
       {/* Focusable so the keyboard can scroll it (axe: scrollable-region-focusable). */}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
-      <div className="shorts-row" role="region" aria-label="Latest shorts" tabIndex={0} ref={ref} onScroll={measure}>
+      <div className="shorts-row" role="region" aria-label={label} tabIndex={0} ref={ref} onScroll={measure}>
         {children}
       </div>
       {more && (
@@ -287,13 +287,17 @@ function SkeletonRows({ count, kind = 'all' }: { count: number; kind?: ItemKind 
   return (
     <div className="feed-skeletons" aria-hidden="true">
       {Array.from({ length: count }, (_, i) => (
+        // The same grid as .feed-item (48px avatar column, 12px gap, 32px
+        // dividers), one bar per text line at that line's height and width.
         <div className="feed-skeleton" key={i} style={{ '--i': i } as React.CSSProperties}>
           <span className="sk sk-avatar" />
           <div className="sk-body">
             <span className="sk sk-meta" />
-            <span className="sk sk-line" />
-            <span className="sk sk-line sk-short" />
-            {hasDek && <span className="sk sk-dek" />}
+            <div className="sk-text">
+              <span className="sk sk-headline" />
+              <span className="sk sk-headline sk-headline--2" />
+              {hasDek && <span className="sk sk-dek" />}
+            </div>
           </div>
         </div>
       ))}
@@ -335,6 +339,12 @@ export function CoverageFeed() {
   const [playingId, setPlayingId] = useState<number | null>(null);
   const [stateScope, setStateScope] = useState<string | null>(null);
   const [stateMenuOpen, setStateMenuOpen] = useState(false);
+  /* Opinion only: a secondary CONTENT TYPE filter (all / articles / shorts /
+     episodes) beside the host one. */
+  type TypeScope = 'all' | 'article' | 'short' | 'episode';
+  const TYPE_LABEL: Record<TypeScope, string> = { all: 'All Types', article: 'Articles', short: 'Shorts', episode: 'Episodes' };
+  const [typeScope, setTypeScope] = useState<TypeScope>('all');
+  const [typeMenuOpen, setTypeMenuOpen] = useState(false);
   const [stateQuery, setStateQuery] = useState('');
   const [announcement, setAnnouncement] = useState('');
   // Bumped when an item is marked visited, so the dimmed state paints now.
@@ -454,6 +464,7 @@ export function CoverageFeed() {
     setFilter(id);
     setHost(null);
     setStateScope(null);
+    setTypeScope('all');
     settle();
     setVisibleCount(PAGE_SIZE);
     setPlayingId(null);
@@ -476,6 +487,7 @@ export function CoverageFeed() {
     setFilter('all');
     setHost(null); // host and state selections are discarded on exit
     setStateScope(null);
+    setTypeScope('all');
     settle();
     setVisibleCount(PAGE_SIZE);
     setPlayingId(null);
@@ -871,6 +883,47 @@ export function CoverageFeed() {
               </button>
               )}
 
+              {/* Secondary CONTENT TYPE filter — opinion only (Sep 2026). */}
+              {filter === 'opinion' && (
+              <button
+                type="button"
+                className="host-trigger type-trigger"
+                aria-haspopup="menu"
+                aria-expanded={typeMenuOpen}
+                disabled={barMode !== 'selected'}
+                onClick={() => {
+                  setHostMenuOpen(false);
+                  setStateMenuOpen(false);
+                  setTypeMenuOpen((v) => !v);
+                }}
+              >
+                {TYPE_LABEL[typeScope]}
+                <svg width="12" height="6" viewBox="0 0 12 6" fill="none" aria-hidden="true">
+                  <path d="m1 1 5 4 5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              )}
+              {filter === 'opinion' && typeMenuOpen && (
+                <div className="host-menu type-menu" role="menu" aria-label="Filter by content type">
+                  {(['all', 'article', 'short', 'episode'] as TypeScope[]).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={typeScope === t}
+                      className={`dock-menu-item${typeScope === t ? ' is-active' : ''}`}
+                      onClick={() => {
+                        setTypeScope(t);
+                        setTypeMenuOpen(false);
+                        settle();
+                        track('type_filter_change', { type: t });
+                      }}
+                    >
+                      {TYPE_LABEL[t]}
+                    </button>
+                  ))}
+                </div>
+              )}
               {/* Secondary STATE filter — articles only (Sep 2026). */}
               {stateRowOpen && (
               <button
@@ -998,10 +1051,10 @@ export function CoverageFeed() {
           /* Opinion: format shelves — shorts row first, then episodes,
              then the written pieces. */
           <div className="opinion-view">
-            {opinionShorts.length > 0 && (
+            {opinionShorts.length > 0 && (typeScope === 'all' || typeScope === 'short') && (
               <div className="shorts-row-block">
                 <h3 className="shorts-row-title">Opinion shorts</h3>
-                <div className="shorts-row">
+                <ShortsShelf label="Opinion shorts">
                   {opinionShorts.map((item) => (
                     <ShortCard
                       key={item.id}
@@ -1014,18 +1067,18 @@ export function CoverageFeed() {
                       onVisibility={hoverMode ? undefined : onVisibility}
                     />
                   ))}
-                </div>
+                </ShortsShelf>
               </div>
             )}
 
-            {opinionEpisodes.length > 0 && (
+            {opinionEpisodes.length > 0 && (typeScope === 'all' || typeScope === 'episode') && (
               <>
                 <h3 className="feed-shelf-title">Episodes</h3>
                 {opinionEpisodes.map(renderFeedItem)}
               </>
             )}
 
-            {opinionArticles.length > 0 && (
+            {opinionArticles.length > 0 && (typeScope === 'all' || typeScope === 'article') && (
               <>
                 <h3 className="feed-shelf-title">Articles</h3>
                 {opinionArticles.map(renderFeedItem)}
