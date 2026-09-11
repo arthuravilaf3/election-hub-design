@@ -244,6 +244,7 @@ export default function App() {
                   next={nextState}
                   showFollow={features.followState}
                   showDistricts={features.zoomDepth}
+                  onChamber={(c) => selectChamber(c, 'panel')}
                   racesByChamber={Object.fromEntries(
                     CHAMBERS.flatMap((c) => {
                       const r = state.ballot[c][zoomedRace.id];

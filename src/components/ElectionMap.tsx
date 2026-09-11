@@ -159,6 +159,7 @@ export function ElectionMap({
   useLayoutEffect(() => {
     const camera = cameraRef.current;
     if (!camera) return;
+    stopGlide();
     const from = { ...camRef.current };
     const to = { s: 1, x: 0, y: 0 };
     if (zoomedId) {
@@ -200,7 +201,20 @@ export function ElectionMap({
   // it the click is swallowed. Pointer capture keeps the drag alive when the
   // pointer leaves the svg; the pan is clamped so the map can never be
   // pushed entirely out of the frame. Not zoomed: no pan, the map is still.
-  const drag = useRef({ on: false, id: -1, x0: 0, y0: 0, cx: 0, cy: 0, moved: false });
+  const drag = useRef({ on: false, id: -1, x0: 0, y0: 0, cx: 0, cy: 0, moved: false, vx: 0, vy: 0, t: 0, lx: 0, ly: 0 });
+  const glide = useRef(0);
+  const stopGlide = () => {
+    if (glide.current) window.cancelAnimationFrame(glide.current);
+    glide.current = 0;
+  };
+  const clampCam = (c: { s: number; x: number; y: number }) => {
+    const margin = 120;
+    return {
+      s: c.s,
+      x: Math.min(VIEW_W - margin, Math.max(-c.s * VIEW_W + margin, c.x)),
+      y: Math.min(VIEW_H - margin, Math.max(-c.s * VIEW_H + margin, c.y)),
+    };
+  };
   const [dragging, setDragging] = useState(false);
   const onSvgPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!zoomedId || e.button !== 0) return;
@@ -212,6 +226,12 @@ export function ElectionMap({
     d.cx = camRef.current.x;
     d.cy = camRef.current.y;
     d.moved = false;
+    d.vx = 0;
+    d.vy = 0;
+    d.t = performance.now();
+    d.lx = e.clientX;
+    d.ly = e.clientY;
+    stopGlide();
     // No capture yet: capturing on press would retarget the click to the
     // svg and the state under the pointer would never open. Capture only
     // once the press has become a drag (below).
@@ -231,10 +251,15 @@ export function ElectionMap({
     const svg = e.currentTarget;
     const k = VIEW_W / svg.getBoundingClientRect().width; // px -> viewBox units
     const c = camRef.current;
-    const margin = 120;
-    const x = Math.min(VIEW_W - margin, Math.max(-c.s * VIEW_W + margin, d.cx + dxPx * k));
-    const y = Math.min(VIEW_H - margin, Math.max(-c.s * VIEW_H + margin, d.cy + dyPx * k));
-    if (cameraRef.current) applyCamera(cameraRef.current, { s: c.s, x, y });
+    // Velocity (viewBox units per ms), smoothed, for the glide on release.
+    const now = performance.now();
+    const dt = Math.max(1, now - d.t);
+    d.vx = 0.7 * d.vx + 0.3 * (((e.clientX - d.lx) * k) / dt);
+    d.vy = 0.7 * d.vy + 0.3 * (((e.clientY - d.ly) * k) / dt);
+    d.t = now;
+    d.lx = e.clientX;
+    d.ly = e.clientY;
+    if (cameraRef.current) applyCamera(cameraRef.current, clampCam({ s: c.s, x: d.cx + dxPx * k, y: d.cy + dyPx * k }));
   };
   const onSvgPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
     const d = drag.current;
@@ -244,6 +269,28 @@ export function ElectionMap({
     // The click that follows a real drag must not open a state: keep
     // `moved` until it has fired (click comes right after pointerup).
     if (d.moved) window.setTimeout(() => { d.moved = false; }, 0);
+    // GLIDE: the map keeps the hand's velocity and eases out (exponential
+    // decay, ~250ms), so a release never stops dead. Off under reduced
+    // motion, and a stale velocity (the hand paused before letting go)
+    // gives nothing.
+    if (!d.moved || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (performance.now() - d.t > 80) return;
+    let vx = d.vx;
+    let vy = d.vy;
+    let last = performance.now();
+    const step = (now: number) => {
+      const dt = now - last;
+      last = now;
+      const c = camRef.current;
+      const next = clampCam({ s: c.s, x: c.x + vx * dt, y: c.y + vy * dt });
+      if (cameraRef.current) applyCamera(cameraRef.current, next);
+      const decay = Math.exp(-dt / 250);
+      vx *= decay;
+      vy *= decay;
+      if (Math.hypot(vx, vy) > 0.004) glide.current = window.requestAnimationFrame(step);
+      else glide.current = 0;
+    };
+    glide.current = window.requestAnimationFrame(step);
   };
 
   // Escape closes the open state. The panel's own close button is the other

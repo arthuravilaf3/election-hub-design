@@ -13,7 +13,7 @@
  * TENET 2 GUARD: in results mode the drawer shows only results (status,
  * reporting, feed attribution) — no estimates beside a live count.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DrawerNav, DrawerTabs, type StateRef } from './DrawerChrome';
 import {
   PARTY_LABEL,
@@ -36,6 +36,118 @@ const CHAMBER_TITLE: Record<Chamber, string> = {
 };
 
 const CHAMBER_ORDER: Chamber[] = ['house', 'senate', 'governor'];
+
+/* Exploration switches (Sep 2026): where the prediction-game CTA sits, and a
+   mocked "already played" reader. */
+const PLAY_VARIANT: 'a' | 'b' | 'c' | null = (() => {
+  try {
+    const v = new URLSearchParams(window.location.search).get('play');
+    return v === 'a' || v === 'b' || v === 'c' ? v : null;
+  } catch {
+    return null;
+  }
+})();
+const PLAYED = (() => {
+  try {
+    return new URLSearchParams(window.location.search).get('played') === '1';
+  } catch {
+    return false;
+  }
+})();
+
+interface PlayProps {
+  stateName: string;
+  pick: Candidate | null;
+  leader?: Candidate;
+}
+
+/** a: a card of its own under Candidates. */
+function PlayCard({ stateName, pick, leader }: PlayProps) {
+  return (
+    <div className="play-card">
+      {pick ? (
+        <>
+          <div className="play-card-copy">
+            <p className="play-eyebrow">Your prediction</p>
+            <p className="play-title">
+              <span className="cand-avatar cand-avatar--sm" aria-hidden="true">
+                <img className="cand-photo" src={photoFor(pick.name)} alt="" />
+              </span>
+              {pick.name}
+            </p>
+            <p className="play-sub">
+              {leader && leader.name === pick.name
+                ? `Agrees with the market: leading at ${leader.pct.toFixed(1)}%`
+                : leader
+                  ? `The market has ${leader.name} ahead at ${leader.pct.toFixed(1)}%`
+                  : ''}
+            </p>
+          </div>
+          <button type="button" className="btn-ghost">Change pick</button>
+        </>
+      ) : (
+        <>
+          <div className="play-card-copy">
+            <p className="play-eyebrow">Prediction game</p>
+            <p className="play-title">Who takes {stateName}?</p>
+            <p className="play-sub">Call it before the market does and track your streak to Election Day.</p>
+          </div>
+          <button type="button" className="btn-brand">Make your prediction</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** b: a slim row after the candidate bars (the pick is badged on its row). */
+function PlayRow({ stateName, pick, leader }: PlayProps) {
+  return (
+    <div className="play-row">
+      {pick ? (
+        <>
+          <span className="play-row-text">
+            You picked <b>{pick.name}</b>
+            {leader && leader.name !== pick.name ? ` · market leans ${leader.name.split(' ').pop()}` : ' · agrees with the market'}
+          </span>
+          <button type="button" className="btn-link">Change</button>
+        </>
+      ) : (
+        <>
+          <span className="play-row-text">Think you can call {stateName}?</span>
+          <button type="button" className="btn-link">Make your prediction →</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** c: a bar pinned above the prev/next navigation. */
+function PlayBar({ stateName, pick, leader }: PlayProps) {
+  return (
+    <div className="play-bar">
+      {pick ? (
+        <>
+          <span className="cand-avatar cand-avatar--sm" aria-hidden="true">
+            <img className="cand-photo" src={photoFor(pick.name)} alt="" />
+          </span>
+          <span className="play-bar-text">
+            <b>Your pick: {pick.name}</b>
+            <span>{leader && leader.name === pick.name ? 'Leading the market' : `Market: ${leader?.name ?? ''}`}</span>
+          </span>
+          <button type="button" className="btn-ghost">Change</button>
+        </>
+      ) : (
+        <>
+          <span className="play-bar-text">
+            <b>Make your prediction</b>
+            <span>Who takes {stateName}? Play and track it to Election Day.</span>
+          </span>
+          <button type="button" className="btn-brand">Play</button>
+        </>
+      )}
+    </div>
+  );
+}
 
 
 /** A small pill-shaped native select: the listed sources, the current one
@@ -90,7 +202,7 @@ function photoFor(name: string): string {
 }
 
 /** Candidate photo-bars: bar and number grow in the same animation frame. */
-function CandidateRows({ candidates }: { candidates: Candidate[] }) {
+function CandidateRows({ candidates, pick = null }: { candidates: Candidate[]; pick?: string | null }) {
   const [progress, setProgress] = useState(0);
   const key = candidates.map((c) => `${c.name}:${c.pct}`).join('|');
 
@@ -123,7 +235,10 @@ function CandidateRows({ candidates }: { candidates: Candidate[] }) {
               <img className="cand-photo" src={photoFor(c.name)} alt="" />
             </span>
             <span className="bar-lines">
-              <span className="bar-title">{c.name}</span>
+              <span className="bar-title">
+                {c.name}
+                {pick === c.name && <span className="cand-pick">Your pick</span>}
+              </span>
               <span className="bar-sub">
                 {c.party === 'ind' ? 'Independent' : PARTY_LABEL[c.party]}
               </span>
@@ -170,13 +285,54 @@ function districtValue(read: ReturnType<typeof readFor>): { label: string; fill:
  * rows above, so a district and a candidate read as the same kind of object.
  * The bar's width is the provider's confidence in that seat.
  */
+type DistrictOrder = 'all' | 'dem' | 'rep' | 'close';
+const DISTRICT_ORDERS: Array<{ id: DistrictOrder; label: string }> = [
+  { id: 'all', label: 'All' },
+  { id: 'dem', label: 'Most Democratic' },
+  { id: 'rep', label: 'Most Republican' },
+  { id: 'close', label: 'Closest' },
+];
+
+/** Signed lean of a read in its own units: + = Democrat, − = Republican.
+    Market reads centre on 50; polls on 0. Never converted between kinds —
+    it only ORDERS rows within one source. */
+function leanScore(read: ReturnType<typeof readFor>): number {
+  if (!read) return 0;
+  return read.kind === 'market' ? (read.demOdds ?? 50) - 50 : read.margin ?? 0;
+}
+
 function DistrictGrid({ districts, sourceId }: { districts: District[]; sourceId: string }) {
   const [expanded, setExpanded] = useState(false);
+  const [order, setOrder] = useState<DistrictOrder>('all');
   const total = districts.length;
-  const shown = expanded ? districts : districts.slice(0, DISTRICTS_PREVIEW);
+  const ordered = useMemo(() => {
+    if (order === 'all') return districts;
+    const sc = (d: District) => leanScore(readFor(d, sourceId));
+    const list = [...districts];
+    if (order === 'dem') list.sort((a, b) => sc(b) - sc(a));
+    else if (order === 'rep') list.sort((a, b) => sc(a) - sc(b));
+    else list.sort((a, b) => Math.abs(sc(a)) - Math.abs(sc(b)));
+    return list;
+  }, [districts, order, sourceId]);
+  const shown = expanded ? ordered : ordered.slice(0, DISTRICTS_PREVIEW);
 
   return (
     <>
+      {/* Order, not filter: every district stays, the reading order changes. */}
+      <div className="drawer-order" role="radiogroup" aria-label="Order districts">
+        {DISTRICT_ORDERS.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            role="radio"
+            aria-checked={o.id === order}
+            className={`drawer-order-chip${o.id === order ? ' is-active' : ''}`}
+            onClick={() => setOrder(o.id)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
       <ul className="bar-list district-list">
         {shown.map((d) => {
           const read = readFor(d, sourceId);
@@ -255,10 +411,11 @@ interface RacePanelProps {
   next: StateRef;
   showFollow?: boolean;
   showDistricts?: boolean;
-  /** Every race this state has on the ballot, by chamber — the tab row.
-      Picking a tab changes only what THIS panel shows; the map, its pills
-      and the header stay on the page's chamber (Sep 2026). */
+  /** Every race this state has on the ballot, by chamber — the tab row. */
   racesByChamber: Partial<Record<Chamber, StateRace>>;
+  /** Picking a tab switches the page's chamber: the map follows, and the
+      pills keep that choice after the panel closes (decided Sep 2026). */
+  onChamber: (chamber: Chamber) => void;
   onNavigate: (stateId: string) => void;
   onClose: () => void;
 }
@@ -272,15 +429,20 @@ export function RacePanel({
   showFollow = true,
   showDistricts = true,
   racesByChamber,
+  onChamber,
   onNavigate,
   onClose,
 }: RacePanelProps) {
-  /* The tab row is local: it opens on the page's chamber and switches the
-     panel's race without touching the map. */
+  /* The tab row drives the page's chamber, so the panel always shows the
+     page's race for this state. */
   const chambers = CHAMBER_ORDER.filter((c) => !!racesByChamber[c]);
-  const [tab, setTab] = useState<Chamber>(race.chamber);
-  const shown = racesByChamber[tab] ?? race;
+  const shown = race;
   const isResults = shown.mode === 'results';
+  /* PLAY CTA — exploration (Sep 2026): ?play=a|b|c places the prediction
+     game's call-to-action; ?played=1 mocks a reader who already picked
+     (the first candidate). None by default until one is chosen. */
+  const playVariant = PLAY_VARIANT;
+  const playedPick = PLAYED && shown.candidates ? shown.candidates[0] : null;
   /* SOURCE INSIDE THE PANEL (Sep 2026): a pill picker at the right end of
      the tab row. Local to the panel — it starts on the map's source and
      changes only what this panel reads, never the map. */
@@ -401,21 +563,34 @@ export function RacePanel({
             <div className="drawer-tabrow drawer-tabrow--split">
               <DrawerTabs
                 tabs={chambers.map((c) => ({ id: c, label: CHAMBER_TITLE[c] }))}
-                value={tab}
-                onChange={(id) => setTab(id as Chamber)}
+                value={shown.chamber}
+                onChange={(id) => onChamber(id as Chamber)}
               />
               <SourcePicker value={src} onChange={setSrcId} />
             </div>
 
-            <div role="tabpanel" id="drawer-tabpanel" aria-labelledby={`drawer-tab-${tab}`}>
+            <div role="tabpanel" id="drawer-tabpanel" aria-labelledby={`drawer-tab-${shown.chamber}`}>
             <>
             <section className="drawer-block">
               <BlockHead title="Candidates" read={viewRead} sourceId={src} />
-              {shown.candidates && <CandidateRows candidates={shown.candidates} />}
+              {shown.candidates && (
+                <CandidateRows
+                  candidates={shown.candidates}
+                  pick={playVariant === 'b' ? playedPick?.name ?? null : null}
+                />
+              )}
               <p className="drawer-note">
                 Support shares from the polling average. {CHAMBER_LABEL[shown.chamber]} race, 2026.
               </p>
+              {playVariant === 'b' && (
+                <PlayRow stateName={stateName} pick={playedPick} leader={shown.candidates?.[0]} />
+              )}
             </section>
+            {playVariant === 'a' && (
+              <section className="drawer-block drawer-block--play">
+                <PlayCard stateName={stateName} pick={playedPick} leader={shown.candidates?.[0]} />
+              </section>
+            )}
 
             {/* House: the state's WHOLE delegation. Long delegations
                 (California sends 52) stay behind an expander so the panel
@@ -439,6 +614,9 @@ export function RacePanel({
         )}
       </div>
 
+      {playVariant === 'c' && !isResults && (
+        <PlayBar stateName={stateName} pick={playedPick} leader={shown.candidates?.[0]} />
+      )}
       <DrawerNav prev={prev} next={next} onNavigate={onNavigate} />
     </section>
   );

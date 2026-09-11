@@ -10,7 +10,7 @@
 // Chrome only: nothing in this bar may use the party data-viz TOKENS. The
 // gradient's colours are the comp's own literals, kept as an identity
 // palette (see .dw-nav-link--gradient), not as a reading of any race.
-import { useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { DWLogo } from './DWLogo';
 
 // Section links. In the prototype a click does not leave the page: it moves
@@ -24,6 +24,12 @@ const SECTIONS = [
   { id: 'sports', label: 'Sports & State', href: 'https://www.dailywire.com/sports-and-state' },
 ];
 const MIDTERMS_ID = 'midterms';
+
+/** The Midterms dropdown: the hub's two destinations. */
+const MIDTERMS_MENU = [
+  { id: 'map', label: 'Midterms Election Map', sub: 'Every race, two sources, one map', href: 'https://www.dailywire.com/midterms' },
+  { id: 'play', label: 'Make your Prediction', sub: 'Call the races and track your streak', href: 'https://www.dailywire.com/midterms/predict' },
+];
 
 // Tabler icons (download, search) at 20px, as in the comp.
 function DownloadIcon() {
@@ -58,6 +64,23 @@ export function DWNav() {
   // Which page the nav believes it is on. The hub IS the map page, so it
   // starts on The Midterms.
   const [current, setCurrent] = useState(MIDTERMS_ID);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e: Event) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('click', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('click', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
   const go = (id: string) => (e: MouseEvent) => {
     e.preventDefault();
     setCurrent(id);
@@ -78,16 +101,47 @@ export function DWNav() {
                 {s.label}
               </a>
             ))}
-            <a
-              href="https://www.dailywire.com/midterms"
-              className={`dw-nav-link dw-nav-link--midterms dw-nav-link--gradient${
-                current === MIDTERMS_ID ? ' is-active' : ''
-              }`}
-              aria-current={current === MIDTERMS_ID ? 'page' : undefined}
-              onClick={go(MIDTERMS_ID)}
-            >
-              <span className="dw-nav-midterms-label">The Midterms</span>
-            </a>
+            <div className="dw-nav-menu-wrap" ref={menuRef}>
+              <a
+                href="https://www.dailywire.com/midterms"
+                className={`dw-nav-link dw-nav-link--midterms dw-nav-link--gradient${
+                  current === MIDTERMS_ID ? ' is-active' : ''
+                }${menuOpen ? ' is-open' : ''}`}
+                aria-current={current === MIDTERMS_ID ? 'page' : undefined}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMenuOpen((v) => !v);
+                }}
+              >
+                <span className="dw-nav-midterms-label">The Midterms</span>
+                {/* DS utility chevron, small: Tabler chevron-down at 14px. */}
+                <svg className="dw-nav-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
+              {menuOpen && (
+                <div className="dw-nav-menu" role="menu" aria-label="The Midterms">
+                  {MIDTERMS_MENU.map((m) => (
+                    <a
+                      key={m.id}
+                      href={m.href}
+                      role="menuitem"
+                      className="dw-nav-menu-item"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setMenuOpen(false);
+                        setCurrent(MIDTERMS_ID);
+                      }}
+                    >
+                      <span className="dw-nav-menu-title">{m.label}</span>
+                      <span className="dw-nav-menu-sub">{m.sub}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <a href="https://www.dailywire.com/" className="dw-nav-logo" aria-label="Daily Wire home">

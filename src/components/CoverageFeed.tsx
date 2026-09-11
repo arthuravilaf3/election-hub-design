@@ -126,6 +126,135 @@ function ShortCard({
 /* ------------------------------------------------------------------ */
 
 /** Skeleton rows — Figma prototype motion: 600ms, bezier(0.8, 0, 0.6, 1). */
+/**
+ * A horizontal shelf of shorts with the DS "utility" chevron at its right
+ * edge: while the row can still scroll, hovering it fades the last cards
+ * and shows the chevron; a click pages the row on. Hidden at the end.
+ */
+function ShortsShelf({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [more, setMore] = useState(true);
+  const measure = () => {
+    const el = ref.current;
+    if (!el) return;
+    setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+  };
+  useEffect(() => {
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+  return (
+    <div className={`shorts-shelf${more ? ' has-more' : ''}`}>
+      {/* Focusable so the keyboard can scroll it (axe: scrollable-region-focusable). */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+      <div className="shorts-row" role="region" aria-label="Latest shorts" tabIndex={0} ref={ref} onScroll={measure}>
+        {children}
+      </div>
+      {more && (
+        <button
+          type="button"
+          className="utility-btn shorts-next"
+          aria-label="Scroll shorts"
+          onClick={() => ref.current?.scrollBy({ left: ref.current.clientWidth * 0.8, behavior: 'smooth' })}
+        >
+          <ChevronRight />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* The hosts who are people (vs. shows): only their items get a "go to
+   <first name>'s page" entry. */
+const PEOPLE_HOSTS = ['Ben Shapiro', 'Matt Walsh', 'Michael Knowles', 'Andrew Klavan'];
+const SHOW_OF: Record<string, string> = {
+  'Ben Shapiro': 'The Ben Shapiro Show',
+  'Matt Walsh': 'The Matt Walsh Show',
+  'Michael Knowles': 'The Michael Knowles Show',
+  'Andrew Klavan': 'The Andrew Klavan Show',
+  'Morning Wire': 'Morning Wire',
+  'Crain & Co': 'Crain & Co',
+};
+const initials = (name: string) =>
+  name
+    .split(' ')
+    .filter((w) => /^[A-Za-z]/.test(w))
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('');
+
+/**
+ * The three-dots menu. Article / short by a person: go to their page (round
+ * DS avatar, 3xsm, on the right), share, save. Episode: go to the host's
+ * page (round avatar, right), go to the show's page (square DS "Shows"
+ * avatar, on the left), share, save. Items are stubs: they log and close.
+ */
+function ItemMenu({ item, onClose }: { item: FeedItem; onClose: () => void }) {
+  const person =
+    item.kind === 'opinion' ? item.author : item.host && PEOPLE_HOSTS.includes(item.host) ? item.host : null;
+  const show = item.kind === 'episode' && item.host ? SHOW_OF[item.host] ?? item.host : null;
+  const first = person ? person.split(' ')[0] : '';
+  const act = (what: string) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    track('feed_item_action', { id: item.id, what });
+    onClose();
+  };
+  return (
+    <div className="feed-menu" role="menu" aria-label="Item options">
+      {person && (
+        <button type="button" role="menuitem" className="feed-menu-item" onClick={act('host')}>
+          <span>Go to {first}&rsquo;s page</span>
+          <span className="feed-menu-avatar feed-menu-avatar--host" aria-hidden="true">
+            {initials(person)}
+          </span>
+        </button>
+      )}
+      {show && (
+        <button type="button" role="menuitem" className="feed-menu-item feed-menu-item--lead" onClick={act('show')}>
+          <span className="feed-menu-avatar feed-menu-avatar--show" aria-hidden="true">
+            {initials(show.replace(/^The /, ''))}
+          </span>
+          <span>Go to {show}&rsquo;s page</span>
+        </button>
+      )}
+      <button type="button" role="menuitem" className="feed-menu-item" onClick={act('share')}>
+        <span>Share</span>
+        <ShareIcon />
+      </button>
+      <button type="button" role="menuitem" className="feed-menu-item" onClick={act('save')}>
+        <span>Save for later</span>
+        <BookmarkIcon />
+      </button>
+    </div>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BookmarkIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** DS utility icon: Tabler chevron-right at 20px, 1.5 stroke. */
+function ChevronRight() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function SkeletonRows({ count }: { count: number }) {
   return (
     <div className="feed-skeletons" aria-hidden="true">
@@ -147,7 +276,32 @@ export function CoverageFeed() {
   const [filter, setFilter] = useState<ItemKind | 'all'>('all');
   const [host, setHost] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  /* The three-dots menu: which item's is open. */
+  const [menuFor, setMenuFor] = useState<number | null>(null);
+  useEffect(() => {
+    if (menuFor === null) return;
+    const close = () => setMenuFor(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('click', close);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuFor]);
   const [loading, setLoading] = useState(true);
+  /* Filter change: a short skeleton beat (DS ".Skeleton-Others") before the
+     new rows land, so the swap never pops. */
+  const [filtering, setFiltering] = useState(false);
+  const filterTimer = useRef(0);
+  const settle = () => {
+    setFiltering(true);
+    window.clearTimeout(filterTimer.current);
+    filterTimer.current = window.setTimeout(() => setFiltering(false), 520);
+  };
+  useEffect(() => () => window.clearTimeout(filterTimer.current), []);
   const [loadingMore, setLoadingMore] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
   const [stateScope, setStateScope] = useState<string | null>(null);
@@ -271,6 +425,7 @@ export function CoverageFeed() {
     setFilter(id);
     setHost(null);
     setStateScope(null);
+    settle();
     setVisibleCount(PAGE_SIZE);
     setPlayingId(null);
     const label = FILTERS.find((f) => f.id === id)?.label ?? id;
@@ -292,6 +447,7 @@ export function CoverageFeed() {
     setFilter('all');
     setHost(null); // host and state selections are discarded on exit
     setStateScope(null);
+    settle();
     setVisibleCount(PAGE_SIZE);
     setPlayingId(null);
     visibility.current.clear();
@@ -313,6 +469,7 @@ export function CoverageFeed() {
 
   const pickHost = (name: string | null) => {
     setHost(name);
+    settle();
     setVisibleCount(PAGE_SIZE);
     setHostMenuOpen(false);
     setPlayingId(null);
@@ -453,9 +610,12 @@ export function CoverageFeed() {
                 type="button"
                 className="feed-kebab"
                 aria-label="More options"
+                aria-haspopup="menu"
+                aria-expanded={menuFor === item.id}
                 onClick={(e) => {
                   e.stopPropagation();
                   track('feed_item_menu', { id: item.id });
+                  setMenuFor((cur) => (cur === item.id ? null : item.id));
                 }}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -464,6 +624,7 @@ export function CoverageFeed() {
                   <circle cx="12" cy="19" r="1.8" />
                 </svg>
               </button>
+              {menuFor === item.id && <ItemMenu item={item} onClose={() => setMenuFor(null)} />}
             </div>
             <div className="feed-text">
               <h3 className="feed-headline">{item.headline}</h3>
@@ -722,6 +883,7 @@ export function CoverageFeed() {
                     className={`dock-menu-item${stateScope === null ? ' is-active' : ''}`}
                     onClick={() => {
                       setStateScope(null);
+                      settle();
                       setStateMenuOpen(false);
                       setVisibleCount(PAGE_SIZE);
                       track('state_filter_change', { state: null });
@@ -744,6 +906,7 @@ export function CoverageFeed() {
                       className={`dock-menu-item${stateScope === id ? ' is-active' : ''}`}
                       onClick={() => {
                         setStateScope(id);
+                        settle();
                         setStateMenuOpen(false);
                         setVisibleCount(PAGE_SIZE);
                         track('state_filter_change', { state: id });
@@ -792,7 +955,7 @@ export function CoverageFeed() {
           {announcement}
         </div>
 
-        {loading ? (
+        {loading || filtering ? (
           <SkeletonRows count={4} />
         ) : opinionView ? (
           /* Opinion: format shelves — shorts row first, then episodes,
@@ -871,9 +1034,7 @@ export function CoverageFeed() {
             {filter === 'all' && (
               <div className="shorts-row-block">
                 <h3 className="shorts-row-title">Latest shorts</h3>
-                {/* A horizontal scroller: focusable so the keyboard can scroll
-                    it (axe: scrollable-region-focusable). */}
-                <div className="shorts-row" role="region" aria-label="Latest shorts" tabIndex={0}>
+                <ShortsShelf>
                   {latestShorts.map((item) => (
                     <ShortCard
                       key={item.id}
@@ -886,7 +1047,7 @@ export function CoverageFeed() {
                       onVisibility={hoverMode ? undefined : onVisibility}
                     />
                   ))}
-                </div>
+                </ShortsShelf>
               </div>
             )}
 

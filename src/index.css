@@ -2227,11 +2227,28 @@ button,
    the one before it. */
 .feed-item + .feed-item,
 .feed-item + .feed-skeletons,
-.feed-item + .feed-ad,
 .feed-ad + .feed-item {
   margin-top: 32px;
   padding-top: 32px;
   border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+/* The ad sits BETWEEN posts: the post above closes with its hairline first,
+   then the slot, then the next post opens with its own hairline. Drawn as a
+   pseudo-element so it never depends on what the previous sibling was. */
+.feed-ad {
+  position: relative;
+  margin-top: 65px; /* 32 gap + 1 line + 32 gap */
+}
+
+.feed-ad::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -33px;
+  height: 1px;
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
 /* The column: attribution + headline block, then the media, 32 apart. */
@@ -2413,8 +2430,139 @@ button,
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
   /* Scrolls by swipe/wheel only — no visible scrollbar. */
   scrollbar-width: none;
+}
+
+.shorts-row > * {
+  scroll-snap-align: start;
+}
+
+/* The shelf: on hover, while there is more to the right, the last cards
+   fade under a page-coloured gradient and the DS utility chevron appears. */
+.shorts-shelf {
+  position: relative;
+}
+
+.shorts-shelf::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 8px;
+  width: 120px;
+  background: linear-gradient(90deg, transparent, var(--surface-dim));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+.shorts-shelf.has-more:hover::after,
+.shorts-shelf.has-more:focus-within::after {
+  opacity: 1;
+}
+
+/* DS utility button: 40px round, subtle surface, 20px icon. */
+.utility-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 140ms ease-out, opacity 200ms ease-out, transform 200ms ease-out;
+}
+
+.utility-btn:hover {
+  background: var(--surface-hover);
+}
+
+.shorts-next {
+  position: absolute;
+  right: 8px;
+  top: calc(50% - 24px);
+  z-index: 1;
+  opacity: 0;
+  transform: translateX(4px);
+}
+
+.shorts-shelf:hover .shorts-next,
+.shorts-shelf:focus-within .shorts-next,
+.shorts-next:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Three-dots menu on a feed card ---- */
+.feed-attrib {
+  position: relative;
+}
+
+.feed-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 5;
+  min-width: 240px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  animation: menu-in 140ms ease-out;
+}
+
+.feed-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.feed-menu-item:hover,
+.feed-menu-item:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
+}
+
+.feed-menu-item--lead {
+  justify-content: flex-start;
+}
+
+/* DS Avatar, 3xsm (24px): Hosts are round, Shows are a rounded square. */
+.feed-menu-avatar {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.feed-menu-avatar--show {
+  border-radius: 6px;
 }
 
 .shorts-row::-webkit-scrollbar {
@@ -3464,6 +3612,8 @@ button,
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* No scroll indicator (Sep 2026): the panel scrolls, but quietly. */
+  scrollbar-width: none;
   /* Reaching the end of the panel must not hand the scroll to the page —
      belt and braces alongside the page-level lock (useScrollLock). */
   overscroll-behavior: contain;
@@ -4375,4 +4525,253 @@ button,
 
 body {
   padding-bottom: var(--ticker-h);
+}
+
+.drawer-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- Districts: order chips ---------- */
+.drawer-order {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 12px;
+}
+
+.drawer-order-chip {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  background: transparent;
+  color: var(--ink-subtle);
+  cursor: pointer;
+  transition: background-color 140ms ease-out, color 140ms ease-out, border-color 140ms ease-out;
+}
+
+.drawer-order-chip:hover {
+  color: var(--ink);
+}
+
+.drawer-order-chip.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface-dim);
+}
+
+/* ---------- Prediction-game CTA explorations (?play=a|b|c) ---------- */
+.btn-brand {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fafafa;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-brand:hover {
+  background: var(--brand-hover);
+}
+
+.btn-ghost {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 14px;
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-link {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand-hover);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.drawer-block--play {
+  padding-top: 0;
+}
+
+.play-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+}
+
+.play-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.play-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-hover);
+}
+
+.play-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.play-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-subtle);
+}
+
+.cand-avatar--sm {
+  width: 24px;
+  height: 24px;
+}
+
+.cand-pick {
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fafafa;
+}
+
+.play-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  font-size: 14px;
+  color: var(--ink-subtle);
+}
+
+.play-row-text b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.play-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, var(--brand) 8%, var(--surface));
+}
+
+.play-bar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink-subtle);
+}
+
+.play-bar-text b {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ---------- Nav: The Midterms dropdown ---------- */
+.dw-nav-menu-wrap {
+  position: relative;
+}
+
+.dw-nav-chevron {
+  flex: none;
+  margin-left: 2px;
+  color: var(--ink-subtlest);
+  transition: transform 160ms ease-out, color 160ms ease-out;
+}
+
+.dw-nav-link--midterms:hover .dw-nav-chevron,
+.dw-nav-link--midterms.is-open .dw-nav-chevron {
+  color: var(--ink);
+}
+
+.dw-nav-link--midterms.is-open .dw-nav-chevron {
+  transform: rotate(180deg);
+}
+
+.dw-nav-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 5;
+  min-width: 260px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  animation: menu-in 140ms ease-out;
+}
+
+.dw-nav-menu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.dw-nav-menu-item:hover,
+.dw-nav-menu-item:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
+}
+
+.dw-nav-menu-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dw-nav-menu-sub {
+  font-size: 12px;
+  color: var(--ink-subtlest);
 }

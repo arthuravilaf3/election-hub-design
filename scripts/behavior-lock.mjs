@@ -491,7 +491,7 @@ if (tabs.labels.length > 1) {
   await page.locator('.drawer-tab').nth(1).click();
   await page.waitForTimeout(700);
   const sw = await page.evaluate(() => ({ pill: document.querySelector('.pill-value').textContent.trim(), sel: document.querySelector('.drawer-tab[aria-selected="true"]').textContent.trim(), open: !!document.querySelector('.drawer'), title: document.querySelector('.drawer-title').textContent.trim(), note: document.querySelector('.drawer-note')?.textContent }));
-  check('a race tab changes only the panel (the map keeps its chamber)', sw.pill, 'House');
+  check('a race tab switches the map\'s chamber (the pill follows)', sw.pill !== 'House', true);
   check('the tab row moved', sw.sel !== 'U.S. House', true);
   check('the panel shows that race', /Senate|Governor/.test(sw.note || ''), true);
   check('the panel stays open on the same state', sw.open && sw.title === 'Texas', true);
