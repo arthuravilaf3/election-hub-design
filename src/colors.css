@@ -59,20 +59,21 @@
   /* ---- Rating scale (redesign Aug 2026, from the DW WIP Q3 Figma) ----
      Categorical Safe/Likely/Lean × party + Toss-up, replacing the continuous
      margin ramp in prediction mode. Values lifted verbatim from the design. */
-  --rating-safe-dem: #1041b7;
-  --rating-likely-dem: #0065f4;
-  --rating-lean-dem: #86c7ff;
-  /* Toss-up is PURPLE (design decision Sep 9 2026): the midpoint of the two
-     seat-bar party colours, so it reads as "both, undecided" — grey is
-     reserved for not-on-ballot. */
-  --rating-tossup: #a260a7;
-  --rating-lean-rep: #ffa0a3;
-  --rating-likely-rep: #ee2532;
-  --rating-safe-rep: #a8000f;
+  /* Scale from Arthur's Sep 11 2026 swatch: bright red through a near-black
+     purple to light cyan. Ten stops read by eye from the image; the seven
+     ratings sit on 1 · 2 · 3.5 · 5.5 · 7.5 · 9 · 10. */
+  --rating-safe-rep: #e5302e;
+  --rating-likely-rep: #b12a3c;
+  --rating-lean-rep: #7a1d3d;
+  --rating-tossup: #2b0c3f;
+  --rating-lean-dem: #0a1b8f;
+  --rating-likely-dem: #1c4ad8;
+  --rating-safe-dem: #5acbf5;
 
   /* Balance bar + candidate bars (drawer) */
-  --bar-dem: #0044c9;
-  --bar-rep: #d71e28;
+  /* The dots and bars take the scale's two ends. */
+  --bar-dem: #1c4ad8;
+  --bar-rep: #e5302e;
   --cand-ind: #2e9e44;
 
   /* Prediction Game promo */

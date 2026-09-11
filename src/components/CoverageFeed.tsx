@@ -283,12 +283,28 @@ function ChevronRight() {
  * quick and staggered, and shimmer left to right while they wait.
  */
 function SkeletonRows({ count, kind = 'all' }: { count: number; kind?: ItemKind | 'all' }) {
-  const hasDek = kind === 'all' || kind === 'article' || kind === 'opinion';
+  // Shorts arrive as a grid of portrait cards: their skeleton is that grid.
+  if (kind === 'short') {
+    return (
+      <div className="feed-skeletons feed-skeletons--grid" aria-hidden="true">
+        {Array.from({ length: Math.max(count, 5) }, (_, i) => (
+          <div className="sk sk-card" key={i} style={{ '--i': i } as React.CSSProperties}>
+            <div className="sk-caption">
+              <span className="sk" />
+              <span className="sk" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  // Everything else is a row: the same grid as .feed-item (48px avatar
+  // column, 12px gap, 32px dividers) with one bar per text line at that
+  // line's height, then the card's 16:9 media surface. Episodes have no dek.
+  const hasDek = kind !== 'episode';
   return (
     <div className="feed-skeletons" aria-hidden="true">
       {Array.from({ length: count }, (_, i) => (
-        // The same grid as .feed-item (48px avatar column, 12px gap, 32px
-        // dividers), one bar per text line at that line's height and width.
         <div className="feed-skeleton" key={i} style={{ '--i': i } as React.CSSProperties}>
           <span className="sk sk-avatar" />
           <div className="sk-body">
@@ -297,7 +313,9 @@ function SkeletonRows({ count, kind = 'all' }: { count: number; kind?: ItemKind 
               <span className="sk sk-headline" />
               <span className="sk sk-headline sk-headline--2" />
               {hasDek && <span className="sk sk-dek" />}
+              {hasDek && <span className="sk sk-dek sk-dek--2" />}
             </div>
+            <span className="sk sk-media" />
           </div>
         </div>
       ))}
@@ -332,7 +350,7 @@ export function CoverageFeed() {
   const settle = () => {
     setFiltering(true);
     window.clearTimeout(filterTimer.current);
-    filterTimer.current = window.setTimeout(() => setFiltering(false), 520);
+    filterTimer.current = window.setTimeout(() => setFiltering(false), 1100);
   };
   useEffect(() => () => window.clearTimeout(filterTimer.current), []);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -409,12 +427,18 @@ export function CoverageFeed() {
     () =>
       ALL_ITEMS.filter(
         (i) =>
-          // Opinion filters by VOICE (flag spans formats); others by format.
-          (filter === 'all' || (filter === 'opinion' ? !!i.opinion : i.kind === filter)) &&
+          // Opinion filters by VOICE (flag spans formats) and only from the
+          // hosts who are people; others by format.
+          (filter === 'all' ||
+            (filter === 'opinion'
+              ? !!i.opinion &&
+                PEOPLE_HOSTS.includes(i.host ?? i.author) &&
+                (typeScope === 'all' || (typeScope === 'article' ? i.kind === 'opinion' : i.kind === typeScope))
+              : i.kind === filter)) &&
           (!host || !hostRowOpen || i.host === host) &&
           (!stateScope || !stateRowOpen || (i.tag ?? '').startsWith(stateScope))
       ),
-    [filter, host, hostRowOpen, stateRowOpen, stateScope]
+    [filter, host, hostRowOpen, stateRowOpen, stateScope, typeScope]
   );
   // Memoized: a fresh array identity every render would tear down and
   // re-attach the impression observers constantly.
@@ -707,21 +731,6 @@ export function CoverageFeed() {
   };
 
   const shortsGrid = filter === 'short';
-  /* Opinion is sectioned BY FORMAT (shorts row → episodes → articles),
-     not by day — a curated shelf, not a stream. No ads in it. */
-  const opinionView = filter === 'opinion';
-  const opinionShorts = useMemo(
-    () => (opinionView ? filtered.filter((i) => i.kind === 'short') : []),
-    [opinionView, filtered]
-  );
-  const opinionEpisodes = useMemo(
-    () => (opinionView ? filtered.filter((i) => i.kind === 'episode') : []),
-    [opinionView, filtered]
-  );
-  const opinionArticles = useMemo(
-    () => (opinionView ? filtered.filter((i) => i.kind === 'opinion') : []),
-    [opinionView, filtered]
-  );
 
   // Rows with ads: cadence runs on the FILTERED, visible list; an ad never
   // sits adjacent to a day divider (pushed one slot down instead).
@@ -1047,53 +1056,6 @@ export function CoverageFeed() {
 
         {loading || filtering ? (
           <SkeletonRows count={4} kind={filter} />
-        ) : opinionView ? (
-          /* Opinion: format shelves — shorts row first, then episodes,
-             then the written pieces. */
-          <div className="opinion-view">
-            {opinionShorts.length > 0 && (typeScope === 'all' || typeScope === 'short') && (
-              <div className="shorts-row-block">
-                <h3 className="shorts-row-title">Opinion shorts</h3>
-                <ShortsShelf label="Opinion shorts">
-                  {opinionShorts.map((item) => (
-                    <ShortCard
-                      key={item.id}
-                      item={item}
-                      playing={playingId === item.id}
-                      hoverMode={hoverMode}
-                      reducedMotion={reducedMotion}
-                      onRequestPlay={requestPlay}
-                      onRequestStop={requestStop}
-                      onVisibility={hoverMode ? undefined : onVisibility}
-                    />
-                  ))}
-                </ShortsShelf>
-              </div>
-            )}
-
-            {opinionEpisodes.length > 0 && (typeScope === 'all' || typeScope === 'episode') && (
-              <>
-                <h3 className="feed-shelf-title">Episodes</h3>
-                {opinionEpisodes.map(renderFeedItem)}
-              </>
-            )}
-
-            {opinionArticles.length > 0 && (typeScope === 'all' || typeScope === 'article') && (
-              <>
-                <h3 className="feed-shelf-title">Articles</h3>
-                {opinionArticles.map(renderFeedItem)}
-              </>
-            )}
-
-            {filtered.length === 0 && (
-              <div className="feed-empty">
-                <p>Nothing matches those filters.</p>
-                <button type="button" className="feed-clear" onClick={exitFilters}>
-                  Clear filters ✕
-                </button>
-              </div>
-            )}
-          </div>
         ) : shortsGrid ? (
           /* Shorts pill: grid of short cards; the top row hides (no dupes). */
           <div className="shorts-grid">

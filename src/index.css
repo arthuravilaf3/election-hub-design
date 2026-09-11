@@ -550,9 +550,20 @@ button,
   pointer-events: none;
   transform-box: fill-box;
   transform-origin: center;
-  transform: translateY(-7px) scale(1.015);
-  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.28)) brightness(1.06);
-  animation: lift-in 180ms ease-out;
+  transform: translateY(-9px) scale(1.02);
+  /* Two shadows: a wide soft one for height, a tight dark one for contact. */
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.42)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.38));
+  animation: lift-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The slab under the face: the same fill, darkened, stepped down. */
+.lift-side {
+  filter: brightness(0.45) saturate(0.9);
+}
+
+/* The face: a touch brighter than the map, with a light top edge. */
+.lift-shape {
+  filter: brightness(1.08);
 }
 
 /* The lifted copy carries a stroke highlight so elevation is not
@@ -567,7 +578,7 @@ button,
 @keyframes lift-in {
   from {
     transform: translateY(0) scale(1);
-    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0)) brightness(1);
+    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0)) drop-shadow(0 0 0 rgba(0, 0, 0, 0));
   }
 }
 
@@ -2800,7 +2811,9 @@ button,
   background-color: #151515;
   background-image: linear-gradient(90deg, #151515 0%, #1f1f1f 51%, #151515 100%);
   background-size: 300% 100%;
-  animation: sk-shimmer 600ms cubic-bezier(0.8, 0, 0.6, 1) infinite;
+  /* Slower than the Figma's 600ms by request: one sweep every 1.4s, the
+     same strong ease so it still breathes rather than slides. */
+  animation: sk-shimmer 1400ms cubic-bezier(0.8, 0, 0.6, 1) infinite;
 }
 
 .sk-avatar {
@@ -2837,7 +2850,55 @@ button,
 
 .sk-dek {
   height: 14px;
-  width: 76%;
+  width: 96%;
+}
+
+.sk-dek--2 {
+  width: 40%;
+  margin-top: -5px;
+}
+
+/* The media surface of the card that follows: 16:9 for articles and
+   episodes, at the card's 8px radius and 32px gap above it. */
+.sk-media {
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+/* Shorts land as a grid of portrait cards, so their skeleton is the same
+   grid of 9:16 boxes, caption band and all. */
+.feed-skeletons--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(166px, 1fr));
+  gap: 16px;
+}
+
+.sk-card {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  border-radius: 8px;
+  overflow: hidden;
+  animation: rise-in 220ms var(--intro-ease) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+.sk-card .sk-caption {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.sk-card .sk-caption .sk {
+  height: 14px;
+  background-image: linear-gradient(90deg, #202020 0%, #2a2a2a 51%, #202020 100%);
+}
+
+.sk-card .sk-caption .sk:last-child {
+  width: 60%;
 }
 
 @keyframes sk-shimmer {

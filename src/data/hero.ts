@@ -83,6 +83,8 @@ export function forecastFor(
   }
 
   const current = CURRENT_SEATS[chamber];
+  const demHeldUp = Math.round((seatsUp * current.dem) / current.total);
+  const projectedDem = Math.max(0, Math.min(current.total, current.dem - demHeldUp + demLeans + tossups / 2));
   /* Date AND time, in the comp's form: "Sep 1, 2026 9:00 AM ET". Pinned to
      Eastern — the election clock everyone quotes — and labelled as such, so
      a reader elsewhere is not left guessing whose 9:00 that is. */
@@ -110,7 +112,11 @@ export function forecastFor(
     rep: current.rep,
     seatsUp,
     tossups,
-    demShare: (current.dem / current.total) * 100,
+    // The dots are a PROJECTION under this source (decided Sep 11 2026, so a
+    // source switch visibly moves them): seats not up stay with their
+    // holders (split by the current composition), seats up go to the
+    // source's lean. FIXTURE math — the real feed brings a real projection.
+    demShare: (projectedDem / current.total) * 100,
     // The toss-up races carved out at the boundary between the two blocs.
     // Floored so the neutral gap never disappears at House scale (6/435).
     tossupShare: Math.max(1.4, (tossups / current.total) * 100),

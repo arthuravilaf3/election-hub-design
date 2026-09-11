@@ -520,6 +520,18 @@ export function ElectionMap({
               )}
               {liftShape && liftRace && (
                 <g className="lift-overlay" aria-hidden="true">
+                  {/* The slab: three darker copies stepped down under the
+                      face, so the state reads as a solid object lifted off
+                      the map — an edge, not a shadow alone. */}
+                  {[3, 2, 1].map((o) => (
+                    <path
+                      key={o}
+                      d={liftShape.d}
+                      className="lift-side"
+                      transform={`translate(0 ${o * 1.7})`}
+                      style={{ fill: fillFor(liftRace, srcFor(liftShape.id)) }}
+                    />
+                  ))}
                   <path
                     d={liftShape.d}
                     className="lift-shape"

@@ -127,7 +127,10 @@ function buildReads(id: string, [, poll, kalshi, poly]: Seed, now: number): Sour
   const reads: SourceRead[] = [
     { sourceId: 'dw-poll-avg', kind: 'poll', margin: poll, asOf: new Date(now - (2 * HOUR + (h % 90) * MINUTE)).toISOString() },
     { sourceId: 'kalshi', kind: 'market', demOdds: kalshi, asOf: new Date(now - (3 + (h % 14)) * MINUTE).toISOString() },
-    { sourceId: 'polymarket', kind: 'market', demOdds: poly, asOf: new Date(now - (2 + (h % 21)) * MINUTE).toISOString() },
+    // FIXTURE DISAGREEMENT (Sep 2026): in every third race the market reads
+    // the Republican 9 points stronger than the poll does, so switching
+    // sources visibly moves leans — the product's whole premise on show.
+    { sourceId: 'polymarket', kind: 'market', demOdds: h % 3 === 0 ? Math.max(3, poly - 9) : poly, asOf: new Date(now - (2 + (h % 21)) * MINUTE).toISOString() },
   ];
   return reads.filter((r) => !MARKET_GAPS[r.sourceId]?.includes(id));
 }
