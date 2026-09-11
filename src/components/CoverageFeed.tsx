@@ -555,29 +555,7 @@ export function CoverageFeed() {
           <h2>All Election Coverage</h2>
         </header>
 
-        {filter === 'all' && (
-          <div className="shorts-row-block shorts-row-block--top">
-            <h3 className="shorts-row-title">Latest shorts</h3>
-            {/* A horizontal scroller: focusable so the keyboard can scroll
-                it (axe: scrollable-region-focusable). */}
-            <div className="shorts-row" role="region" aria-label="Latest shorts" tabIndex={0}>
-              {latestShorts.map((item) => (
-                <ShortCard
-                  key={item.id}
-                  item={item}
-                  playing={playingId === item.id}
-                  hoverMode={hoverMode}
-                  reducedMotion={reducedMotion}
-                  onRequestPlay={requestPlay}
-                  onRequestStop={requestStop}
-                  onVisibility={hoverMode ? undefined : onVisibility}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Collapsing-pill filter bar, on its own row below the shorts. */}
+        {/* Collapsing-pill filter bar, on its own row below the title. */}
         <div className={`filter-bar filter-bar--${barMode}`} role="group" aria-label="Filter coverage">
           {/* ✕ — flow slot in selected mode; absolute ghost while animating. */}
           {barMode !== 'browse' && (
@@ -890,6 +868,28 @@ export function CoverageFeed() {
           </div>
         ) : (
           <>
+            {filter === 'all' && (
+              <div className="shorts-row-block">
+                <h3 className="shorts-row-title">Latest shorts</h3>
+                {/* A horizontal scroller: focusable so the keyboard can scroll
+                    it (axe: scrollable-region-focusable). */}
+                <div className="shorts-row" role="region" aria-label="Latest shorts" tabIndex={0}>
+                  {latestShorts.map((item) => (
+                    <ShortCard
+                      key={item.id}
+                      item={item}
+                      playing={playingId === item.id}
+                      hoverMode={hoverMode}
+                      reducedMotion={reducedMotion}
+                      onRequestPlay={requestPlay}
+                      onRequestStop={requestStop}
+                      onVisibility={hoverMode ? undefined : onVisibility}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {visible.length === 0 && (
               <div className="feed-empty">
                 <p>Nothing matches those filters.</p>

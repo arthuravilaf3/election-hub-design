@@ -69,22 +69,30 @@ const ZOOM_FILL = 0.78; // fraction of the region the state fills
 const MAX_ZOOM = 7;
 
 /**
- * How much of the frame is left of the drawer — the region the zoomed state
- * has to fit inside, silhouette fully visible beside the panel. MEASURED:
- * the drawer is absolutely positioned inside `.map-and-panel`, so its
- * offsetLeft IS the left region's width. Falls back to the declared fraction
- * before the panel mounts, and to the whole frame when the drawer is not in
- * the frame's flow (mobile: a fixed bottom sheet).
+ * Where the zoomed state should land, in viewBox units: the centre of the
+ * CARD's area left of the drawer — measured, because the svg sits inset in
+ * the card (its side padding) and the drawer is absolutely positioned inside
+ * `.map-and-panel`, so its offsetLeft IS the region's width. Falls back to
+ * the svg's own box when the frame or the drawer is not there, and to the
+ * whole frame when the drawer is out of its flow (mobile bottom sheet).
  */
-function measureRegionW(svg: SVGSVGElement | null): number {
+function measureTarget(svg: SVGSVGElement | null): { fitW: number; fitH: number; cx: number; cy: number } {
+  const fallback = { fitW: VIEW_W * ZOOM_REGION_W, fitH: VIEW_H, cx: (VIEW_W * ZOOM_REGION_W) / 2, cy: VIEW_H / 2 };
   const frame = svg?.closest('.map-and-panel') as HTMLElement | null;
-  if (!frame) return ZOOM_REGION_W;
+  if (!svg || !frame) return fallback;
+  const sr = svg.getBoundingClientRect();
+  const fr = frame.getBoundingClientRect();
+  if (!sr.width || !fr.width) return fallback;
   const drawer = frame.querySelector('.drawer') as HTMLElement | null;
-  if (!drawer) return ZOOM_REGION_W;
-  if (drawer.offsetParent !== frame) return 1;
-  const frameW = frame.clientWidth;
-  if (!frameW) return ZOOM_REGION_W;
-  return Math.min(1, Math.max(0.2, drawer.offsetLeft / frameW));
+  const inFlow = drawer && drawer.offsetParent === frame;
+  const regionPx = inFlow ? Math.max(fr.width * 0.2, drawer.offsetLeft) : fr.width;
+  const k = VIEW_W / sr.width; // px -> viewBox units
+  return {
+    fitW: regionPx * k,
+    fitH: fr.height * k,
+    cx: (regionPx / 2 - (sr.left - fr.left)) * k,
+    cy: (fr.height / 2 - (sr.top - fr.top)) * k,
+  };
 }
 
 export function ElectionMap({
@@ -157,17 +165,15 @@ export function ElectionMap({
       const target = pathRefs.current.get(zoomedId);
       if (target) {
         const box = target.getBBox();
-        const regionW = measureRegionW(camera.ownerSVGElement);
-        to.s = Math.min(
-          MAX_ZOOM,
-          Math.min((VIEW_W * regionW * ZOOM_FILL) / box.width, (VIEW_H * ZOOM_FILL) / box.height)
-        );
+        const t = measureTarget(camera.ownerSVGElement);
+        to.s = Math.min(MAX_ZOOM, Math.min((t.fitW * ZOOM_FILL) / box.width, (t.fitH * ZOOM_FILL) / box.height));
         const cx = box.x + box.width / 2;
         const cy = box.y + box.height / 2;
-        // CENTER the state in its region — no cover clamp: past the map's
-        // edge there is only transparent svg over the same card surface.
-        to.x = (VIEW_W * regionW) / 2 - to.s * cx;
-        to.y = VIEW_H / 2 - to.s * cy;
+        // CENTER the state in the card's region left of the drawer — no
+        // cover clamp: past the map's edge there is only transparent svg
+        // over the same card surface.
+        to.x = t.cx - to.s * cx;
+        to.y = t.cy - to.s * cy;
       }
     }
     const apply = (c: { s: number; x: number; y: number }) => applyCamera(camera, c);
@@ -206,7 +212,9 @@ export function ElectionMap({
     d.cx = camRef.current.x;
     d.cy = camRef.current.y;
     d.moved = false;
-    e.currentTarget.setPointerCapture(e.pointerId);
+    // No capture yet: capturing on press would retarget the click to the
+    // svg and the state under the pointer would never open. Capture only
+    // once the press has become a drag (below).
   };
   const onSvgPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const d = drag.current;
@@ -218,6 +226,7 @@ export function ElectionMap({
       d.moved = true;
       setDragging(true);
       setTooltip(null);
+      e.currentTarget.setPointerCapture(e.pointerId);
     }
     const svg = e.currentTarget;
     const k = VIEW_W / svg.getBoundingClientRect().width; // px -> viewBox units
