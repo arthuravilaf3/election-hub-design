@@ -187,7 +187,27 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
     const R = L.pitch * 1.6; // reach
     const A = 0.3; // swell of the dot under the pointer
     const B = L.pitch * 0.18; // lean toward the pointer
+    const PUSH = L.pitch * 0.34; // …or away from it, across the party line
     const k = 0.2; // lerp per frame (~80ms time constant at 60fps)
+    // THE DIVIDE (Sep 2026): dots of the SAME colour as the one under the
+    // pointer gather toward it; dots of ANOTHER colour push away and shrink
+    // a little — the country pulling apart under the reader's hand. The hot
+    // dot is the nearest one; parties are read off the classes so a source
+    // switch (which only recolours) is picked up without re-measuring.
+    const party = (el: HTMLElement) =>
+      el.classList.contains('dot--rep') ? 'rep' : el.classList.contains('dot--dem') ? 'dem' : 'toss';
+    let hot = -1;
+    let hotD2 = Infinity;
+    for (let i = 0; i < L.dots.length; i += 1) {
+      const dx = L.px - L.cx[i];
+      const dy = L.py - L.cy[i];
+      const d2 = dx * dx + dy * dy;
+      if (d2 < hotD2) {
+        hotD2 = d2;
+        hot = i;
+      }
+    }
+    const hotParty = hot >= 0 && hotD2 < R * R * 4 ? party(L.dots[hot]) : null;
     let moving = false;
     for (let i = 0; i < L.dots.length; i += 1) {
       const dx = L.px - L.cx[i];
@@ -198,10 +218,17 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       let ty = 0;
       if (d2 < R * R * 4) {
         const w = Math.exp(-d2 / (R * R));
-        ts = 1 + A * w;
         const d = Math.sqrt(d2) || 1;
-        tx = (dx / d) * B * w;
-        ty = (dy / d) * B * w;
+        if (hotParty && party(L.dots[i]) !== hotParty) {
+          // Across the line: recoil, and give a little ground.
+          ts = 1 - 0.1 * w;
+          tx = (-dx / d) * PUSH * w;
+          ty = (-dy / d) * PUSH * w;
+        } else {
+          ts = 1 + A * w;
+          tx = (dx / d) * B * w;
+          ty = (dy / d) * B * w;
+        }
       }
       const ns = L.s[i] + (ts - L.s[i]) * k;
       const nx = L.x[i] + (tx - L.x[i]) * k;

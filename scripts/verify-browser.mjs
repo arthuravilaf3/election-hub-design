@@ -483,7 +483,7 @@ console.log('no floating chrome: mid-section', JSON.stringify(mid), '| past sect
 // MVP — no Follow, no zoom depth, no election night, no race tags, no picker.
 for (const phase of [1, 2, 3, 4]) {
   const probe = await browser.newPage({ viewport: { width: 1440, height: 1024 } });
-  await probe.goto(`http://localhost:5173/?phase=${phase}`, { waitUntil: 'networkidle' });
+  await probe.goto(`${new URL(BASE).origin}/?phase=${phase}`, { waitUntil: 'networkidle' });
   await probe.waitForTimeout(700);
   await probe.evaluate(() => document.querySelector('.map-card').scrollIntoView({ block: 'center' }));
   await probe.waitForTimeout(300);
