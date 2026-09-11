@@ -37,55 +37,6 @@ const CHAMBER_TITLE: Record<Chamber, string> = {
 
 const CHAMBER_ORDER: Chamber[] = ['house', 'senate', 'governor'];
 
-/* The prediction game inside the panel: one quiet line under the
-   candidates. ?played=1 mocks a reader who already picked (the first
-   candidate) so the compare state can be reviewed. */
-const PLAYED = (() => {
-  try {
-    return new URLSearchParams(window.location.search).get('played') === '1';
-  } catch {
-    return false;
-  }
-})();
-
-interface PlayProps {
-  stateName: string;
-  pick: Candidate | null;
-  leader?: Candidate;
-}
-
-/** One quiet line: the invitation, or the reader's pick beside the market's
-    read. Same weight as the note above it — the game is an aside here. */
-function PlayRow({ stateName, pick, leader }: PlayProps) {
-  return (
-    <p className="play-row">
-      {pick ? (
-        <>
-          <span className="cand-avatar cand-avatar--xs" aria-hidden="true">
-            <img className="cand-photo" src={photoFor(pick.name)} alt="" />
-          </span>
-          <span className="play-row-text">
-            Your pick: <b>{pick.name}</b>
-            {leader && leader.name !== pick.name
-              ? ` · the market leans ${leader.name.split(' ').pop()}`
-              : ' · leading the market'}
-          </span>
-          <button type="button" className="play-link">Change</button>
-        </>
-      ) : (
-        <>
-          <span className="play-row-text">Think you can call {stateName}?</span>
-          <button type="button" className="play-link">
-            Make your prediction
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </>
-      )}
-    </p>
-  );
-}
 
 
 /** A small pill-shaped native select: the listed sources, the current one
@@ -140,7 +91,7 @@ function photoFor(name: string): string {
 }
 
 /** Candidate photo-bars: bar and number grow in the same animation frame. */
-function CandidateRows({ candidates, pick = null }: { candidates: Candidate[]; pick?: string | null }) {
+function CandidateRows({ candidates }: { candidates: Candidate[] }) {
   const [progress, setProgress] = useState(0);
   const key = candidates.map((c) => `${c.name}:${c.pct}`).join('|');
 
@@ -175,14 +126,6 @@ function CandidateRows({ candidates, pick = null }: { candidates: Candidate[]; p
             <span className="bar-lines">
               <span className="bar-title">
                 {c.name}
-                {pick === c.name && (
-                  <span className="cand-pick" title="Your pick">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="m5 12 5 5L20 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Your pick
-                  </span>
-                )}
               </span>
               <span className="bar-sub">
                 {c.party === 'ind' ? 'Independent' : PARTY_LABEL[c.party]}
@@ -378,7 +321,6 @@ export function RacePanel({
   const chambers = CHAMBER_ORDER.filter((c) => !!racesByChamber[c]);
   const shown = race;
   const isResults = shown.mode === 'results';
-  const playedPick = PLAYED && shown.candidates ? shown.candidates[0] : null;
   /* SOURCE INSIDE THE PANEL (Sep 2026): a pill picker at the right end of
      the tab row. Local to the panel — it starts on the map's source and
      changes only what this panel reads, never the map. */
@@ -509,11 +451,10 @@ export function RacePanel({
             <>
             <section className="drawer-block">
               <BlockHead title="Candidates" read={viewRead} sourceId={src} />
-              {shown.candidates && <CandidateRows candidates={shown.candidates} pick={playedPick?.name ?? null} />}
+              {shown.candidates && <CandidateRows candidates={shown.candidates} />}
               <p className="drawer-note">
                 Support shares from the polling average. {CHAMBER_LABEL[shown.chamber]} race, 2026.
               </p>
-              <PlayRow stateName={stateName} pick={playedPick} leader={shown.candidates?.[0]} />
             </section>
 
             {/* House: the state's WHOLE delegation. Long delegations
