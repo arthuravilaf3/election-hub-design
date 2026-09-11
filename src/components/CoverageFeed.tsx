@@ -134,10 +134,12 @@ function ShortCard({
 function ShortsShelf({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState(true);
+  const [back, setBack] = useState(false);
   const measure = () => {
     const el = ref.current;
     if (!el) return;
     setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    setBack(el.scrollLeft > 8);
   };
   useEffect(() => {
     measure();
@@ -145,7 +147,17 @@ function ShortsShelf({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('resize', measure);
   }, []);
   return (
-    <div className={`shorts-shelf${more ? ' has-more' : ''}`}>
+    <div className={`shorts-shelf${more ? ' has-more' : ''}${back ? ' has-back' : ''}`}>
+      {back && (
+        <button
+          type="button"
+          className="utility-btn shorts-prev"
+          aria-label="Scroll shorts back"
+          onClick={() => ref.current?.scrollBy({ left: -ref.current.clientWidth * 0.8, behavior: 'smooth' })}
+        >
+          <ChevronLeft />
+        </button>
+      )}
       {/* Focusable so the keyboard can scroll it (axe: scrollable-region-focusable). */}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
       <div className="shorts-row" role="region" aria-label="Latest shorts" tabIndex={0} ref={ref} onScroll={measure}>
@@ -242,6 +254,15 @@ function BookmarkIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** DS utility icon: Tabler chevron-left at 20px, 1.5 stroke. */
+function ChevronLeft() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m15 6-6 6 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

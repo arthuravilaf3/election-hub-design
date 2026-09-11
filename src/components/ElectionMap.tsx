@@ -293,6 +293,25 @@ export function ElectionMap({
     glide.current = window.requestAnimationFrame(step);
   };
 
+  // TRACKPAD PAN while zoomed: two-finger scrolling over the map moves the
+  // camera instead of the page (only while a state is open — at rest the
+  // page scrolls as normal). Non-passive so the page scroll can be stopped.
+  const svgRef = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !zoomedId) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) return; // pinch-zoom gesture: leave it to the browser
+      e.preventDefault();
+      stopGlide();
+      const k = VIEW_W / svg.getBoundingClientRect().width;
+      const c = camRef.current;
+      if (cameraRef.current) applyCamera(cameraRef.current, clampCam({ s: c.s, x: c.x - e.deltaX * k, y: c.y - e.deltaY * k }));
+    };
+    svg.addEventListener('wheel', onWheel, { passive: false });
+    return () => svg.removeEventListener('wheel', onWheel);
+  }, [zoomedId]);
+
   // Escape closes the open state. The panel's own close button is the other
   // way back, on touch as well as pointer.
   useEffect(() => {
@@ -400,6 +419,7 @@ export function ElectionMap({
       {/* Flat rendering on purpose: any 3D transform on an SVG ancestor makes
           the compositor rasterize + resample it, pixelating the borders. */}
           <svg
+            ref={svgRef}
             viewBox={MAP_VIEWBOX}
             className="election-map"
             role="group"

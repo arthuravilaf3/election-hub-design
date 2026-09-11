@@ -292,18 +292,22 @@ check('Escape clears zoom', await page.evaluate(() => !document.querySelector('.
 await page.click('.state-shape[data-state=TX]');
 await page.waitForTimeout(900);
 
-// Over the map: the page scrolls, and the panel stays open. It used to close.
+// Over the zoomed map: two-finger scrolling PANS the camera (Sep 2026) and
+// the page stays put; the panel stays open.
 const yBefore = await page.evaluate(() => window.scrollY);
+const camBefore = await page.evaluate(() => document.querySelector('.map-camera').getAttribute('transform'));
 await page.mouse.move(300, 500);
 await page.mouse.wheel(0, 200);
 await page.waitForTimeout(500);
 const overMap = await page.evaluate(() => ({
   scrolled: window.scrollY,
+  cam: document.querySelector('.map-camera').getAttribute('transform'),
   stillOpen: !!document.querySelector('.drawer'),
   locked: document.body.classList.contains('is-scroll-locked'),
 }));
 check('page is not frozen while the panel is open', overMap.locked, false);
-check('wheel over the map scrolls the page', overMap.scrolled > yBefore, true);
+check('wheel over the zoomed map pans the camera', overMap.cam !== camBefore, true);
+check('and the page does not scroll under it', overMap.scrolled, yBefore);
 check('wheel over the map keeps the panel open', overMap.stillOpen, true);
 
 // Over the panel: the panel scrolls and the page does NOT (no scroll chaining

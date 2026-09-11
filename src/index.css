@@ -2446,23 +2446,6 @@ button,
   position: relative;
 }
 
-.shorts-shelf::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 8px;
-  width: 120px;
-  background: linear-gradient(90deg, transparent, var(--surface-dim));
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 200ms ease-out;
-}
-
-.shorts-shelf.has-more:hover::after,
-.shorts-shelf.has-more:focus-within::after {
-  opacity: 1;
-}
 
 /* DS utility button: 40px round, subtle surface, 20px icon. */
 .utility-btn {
@@ -2484,18 +2467,31 @@ button,
   background: var(--surface-hover);
 }
 
-.shorts-next {
+.shorts-next,
+.shorts-prev {
   position: absolute;
-  right: 8px;
   top: calc(50% - 24px);
   z-index: 1;
   opacity: 0;
+}
+
+.shorts-next {
+  right: 8px;
   transform: translateX(4px);
 }
 
+/* The way back appears once the row has scrolled right. */
+.shorts-prev {
+  left: 8px;
+  transform: translateX(-4px);
+}
+
 .shorts-shelf:hover .shorts-next,
+.shorts-shelf:hover .shorts-prev,
 .shorts-shelf:focus-within .shorts-next,
-.shorts-next:focus-visible {
+.shorts-shelf:focus-within .shorts-prev,
+.shorts-next:focus-visible,
+.shorts-prev:focus-visible {
   opacity: 1;
   transform: none;
 }
@@ -2749,8 +2745,16 @@ button,
   display: block;
   border-radius: 6px;
   background: var(--surface-2);
-  /* Figma prototype spec: 600ms, custom bezier (0.8, 0, 0.6, 1). */
-  animation: sk-pulse 600ms cubic-bezier(0.8, 0, 0.6, 1) infinite alternate;
+  /* A shimmer that sweeps LEFT TO RIGHT (Sep 2026), on the DS prototype's
+     bezier, instead of the old opacity pulse. */
+  background-image: linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    color-mix(in srgb, var(--ink) 9%, var(--surface-2)) 50%,
+    var(--surface-2) 100%
+  );
+  background-size: 240% 100%;
+  animation: sk-shimmer 1200ms cubic-bezier(0.8, 0, 0.6, 1) infinite;
 }
 
 .sk-time {
@@ -2783,9 +2787,9 @@ button,
   border-radius: 4px;
 }
 
-@keyframes sk-pulse {
-  from { opacity: 1; }
-  to { opacity: 0.45; }
+@keyframes sk-shimmer {
+  from { background-position: 120% 50%; }
+  to { background-position: -120% 50%; }
 }
 
 /* Load more */
@@ -4562,126 +4566,22 @@ body {
   color: var(--surface-dim);
 }
 
-/* ---------- Prediction-game CTA explorations (?play=a|b|c) ---------- */
-.btn-brand {
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 10px 16px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--brand);
-  color: #fafafa;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.btn-brand:hover {
-  background: var(--brand-hover);
-}
-
-.btn-ghost {
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 9px 14px;
-  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.btn-link {
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--brand-hover);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.drawer-block--play {
-  padding-top: 0;
-}
-
-.play-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--brand) 10%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
-}
-
-.play-card-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.play-eyebrow {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--brand-hover);
-}
-
-.play-title {
-  margin: 0;
+/* ---------- Prediction game: one quiet line under the candidates ---------- */
+.play-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.play-sub {
-  margin: 0;
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
   font-size: 13px;
   line-height: 18px;
   color: var(--ink-subtle);
 }
 
-.cand-avatar--sm {
-  width: 24px;
-  height: 24px;
-}
-
-.cand-pick {
-  display: inline-block;
-  margin-left: 8px;
-  vertical-align: 2px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--brand);
-  color: #fafafa;
-}
-
-.play-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-  font-size: 14px;
-  color: var(--ink-subtle);
+.play-row-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .play-row-text b {
@@ -4689,30 +4589,42 @@ body {
   font-weight: 600;
 }
 
-.play-bar {
-  flex: none;
-  display: flex;
+.play-link {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 24px;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-  background: color-mix(in srgb, var(--brand) 8%, var(--surface));
-}
-
-.play-bar-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
   font-size: 13px;
-  color: var(--ink-subtle);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.play-bar-text b {
-  color: var(--ink);
-  font-size: 14px;
+.play-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cand-avatar--xs {
+  width: 20px;
+  height: 20px;
+}
+
+/* The reader's pick on its candidate row: a small check + label, in the
+   row's own ink — a marker, not a badge. */
+.cand-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+  font-size: 11px;
   font-weight: 600;
+  color: var(--ink-subtle);
+  vertical-align: 1px;
 }
 
 /* ---------- Nav: The Midterms dropdown ---------- */

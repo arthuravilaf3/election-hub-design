@@ -37,16 +37,9 @@ const CHAMBER_TITLE: Record<Chamber, string> = {
 
 const CHAMBER_ORDER: Chamber[] = ['house', 'senate', 'governor'];
 
-/* Exploration switches (Sep 2026): where the prediction-game CTA sits, and a
-   mocked "already played" reader. */
-const PLAY_VARIANT: 'a' | 'b' | 'c' | null = (() => {
-  try {
-    const v = new URLSearchParams(window.location.search).get('play');
-    return v === 'a' || v === 'b' || v === 'c' ? v : null;
-  } catch {
-    return null;
-  }
-})();
+/* The prediction game inside the panel: one quiet line under the
+   candidates. ?played=1 mocks a reader who already picked (the first
+   candidate) so the compare state can be reviewed. */
 const PLAYED = (() => {
   try {
     return new URLSearchParams(window.location.search).get('played') === '1';
@@ -61,91 +54,36 @@ interface PlayProps {
   leader?: Candidate;
 }
 
-/** a: a card of its own under Candidates. */
-function PlayCard({ stateName, pick, leader }: PlayProps) {
-  return (
-    <div className="play-card">
-      {pick ? (
-        <>
-          <div className="play-card-copy">
-            <p className="play-eyebrow">Your prediction</p>
-            <p className="play-title">
-              <span className="cand-avatar cand-avatar--sm" aria-hidden="true">
-                <img className="cand-photo" src={photoFor(pick.name)} alt="" />
-              </span>
-              {pick.name}
-            </p>
-            <p className="play-sub">
-              {leader && leader.name === pick.name
-                ? `Agrees with the market: leading at ${leader.pct.toFixed(1)}%`
-                : leader
-                  ? `The market has ${leader.name} ahead at ${leader.pct.toFixed(1)}%`
-                  : ''}
-            </p>
-          </div>
-          <button type="button" className="btn-ghost">Change pick</button>
-        </>
-      ) : (
-        <>
-          <div className="play-card-copy">
-            <p className="play-eyebrow">Prediction game</p>
-            <p className="play-title">Who takes {stateName}?</p>
-            <p className="play-sub">Call it before the market does and track your streak to Election Day.</p>
-          </div>
-          <button type="button" className="btn-brand">Make your prediction</button>
-        </>
-      )}
-    </div>
-  );
-}
-
-/** b: a slim row after the candidate bars (the pick is badged on its row). */
+/** One quiet line: the invitation, or the reader's pick beside the market's
+    read. Same weight as the note above it — the game is an aside here. */
 function PlayRow({ stateName, pick, leader }: PlayProps) {
   return (
-    <div className="play-row">
+    <p className="play-row">
       {pick ? (
         <>
-          <span className="play-row-text">
-            You picked <b>{pick.name}</b>
-            {leader && leader.name !== pick.name ? ` · market leans ${leader.name.split(' ').pop()}` : ' · agrees with the market'}
+          <span className="cand-avatar cand-avatar--xs" aria-hidden="true">
+            <img className="cand-photo" src={photoFor(pick.name)} alt="" />
           </span>
-          <button type="button" className="btn-link">Change</button>
+          <span className="play-row-text">
+            Your pick: <b>{pick.name}</b>
+            {leader && leader.name !== pick.name
+              ? ` · the market leans ${leader.name.split(' ').pop()}`
+              : ' · leading the market'}
+          </span>
+          <button type="button" className="play-link">Change</button>
         </>
       ) : (
         <>
           <span className="play-row-text">Think you can call {stateName}?</span>
-          <button type="button" className="btn-link">Make your prediction →</button>
+          <button type="button" className="play-link">
+            Make your prediction
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </>
       )}
-    </div>
-  );
-}
-
-/** c: a bar pinned above the prev/next navigation. */
-function PlayBar({ stateName, pick, leader }: PlayProps) {
-  return (
-    <div className="play-bar">
-      {pick ? (
-        <>
-          <span className="cand-avatar cand-avatar--sm" aria-hidden="true">
-            <img className="cand-photo" src={photoFor(pick.name)} alt="" />
-          </span>
-          <span className="play-bar-text">
-            <b>Your pick: {pick.name}</b>
-            <span>{leader && leader.name === pick.name ? 'Leading the market' : `Market: ${leader?.name ?? ''}`}</span>
-          </span>
-          <button type="button" className="btn-ghost">Change</button>
-        </>
-      ) : (
-        <>
-          <span className="play-bar-text">
-            <b>Make your prediction</b>
-            <span>Who takes {stateName}? Play and track it to Election Day.</span>
-          </span>
-          <button type="button" className="btn-brand">Play</button>
-        </>
-      )}
-    </div>
+    </p>
   );
 }
 
@@ -237,7 +175,14 @@ function CandidateRows({ candidates, pick = null }: { candidates: Candidate[]; p
             <span className="bar-lines">
               <span className="bar-title">
                 {c.name}
-                {pick === c.name && <span className="cand-pick">Your pick</span>}
+                {pick === c.name && (
+                  <span className="cand-pick" title="Your pick">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="m5 12 5 5L20 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    Your pick
+                  </span>
+                )}
               </span>
               <span className="bar-sub">
                 {c.party === 'ind' ? 'Independent' : PARTY_LABEL[c.party]}
@@ -338,7 +283,6 @@ function DistrictGrid({ districts, sourceId }: { districts: District[]; sourceId
           const read = readFor(d, sourceId);
           const rating = read ? ratingOf(read) : 'tossup';
           const lean = read ? leanOf(read) : 'tossup';
-          const freshness = freshnessOf(read);
           const value = districtValue(read);
           return (
             <li
@@ -353,7 +297,6 @@ function DistrictGrid({ districts, sourceId }: { districts: District[]; sourceId
                   </span>
                   <span className="bar-sub">
                     {RATING_LABEL[rating]} · {PARTY_LABEL[d.incumbent]} held
-                    {freshness.stale && <span className="is-stale"> · ⚠ {freshness.label}</span>}
                   </span>
                 </span>
               </span>
@@ -392,10 +335,7 @@ function BlockHead({ title, read, sourceId }: { title: string; read: ReturnType<
           <span className="drawer-meta-dot" aria-hidden="true">·</span>
           {readLine(read)}
           <span className="drawer-meta-dot" aria-hidden="true">·</span>
-          <span className={freshness.stale ? 'is-stale' : undefined}>
-            {freshness.stale ? '⚠ ' : ''}
-            {freshness.label}
-          </span>
+          <span>{freshness.label}</span>
         </p>
       )}
     </div>
@@ -438,10 +378,6 @@ export function RacePanel({
   const chambers = CHAMBER_ORDER.filter((c) => !!racesByChamber[c]);
   const shown = race;
   const isResults = shown.mode === 'results';
-  /* PLAY CTA — exploration (Sep 2026): ?play=a|b|c places the prediction
-     game's call-to-action; ?played=1 mocks a reader who already picked
-     (the first candidate). None by default until one is chosen. */
-  const playVariant = PLAY_VARIANT;
   const playedPick = PLAYED && shown.candidates ? shown.candidates[0] : null;
   /* SOURCE INSIDE THE PANEL (Sep 2026): a pill picker at the right end of
      the tab row. Local to the panel — it starts on the map's source and
@@ -573,24 +509,12 @@ export function RacePanel({
             <>
             <section className="drawer-block">
               <BlockHead title="Candidates" read={viewRead} sourceId={src} />
-              {shown.candidates && (
-                <CandidateRows
-                  candidates={shown.candidates}
-                  pick={playVariant === 'b' ? playedPick?.name ?? null : null}
-                />
-              )}
+              {shown.candidates && <CandidateRows candidates={shown.candidates} pick={playedPick?.name ?? null} />}
               <p className="drawer-note">
                 Support shares from the polling average. {CHAMBER_LABEL[shown.chamber]} race, 2026.
               </p>
-              {playVariant === 'b' && (
-                <PlayRow stateName={stateName} pick={playedPick} leader={shown.candidates?.[0]} />
-              )}
+              <PlayRow stateName={stateName} pick={playedPick} leader={shown.candidates?.[0]} />
             </section>
-            {playVariant === 'a' && (
-              <section className="drawer-block drawer-block--play">
-                <PlayCard stateName={stateName} pick={playedPick} leader={shown.candidates?.[0]} />
-              </section>
-            )}
 
             {/* House: the state's WHOLE delegation. Long delegations
                 (California sends 52) stay behind an expander so the panel
@@ -614,9 +538,6 @@ export function RacePanel({
         )}
       </div>
 
-      {playVariant === 'c' && !isResults && (
-        <PlayBar stateName={stateName} pick={playedPick} leader={shown.candidates?.[0]} />
-      )}
       <DrawerNav prev={prev} next={next} onNavigate={onNavigate} />
     </section>
   );
