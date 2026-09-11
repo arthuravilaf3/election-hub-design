@@ -2197,6 +2197,13 @@ button,
 }
 
  /* Day header, per the comp: DS label/600/lg over a hairline rule. */
+/* Right after the filter bar (a filter is on): the date sits where the
+   "Latest shorts" title sits in browse mode — 28px under the bar, allowing
+   for its own 8px top padding. */
+.filter-bar + .feed-date {
+  margin-top: 20px;
+}
+
 .feed-date {
   margin: 48px 0 24px;
   font-size: 16px;
@@ -4678,67 +4685,6 @@ body {
   background: var(--ink);
   border-color: var(--ink);
   color: var(--surface-dim);
-}
-
-/* ---------- Prediction game: one quiet line under the candidates ---------- */
-.play-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 12px 0 0;
-  padding-top: 12px;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
-  font-size: 13px;
-  line-height: 18px;
-  color: var(--ink-subtle);
-}
-
-.play-row-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.play-row-text b {
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.play-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.play-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.cand-avatar--xs {
-  width: 20px;
-  height: 20px;
-}
-
-/* The reader's pick on its candidate row: a small check + label, in the
-   row's own ink — a marker, not a badge. */
-.cand-pick {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-left: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-subtle);
-  vertical-align: 1px;
 }
 
 /* ---------- Nav: The Midterms dropdown ---------- */
