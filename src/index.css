@@ -423,6 +423,24 @@ button,
  * SVG ancestor makes the compositor rasterize + resample it, pixelating the
  * borders.
  */
+.map-hint {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-subtlest);
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+.map-card.is-zoomed .map-hint {
+  opacity: 0;
+}
+
 .map-card {
   position: relative;
   background: var(--surface);
@@ -1197,6 +1215,11 @@ button,
   grid-template-columns: repeat(var(--dot-cols, 29), minmax(0, 1fr));
   gap: var(--dot-gap, 4px);
   width: 100%;
+  /* An invisible bounding box: the grid always takes the House's footprint
+     (15 rows of 24px dots on 4px gaps at 808 wide = 416 tall, kept as a
+     ratio), so switching to the Senate or Governor never moves the map. */
+  aspect-ratio: 808 / 416;
+  align-content: start;
 }
 
 /* Metaball goo (defined inline in RaceHeader), switched on only while a dot
@@ -1941,7 +1964,7 @@ button,
 
 .drawer-nav-btn:hover {
   color: var(--ink);
-  background: var(--surface);
+  background: var(--surface-hover);
 }
 
 /* Follow: primary until followed, then secondary. */
@@ -2194,6 +2217,17 @@ button,
   grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
+  /* Entrance after a filter: rise in, one card a beat after the last (the
+     list is re-keyed on every filter change so this replays). */
+  animation: rise-in 300ms var(--intro-ease) both;
+  animation-delay: calc(min(var(--i, 0), 12) * 45ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-item,
+  .feed-skeleton {
+    animation: none;
+  }
 }
 
 .feed-avatar {
@@ -2444,6 +2478,7 @@ button,
    fade under a page-coloured gradient and the DS utility chevron appears. */
 .shorts-shelf {
   position: relative;
+  isolation: isolate;
 }
 
 
@@ -2471,7 +2506,7 @@ button,
 .shorts-prev {
   position: absolute;
   top: calc(50% - 24px);
-  z-index: 1;
+  z-index: 3;
   opacity: 0;
 }
 
@@ -2519,7 +2554,7 @@ button,
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
   padding: 10px 12px;
   border: 0;
@@ -2538,11 +2573,12 @@ button,
   outline: none;
 }
 
-.feed-menu-item--lead {
-  justify-content: flex-start;
+/* DS Avatar, 3xsm (24px): Hosts are round, Shows are a rounded square. */
+.feed-menu-item > svg {
+  flex: none;
+  color: var(--ink-subtle);
 }
 
-/* DS Avatar, 3xsm (24px): Hosts are round, Shows are a rounded square. */
 .feed-menu-avatar {
   flex: none;
   width: 24px;
@@ -2735,10 +2771,24 @@ button,
 
 .feed-skeleton {
   display: grid;
-  grid-template-columns: 204px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
   padding: 0 0 40px;
+  animation: rise-in 220ms var(--intro-ease) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+.sk-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+}
+
+.sk-dek {
+  height: 14px;
+  width: 75%;
+  margin-top: 2px;
 }
 
 .sk {
@@ -2769,17 +2819,18 @@ button,
 }
 
 .sk-line {
-  height: 16px;
-  width: 85%;
+  height: 22px;
+  width: 90%;
 }
 
 .sk-line.sk-short {
-  width: 55%;
+  width: 62%;
 }
 
 .sk-meta {
-  height: 11px;
-  width: 35%;
+  height: 12px;
+  width: 30%;
+  margin-bottom: 2px;
 }
 
 .sk-thumb {

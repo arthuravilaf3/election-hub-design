@@ -69,6 +69,10 @@ export function MapCard({
           } as React.CSSProperties
         }
       >
+      {/* A one-line nudge over the map; it steps aside once a state is open. */}
+      <p className="map-hint" aria-hidden={!!zoomedId}>
+        Tap on a state for more information!
+      </p>
       {/* Which race and whose data — over the map, because the map is what
           they change. They step aside while a state is zoomed: that frame
           belongs to the state and its panel. */}

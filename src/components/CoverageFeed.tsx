@@ -216,14 +216,14 @@ function ItemMenu({ item, onClose }: { item: FeedItem; onClose: () => void }) {
     <div className="feed-menu" role="menu" aria-label="Item options">
       {person && (
         <button type="button" role="menuitem" className="feed-menu-item" onClick={act('host')}>
-          <span>Go to {first}&rsquo;s page</span>
           <span className="feed-menu-avatar feed-menu-avatar--host" aria-hidden="true">
             {initials(person)}
           </span>
+          <span>Go to {first}&rsquo;s page</span>
         </button>
       )}
       {show && (
-        <button type="button" role="menuitem" className="feed-menu-item feed-menu-item--lead" onClick={act('show')}>
+        <button type="button" role="menuitem" className="feed-menu-item" onClick={act('show')}>
           <span className="feed-menu-avatar feed-menu-avatar--show" aria-hidden="true">
             {initials(show.replace(/^The /, ''))}
           </span>
@@ -231,12 +231,12 @@ function ItemMenu({ item, onClose }: { item: FeedItem; onClose: () => void }) {
         </button>
       )}
       <button type="button" role="menuitem" className="feed-menu-item" onClick={act('share')}>
-        <span>Share</span>
         <ShareIcon />
+        <span>Share</span>
       </button>
       <button type="button" role="menuitem" className="feed-menu-item" onClick={act('save')}>
-        <span>Save for later</span>
         <BookmarkIcon />
+        <span>Save for later</span>
       </button>
     </div>
   );
@@ -276,16 +276,24 @@ function ChevronRight() {
   );
 }
 
-function SkeletonRows({ count }: { count: number }) {
+/**
+ * Skeleton rows that mirror the card about to appear (DS ".Skeleton-Others"):
+ * one bar per TEXT line — attribution, headline (two lines), and the dek
+ * where the kind has one — no image block. The rows rise in from below,
+ * quick and staggered, and shimmer left to right while they wait.
+ */
+function SkeletonRows({ count, kind = 'all' }: { count: number; kind?: ItemKind | 'all' }) {
+  const hasDek = kind === 'all' || kind === 'article' || kind === 'opinion';
   return (
     <div className="feed-skeletons" aria-hidden="true">
       {Array.from({ length: count }, (_, i) => (
-        <div className="feed-skeleton" key={i}>
-          <span className="sk sk-thumb" />
+        <div className="feed-skeleton" key={i} style={{ '--i': i } as React.CSSProperties}>
+          <span className="sk sk-avatar" />
           <div className="sk-body">
+            <span className="sk sk-meta" />
             <span className="sk sk-line" />
             <span className="sk sk-line sk-short" />
-            <span className="sk sk-meta" />
+            {hasDek && <span className="sk sk-dek" />}
           </div>
         </div>
       ))}
@@ -586,7 +594,14 @@ export function CoverageFeed() {
       .map((w) => w[0])
       .slice(0, 2)
       .join('');
-  const renderFeedItem = (item: FeedItem) => {
+  /* Rows arrive the way the panel's candidates do — not all at once: each
+     card rises in a beat after the one above it. The nonce re-keys the list
+     after every filter change so the entrance replays. */
+  const [reveal, setReveal] = useState(0);
+  useEffect(() => {
+    if (!filtering) setReveal((n) => n + 1);
+  }, [filtering]);
+  const renderFeedItem = (item: FeedItem, i = 0) => {
     // The DS writes the episode number here ("Ep. 1520"); the fixture has none.
     const kindLabel = KIND_LABEL_CARD[item.kind];
     const showDek = (item.kind === 'article' || item.kind === 'opinion') && !!item.dek;
@@ -595,7 +610,8 @@ export function CoverageFeed() {
         className={`feed-item feed-item--${item.kind}${item.opinion ? ' feed-item--opinion' : ''}${
           isVisited(item.id) ? ' is-visited' : ''
         }`}
-        key={item.id}
+        style={{ '--i': i } as React.CSSProperties}
+        key={`${reveal}-${item.id}`}
         data-impression={`item-${item.id}`}
         // No article page yet — a click marks the item as visited
         // (persisted) instead of navigating.
@@ -977,7 +993,7 @@ export function CoverageFeed() {
         </div>
 
         {loading || filtering ? (
-          <SkeletonRows count={4} />
+          <SkeletonRows count={4} kind={filter} />
         ) : opinionView ? (
           /* Opinion: format shelves — shorts row first, then episodes,
              then the written pieces. */
@@ -1081,7 +1097,7 @@ export function CoverageFeed() {
               </div>
             )}
 
-            {rows.map((row) => {
+            {rows.map((row, i) => {
               if (row.type === 'divider') {
                 return (
                   <p className="feed-date" key={`d-${row.label}`}>
@@ -1096,7 +1112,7 @@ export function CoverageFeed() {
                   </div>
                 );
               }
-              return renderFeedItem(row.item);
+              return renderFeedItem(row.item, i);
                         })}
           </>
         )}
