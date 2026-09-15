@@ -83,9 +83,16 @@ export function RaceHeader({
             )}
           </p>
         </div>
-        <p className="hub-tagline intro-rise" style={introDelay(INTRO_AT.statement)}>
-          The <strong>right</strong> place to be.
-        </p>
+        {/* The campaign mark (creative, Sep 2026): the "Right Place to Be"
+            hemicycle, in place of the typeset tagline. */}
+        <img
+          className="hub-rightplace intro-rise"
+          style={introDelay(INTRO_AT.statement)}
+          src={asset('logos/the-right-place.svg')}
+          alt="The Right Place to Be"
+          width={297}
+          height={114}
+        />
       </header>
 
       <Countdown />

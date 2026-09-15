@@ -192,7 +192,9 @@ export function MapSelectors({
   const ref = useRef<HTMLDivElement>(null);
   const [offscreen, setOffscreen] = useState(false);
   useEffect(() => {
-    const card = ref.current?.closest('.map-card');
+    // The section, not the card (Sep 2026): the pills stay through the
+    // hemicycle and the big numeral below the map.
+    const card = ref.current?.closest('.map-section');
     if (!card || typeof IntersectionObserver === 'undefined') return;
     const io = new IntersectionObserver(([e]) => setOffscreen(!e.isIntersecting), {
       rootMargin: '-50% 0px 200% 0px',

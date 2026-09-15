@@ -9,6 +9,7 @@ import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { HouseColors } from './components/HouseColors';
+import { Hemicycle } from './components/Hemicycle';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -263,6 +264,10 @@ export default function App() {
             }
           />
 
+          {/* R3 + R53: every seat of the chamber in a hemicycle, and the
+              projected Republican count, under the map. The Race/Source
+              pills stay pinned through here (the gate watches the section). */}
+          <Hemicycle races={races} chamber={state.chamber} sourceId={state.sourceId} />
           </section>
 
           {/* The boundary between map and feed is now editorial, not chromatic:

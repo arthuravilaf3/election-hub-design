@@ -1048,7 +1048,14 @@ button,
   color: var(--ink-subtlest);
 }
 
-/* Right side: the tagline. The one brand-red word is chrome, not data. */
+/* Right side: the campaign mark (297×114 from the Figma). */
+.hub-rightplace {
+  flex: none;
+  width: 297px;
+  height: 114px;
+  display: block;
+}
+
 .hub-tagline {
   flex: none;
   margin: 0;
@@ -4761,10 +4768,10 @@ body {
 /* ---------- House Colors (Figma 10222:111601) ---------- */
 .house-colors {
   position: relative;
-  /* The Figma frame's own proportion (1920 × 258): ~176px at the 1312 rail. */
-  aspect-ratio: 1920 / 258;
-  margin-top: 72px;
-  border-radius: 8px;
+  /* Full bleed (Sep 2026): the Figma frame is 1440 × 342 edge to edge, so
+     the strip runs out to the page padding on both sides. */
+  aspect-ratio: 1440 / 342;
+  margin: 72px calc(-1 * var(--rail-pad)) 0;
   overflow: hidden;
   background: var(--surface);
   isolation: isolate;
@@ -4776,7 +4783,7 @@ body {
   left: 0;
   top: 50%;
   width: 100%;
-  height: calc(100% + 48px);
+  height: calc(100% + 96px);
   object-fit: cover;
   object-position: center;
   transform: translateY(0);
@@ -4799,22 +4806,22 @@ body {
   transition: left 600ms cubic-bezier(0.22, 1, 0.36, 1), width 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.house-colors-band--dem {
+.house-colors-band--rep {
   left: 0;
-  width: var(--dem);
-  background: #7d95ff;
+  width: var(--rep);
+  background: #ff6b66;
 }
 
 .house-colors-band--toss {
-  left: var(--dem);
+  left: var(--rep);
   width: var(--toss);
   background: #ff7ae8;
 }
 
-.house-colors-band--rep {
-  left: calc(var(--dem) + var(--toss));
+.house-colors-band--dem {
+  left: calc(var(--rep) + var(--toss));
   right: 0;
-  background: #ff6b66;
+  background: #7d95ff;
 }
 
 
@@ -4822,5 +4829,92 @@ body {
   .house-colors {
     height: 160px;
     margin-top: 40px;
+  }
+}
+
+/* ---------- R3 hemicycle + R53 numeral (Figma 10373:204824 / :205502) ---------- */
+.hemicycle-block {
+  margin-top: 150px;
+}
+
+/* Drawn at its composed size (1925 × 904), left on the rail, clipped by the
+   page on the right — exactly as laid out. */
+.hemicycle {
+  position: relative;
+  height: 904px;
+  overflow: hidden;
+}
+
+.hemicycle svg {
+  display: block;
+  width: 1925px;
+  height: 904px;
+}
+
+.seat {
+  transition: fill 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* Deal-in wave from the left end of the arc (--i is the seat's position
+     along it, 0..1). backwards so the fill lets go when it ends. */
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: seat-in 420ms cubic-bezier(0.32, 1.5, 0.5, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 700ms);
+}
+
+@keyframes seat-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.seat--safe-rep { fill: var(--rating-safe-rep); }
+.seat--likely-rep { fill: var(--rating-likely-rep); }
+.seat--lean-rep { fill: var(--rating-lean-rep); }
+.seat--tossup { fill: var(--rating-tossup); }
+.seat--lean-dem { fill: var(--rating-lean-dem); }
+.seat--likely-dem { fill: var(--rating-likely-dem); }
+.seat--safe-dem { fill: var(--rating-safe-dem); }
+
+/* The numeral: 352px cap height in the comp (≈ 500px Libre Franklin), the
+   comp's own beige, tabular so a count-up never jitters. */
+.r-number {
+  margin-top: 48px;
+  font-size: 500px;
+  line-height: 0.72;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #efe1d4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seat {
+    animation: none;
+    transition: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .hemicycle-block {
+    margin-top: 80px;
+  }
+  .hemicycle {
+    height: 60vw;
+  }
+  .hemicycle svg {
+    width: 128vw;
+    height: 60vw;
+  }
+  .r-number {
+    font-size: 34vw;
   }
 }

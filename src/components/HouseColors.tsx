@@ -52,13 +52,15 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
       className="house-colors"
       ref={frame}
       role="img"
-      aria-label={`The Capitol, coloured by the projected split: Democrats ${Math.round(dem)}%, toss-ups ${Math.round(gap)}%, Republicans ${Math.round(rep)}%.`}
-      style={{ '--dem': `${dem}%`, '--toss': `${gap}%` } as React.CSSProperties}
+      aria-label={`The Capitol, coloured by the projected split: Republicans ${Math.round(rep)}%, toss-ups ${Math.round(gap)}%, Democrats ${Math.round(dem)}%.`}
+      style={{ '--rep': `${rep}%`, '--toss': `${gap}%` } as React.CSSProperties}
     >
       <img className="house-colors-photo" src={asset('house-colors.png')} alt="" ref={photo} />
-      <span className="house-colors-band house-colors-band--dem" />
-      <span className="house-colors-band house-colors-band--toss" />
+      {/* Red on the left, blue on the right — the order of the seat dots
+          and of the Figma frame. */}
       <span className="house-colors-band house-colors-band--rep" />
+      <span className="house-colors-band house-colors-band--toss" />
+      <span className="house-colors-band house-colors-band--dem" />
     </div>
   );
 }
