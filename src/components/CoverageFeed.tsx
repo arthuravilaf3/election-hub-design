@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { track } from '../data/analytics';
+import { GAME_BANNER, GameRailCard } from './GameBanner';
 import { ALL_ITEMS, FILTERS, HOSTS, HOST_FILTERABLE, STATE_FILTERABLE, TAGGED_STATE_IDS } from '../data/feedItems';
 import { STATE_SHAPES } from '../data/states';
 import type { FeedItem, ItemKind } from '../data/feedItems';
@@ -1160,6 +1161,7 @@ export function CoverageFeed() {
       {!IS_AD_FREE && (
         <aside className="feed-ad-rail feed-ad-rail--left" aria-label="Advertisement, left">
           <div className="feed-ad-rail-inner">
+            {GAME_BANNER === 'c' && <GameRailCard />}
             <p className="feed-ad-rail-label">ADVERTISEMENT</p>
             <div className="feed-ad-rail-slot" data-impression="ad-rail-left" />
           </div>

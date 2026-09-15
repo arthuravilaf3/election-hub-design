@@ -8,6 +8,8 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
+import { GAME_BANNER, GameFloat, GameStage } from './components/GameBanner';
+import { HouseColors } from './components/HouseColors';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -214,6 +216,10 @@ export default function App() {
             raceCount={Object.keys(races).length}
           />
 
+          {/* House Colors: the Capitol in the chamber's split, between the
+              dots and the map. */}
+          <HouseColors forecast={forecast} />
+
           <MapCard
             races={races}
             chamber={state.chamber}
@@ -262,6 +268,7 @@ export default function App() {
 
           {/* The boundary between map and feed is now editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
+          {GAME_BANNER === 'a' && <GameStage />}
           <PlanBanner />
 
           <CoverageFeed />
@@ -290,6 +297,7 @@ export default function App() {
 
       {/* Fixed to the bottom edge; last in the DOM so it stays out of the
           reading order. */}
+      {GAME_BANNER === 'd' && <GameFloat />}
       <PolymarketTicker />
 
     </>
