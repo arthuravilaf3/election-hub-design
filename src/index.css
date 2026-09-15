@@ -2100,8 +2100,7 @@ button,
   margin-top: 72px;
   padding: 0 16px 64px;
   display: grid;
-  /* One rail on the left (Sep 2026), the stream beside it. */
-  grid-template-columns: 304px minmax(0, 1fr);
+  grid-template-columns: 304px minmax(0, 1fr) 304px;
   column-gap: 56px;
 }
 
@@ -4758,77 +4757,6 @@ body {
   font-size: 12px;
   color: var(--ink-subtlest);
 }
-
-/* ---------- Prediction game banner explorations (?banner=a|b|c|d) ---------- */
-.game-title {
-  margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-  color: var(--ink);
-  text-wrap: balance;
-}
-
-.game-title em {
-  font-style: normal;
-  background: linear-gradient(90deg, #1c4ad8 0%, #1c4ad8 35%, #e5302e 62%, #e5302e 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.game-sub {
-  margin: 0;
-  color: var(--ink-subtle);
-  line-height: 1.5;
-}
-
-.game-cta {
-  font: inherit;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--surface-dim);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.game-cta:hover {
-  background: #e5e5e5;
-}
-
-/* The rail card: leads the feed's left rail, the ad slot below it. */
-.game-banner--rail {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 24px;
-  border-radius: 8px;
-  background: var(--surface);
-  border-top: 4px solid transparent;
-  border-image: linear-gradient(90deg, #e5302e, #1c4ad8) 1;
-}
-
-.game-banner--rail .game-title {
-  font-size: 24px;
-}
-
-.game-banner--rail .game-sub {
-  font-size: 14px;
-}
-
-.game-banner--rail .game-cta {
-  align-self: flex-start;
-  font-size: 14px;
-  padding: 10px 16px;
-}
-
 
 /* ---------- House Colors (Figma 10222:111601) ---------- */
 .house-colors {

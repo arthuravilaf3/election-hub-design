@@ -10,7 +10,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { track } from '../data/analytics';
-import { GameRailCard } from './GameBanner';
 import { ALL_ITEMS, FILTERS, HOSTS, HOST_FILTERABLE, STATE_FILTERABLE, TAGGED_STATE_IDS } from '../data/feedItems';
 import { STATE_SHAPES } from '../data/states';
 import type { FeedItem, ItemKind } from '../data/feedItems';
@@ -1157,19 +1156,25 @@ export function CoverageFeed() {
       {/* The comp's second column. Above 1080 this rail carries the ad
           inventory and the in-feed slots stand down (see index.css) — running
           both would double it. Ad-free tiers get neither (PRD tenet 4). */}
-      {/* The rail (Sep 2026): the prediction game's card first, the ad slot
-          under it. One rail, on the left; the right one is gone. */}
-      <aside className="feed-ad-rail feed-ad-rail--left" aria-label="Sidebar">
-        <div className="feed-ad-rail-inner">
-          <GameRailCard />
-          {!IS_AD_FREE && (
-            <>
-              <p className="feed-ad-rail-label">ADVERTISEMENT</p>
-              <div className="feed-ad-rail-slot" data-impression="ad-rail-left" />
-            </>
-          )}
-        </div>
-      </aside>
+      {/* Two rails, one per side (Sep 2026). Each is its own landmark. */}
+      {!IS_AD_FREE && (
+        <aside className="feed-ad-rail feed-ad-rail--left" aria-label="Advertisement, left">
+          <div className="feed-ad-rail-inner">
+            <p className="feed-ad-rail-label">ADVERTISEMENT</p>
+            <div className="feed-ad-rail-slot" data-impression="ad-rail-left" />
+          </div>
+        </aside>
+      )}
+      {!IS_AD_FREE && (
+        <aside className="feed-ad-rail feed-ad-rail--right" aria-label="Advertisement, right">
+          {/* The column stretches so its left rule runs the full height of
+              the stream; only this inner block sticks. */}
+          <div className="feed-ad-rail-inner">
+            <p className="feed-ad-rail-label">ADVERTISEMENT</p>
+            <div className="feed-ad-rail-slot" data-impression="ad-rail" />
+          </div>
+        </aside>
+      )}
     </section>
   );
 }
