@@ -16,7 +16,6 @@
  */
 import { useEffect, useRef } from 'react';
 import { INTRO_AT, Letters, introDelay } from './Intro';
-import { GAME_BANNER, GameRibbon } from './GameBanner';
 
 import { Countdown } from './Countdown';
 import { asset } from '../data/assets';
@@ -90,7 +89,6 @@ export function RaceHeader({
       </header>
 
       <Countdown />
-      {GAME_BANNER === 'b' && <GameRibbon />}
 
       {/* Keyed on the RACE only: a race change rebuilds the grid and replays
           the entry sweep; a source change keeps the same dots and just
@@ -320,13 +318,13 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
             line under the headline, with the freshness of the read below it. */}
         <p className="dots-seats intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
           <span className="dots-num">
-            {forecast.dem} <b className="dots-party dots-party--dem">D</b>
+            <b className="dots-party dots-party--dem">D</b> {forecast.dem}
           </span>
           <span className="hub-dot" aria-hidden="true">
             •
           </span>
           <span className="dots-num">
-            {forecast.rep} <b className="dots-party dots-party--rep">R</b>
+            <b className="dots-party dots-party--rep">R</b> {forecast.rep}
           </span>
           <span className="hub-dot" aria-hidden="true">
             •

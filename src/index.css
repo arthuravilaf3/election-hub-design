@@ -1196,7 +1196,7 @@ button,
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   color: var(--ink);
 }
@@ -2100,7 +2100,8 @@ button,
   margin-top: 72px;
   padding: 0 16px 64px;
   display: grid;
-  grid-template-columns: 304px minmax(0, 1fr) 304px;
+  /* One rail on the left (Sep 2026), the stream beside it. */
+  grid-template-columns: 304px minmax(0, 1fr);
   column-gap: 56px;
 }
 
@@ -4801,75 +4802,7 @@ body {
   background: #e5e5e5;
 }
 
-/* a: a full-width stage between the map and the feed. The seat-dot motif
-   runs along the bottom edge as a thin red→blue rule. */
-.game-banner--stage {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 40px;
-  margin-top: 72px;
-  padding: 48px 56px;
-  border-radius: 8px;
-  background: var(--surface);
-  overflow: hidden;
-}
-
-.game-banner--stage::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #e5302e 0%, #e5302e 46%, #2b0c3f 50%, #1c4ad8 54%, #1c4ad8 100%);
-}
-
-.game-banner--stage .game-eyebrow {
-  margin: 0 0 12px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-subtlest);
-}
-
-.game-banner--stage .game-title {
-  font-size: clamp(28px, 3.4vw, 44px);
-  max-width: 18ch;
-}
-
-.game-banner--stage .game-sub {
-  margin-top: 12px;
-  font-size: 16px;
-  max-width: 48ch;
-}
-
-/* b: a ribbon between the countdown and the dots — one line, quiet. */
-.game-banner--ribbon {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  margin-top: 48px;
-  padding: 16px 20px;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-  background: color-mix(in srgb, var(--surface) 70%, var(--surface-dim));
-}
-
-.game-banner--ribbon .game-title {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.game-banner--ribbon .game-cta {
-  padding: 8px 14px;
-  font-size: 14px;
-}
-
-/* c: a card in the feed's right rail, above the ad. */
+/* The rail card: leads the feed's left rail, the ad slot below it. */
 .game-banner--rail {
   display: flex;
   flex-direction: column;
@@ -4896,51 +4829,6 @@ body {
   padding: 10px 16px;
 }
 
-/* d: a floating card, bottom-left, mirroring the pills' place at the bottom
-   right — always in view while the map is on screen, gone once it is not. */
-.game-banner--float {
-  position: fixed;
-  left: 24px;
-  bottom: calc(var(--ticker-h) + 40px);
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  max-width: 420px;
-  padding: 12px 12px 12px 18px;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
-  transition: opacity 200ms ease-out;
-}
-
-.game-banner--float .game-title {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-.game-banner--float .game-cta {
-  padding: 8px 12px;
-  font-size: 13px;
-}
-
-.map-card.is-zoomed ~ .game-banner--float,
-.game-banner--float.is-offscreen {
-  opacity: 0;
-  pointer-events: none;
-}
-
-@media (max-width: 900px) {
-  .game-banner--stage {
-    grid-template-columns: 1fr;
-    padding: 32px 24px;
-  }
-  .game-banner--float {
-    display: none;
-  }
-}
 
 /* ---------- House Colors (Figma 10222:111601) ---------- */
 .house-colors {
@@ -4965,7 +4853,7 @@ body {
   object-position: center;
   transform: translateY(0);
   translate: 0 -50%;
-  filter: grayscale(1) contrast(1.05) brightness(0.95);
+  filter: grayscale(1) contrast(1.1);
   will-change: transform;
 }
 
@@ -4976,38 +4864,31 @@ body {
   position: absolute;
   top: 0;
   bottom: 0;
-  mix-blend-mode: multiply;
-  opacity: 0.92;
+  /* LIGHTEN, as both layers are set in the Figma: the colour replaces
+     everything darker than it, the sky stays bright. */
+  mix-blend-mode: lighten;
+  opacity: 1;
   transition: left 600ms cubic-bezier(0.22, 1, 0.36, 1), width 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .house-colors-band--dem {
   left: 0;
   width: var(--dem);
-  background: #5a86ff;
+  background: #7d95ff;
 }
 
 .house-colors-band--toss {
   left: var(--dem);
   width: var(--toss);
-  background: #ff5ce6;
+  background: #ff7ae8;
 }
 
 .house-colors-band--rep {
   left: calc(var(--dem) + var(--toss));
   right: 0;
-  background: #ff5a55;
+  background: #ff6b66;
 }
 
-/* A second pass lifts the mids so the blend never goes muddy. */
-.house-colors::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.1));
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
 
 @media (max-width: 700px) {
   .house-colors {
