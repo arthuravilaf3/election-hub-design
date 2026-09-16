@@ -4873,9 +4873,12 @@ body {
 
 /* The drawing is wider than the frame on purpose — that overflow is what
    phase C slides through. Its feet run under the numeral band. */
+/* A touch wider than the frame: the tips run past the edges (they sit
+   under the numerals anyway) and the arc reads bigger. */
 .r3-seats svg {
   display: block;
-  width: 100%;
+  width: 116%;
+  margin-left: -8%;
   height: 100%;
 }
 
@@ -4903,7 +4906,7 @@ body {
   line-height: 0.9;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #efe1d4;
+  color: var(--ink);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   pointer-events: none;
@@ -4915,61 +4918,33 @@ body {
   right: var(--rail-pad);
 }
 
-/* The 218 line: a dashed radial through the middle seat with a dark halo
-   so it reads over the seats, and its label in the empty centre. Lands
-   with the R count. */
-.r3-majority {
-  opacity: 0;
-  transform: translateY(14px);
-  transition:
-    opacity 600ms var(--intro-ease),
-    transform 600ms var(--intro-ease);
-  pointer-events: none;
-}
-
-.r3-majority.is-in {
-  opacity: 1;
-  transform: none;
-}
-
-.r3-majority-halo {
-  stroke: var(--surface-dim);
-  stroke-width: 12;
-  stroke-opacity: 0.85;
-}
-
-.r3-majority-line {
-  stroke: #efe1d4;
-  stroke-width: 2.5;
-  stroke-dasharray: 10 10;
-  stroke-opacity: 0.85;
-}
-
-.r3-majority-label {
-  fill: #efe1d4;
-  font-size: 30px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-/* The seat tooltip: the map tooltip's look, its own class so the two never
-   get mistaken for each other. */
+/* The seat tooltip: a small race card in the page's own surface — dark on
+   dark, light on light — with the race's bar. */
 .r3-tip {
   position: fixed;
   transform: translateY(calc(-100% - 14px));
-  background: var(--ink);
-  color: var(--surface-dim);
-  border-radius: 8px;
-  padding: 8px 12px;
+  width: 220px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px 9px;
   pointer-events: none;
   z-index: 30;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 16px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
 }
 
 .r3-tip p {
   margin: 0;
+}
+
+.r3-tip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .r3-tip-name {
@@ -4977,14 +4952,66 @@ body {
   font-size: 14px;
 }
 
-.r3-tip-value {
-  margin-top: 2px;
+.r3-tip-rating {
+  color: var(--ink-soft);
+  font-size: 11px;
+  white-space: nowrap;
 }
 
+.r3-tip-bar {
+  position: relative;
+  display: flex;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.r3-tip-bar-rep {
+  display: block;
+  height: 100%;
+  background: var(--bar-rep);
+}
+
+.r3-tip-bar-dem {
+  display: block;
+  height: 100%;
+  background: var(--bar-dem);
+}
+
+.r3-tip-bar--margin::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--ink-soft);
+  z-index: 1;
+}
+
+.r3-tip-bar--margin .r3-tip-bar-rep,
+.r3-tip-bar--margin .r3-tip-bar-dem {
+  position: absolute;
+  top: 0;
+}
+
+.r3-tip-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.r3-tip-rep { color: var(--bar-rep); }
+.r3-tip-dem { color: var(--bar-dem); }
+
 .r3-tip-source {
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 10px;
-  opacity: 0.75;
+  color: var(--ink-soft);
 }
 
 /* Each character is its own slot; it drops in from above like the
@@ -5006,6 +5033,27 @@ body {
   animation-delay: calc(var(--i) * 70ms);
 }
 
+/* Scrolling back past the cue: the digits climb out the way they came in,
+   last one first. */
+.r3-number.is-out .r3-digit-in {
+  animation: r3-digit-out 420ms var(--intro-ease) both;
+  animation-delay: calc((var(--n) - 1 - var(--i)) * 60ms);
+}
+
+@keyframes r3-digit-out {
+  from {
+    transform: none;
+    opacity: 1;
+  }
+  65% {
+    opacity: 0;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .r3-stage {
     height: auto;
@@ -5014,8 +5062,9 @@ body {
     position: static;
     height: 70vh;
   }
-  .r3-majority {
-    transition: none;
+  .r3-number.is-out .r3-digit-in {
+    animation: none;
+    opacity: 0;
   }
   .r3-number.is-in .r3-digit-in {
     animation: none;
