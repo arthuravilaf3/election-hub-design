@@ -29,16 +29,16 @@ type Party = 'rep' | 'toss' | 'dem';
 interface Seat {
   party: Party;
   row: number;
+  /** Radius of the seat's row on the arc. */
+  rr: number;
   /** 0 = left end, 1 = right end of the arc; also the order along a row. */
   t: number;
   ax: number; // arc slot
   ay: number;
-  gx: number; // straight-block slot
-  gy: number;
   r: number;
 }
 
-function buildSeats(total: number, rep: number, toss: number): { seats: Seat[]; rows: number } {
+function buildSeats(total: number, rep: number, toss: number): { seats: Seat[]; rows: number; dotR: number } {
   const rows = total >= 400 ? 12 : total >= 100 ? 6 : 4;
   const step = rows > 1 ? (R_OUT - R_IN) / (rows - 1) : 0;
   const radii = Array.from({ length: rows }, (_, k) => R_OUT - k * step); // outer row first (top)
@@ -63,7 +63,7 @@ function buildSeats(total: number, rep: number, toss: number): { seats: Seat[]; 
     for (let i = 0; i < n; i += 1) {
       const t = (i + 0.5) / n;
       const a = Math.PI - Math.PI * t;
-      seats.push({ party: 'toss', row: k, t, ax: CX + r * Math.cos(a), ay: CY - r * Math.sin(a), gx: 0, gy: 0, r: dotR });
+      seats.push({ party: 'toss', row: k, rr: r, t, ax: CX + r * Math.cos(a), ay: CY - r * Math.sin(a), r: dotR });
     }
   });
   // Colour by position along the arc, left to right: rep, toss, dem — the
@@ -72,20 +72,17 @@ function buildSeats(total: number, rep: number, toss: number): { seats: Seat[]; 
   byT.forEach((s, i) => {
     s.party = i < rep ? 'rep' : i < rep + toss ? 'toss' : 'dem';
   });
-  // The straight block: a RECTANGLE of the same rows, filled row by row in
-  // arc order (outer row first, left to right), so red lands on the left
-  // and blue on the right, and every seat travels from its block slot to
-  // its arc slot.
-  const cols = Math.ceil(total / rows);
-  const pitch = dotR * 2.15;
-  const blockTop = 24;
-  const byRow = [...seats].sort((a, b) => a.row - b.row || a.t - b.t);
-  byRow.forEach((s, i) => {
-    s.gx = dotR + (i % cols) * pitch;
-    s.gy = blockTop + dotR + Math.floor(i / cols) * pitch;
-  });
-  return { seats, rows };
+  return { seats, rows, dotR };
 }
+
+// The straight block is every arc row UNROLLED: the same seats in the same
+// order, laid on a straight line, outer row on top. Between the two states
+// each row BENDS — its radius shrinks from "infinite" to its arc radius —
+// so no seat ever crosses another and red stays left, blue right, the
+// whole way. Straight rows are drawn smaller (the outer row is 60 seats
+// wide) and grow into their arc size as they bend.
+const BLOCK_TOP = 24;
+const BLOCK_PITCH = 3; // row pitch in the block, in seat radii
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -104,7 +101,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
   const dem = Math.round((total * demShare) / 100);
   const toss = Math.round((total * gap) / 100);
   const rep = Math.max(0, total - dem - toss);
-  const { seats, rows } = useMemo(() => buildSeats(total, rep, toss), [total, rep, toss]);
+  const { seats, rows, dotR } = useMemo(() => buildSeats(total, rep, toss), [total, rep, toss]);
 
   const stage = useRef<HTMLDivElement>(null);
   const sticky = useRef<HTMLDivElement>(null);
@@ -135,19 +132,38 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
         g.style.opacity = String(local);
         g.style.filter = local < 1 ? `blur(${((1 - local) * 10).toFixed(1)}px)` : '';
       });
-      // B: each seat between its two slots.
-      seats.forEach((s, i) => {
-        const c = circles.current[i];
-        if (!c) return;
-        c.setAttribute('cx', (s.gx + (s.ax - s.gx) * pB).toFixed(1));
-        c.setAttribute('cy', (s.gy + (s.ay - s.gy) * pB).toFixed(1));
-      });
-      // C: the whole drawing slides left; the numerals cross over.
       // xMinYMin meet: the drawing is the box's width or its height × aspect,
       // whichever is smaller — so it never gets clipped by the frame height.
       const box = el.getBoundingClientRect();
       const drawnW = Math.min(box.width, box.height * (W / H));
       const viewW = sk.clientWidth;
+      // B: every row bends from a straight line into its arc. The straight
+      // block is scaled to fit what the frame shows (in viewBox units) and
+      // centred in it; the arc is centred in the drawing.
+      const visUnits = (viewW / drawnW) * W;
+      const s0 = Math.min(1, (visUnits * 0.94) / (Math.PI * R_OUT));
+      const k = Math.max(0.001, pB);
+      const w = s0 + (1 - s0) * pB;
+      const apexX = visUnits / 2 + (CX - visUnits / 2) * pB;
+      const pitchB = BLOCK_PITCH * dotR * s0;
+      // The block sits centred in the part of the frame above the numeral
+      // band, instead of hugging the top edge the way the arc does.
+      const visUnitsH = (sk.clientHeight / drawnW) * W;
+      const blockH = (rows - 1) * pitchB + 2 * dotR * s0;
+      const blockTop = Math.max(BLOCK_TOP, (visUnitsH * 0.74 - blockH) / 2);
+      seats.forEach((s, i) => {
+        const c = circles.current[i];
+        if (!c) return;
+        const alpha = Math.PI * s.t - Math.PI / 2;
+        const Rk = (s.rr * w) / k;
+        const apexS = blockTop + dotR * s0 + s.row * pitchB;
+        const apexF = CY - s.rr;
+        const apex = apexS + (apexF - apexS) * pB;
+        c.setAttribute('cx', (apexX + Rk * Math.sin(k * alpha)).toFixed(1));
+        c.setAttribute('cy', (apex + Rk * (1 - Math.cos(k * alpha))).toFixed(1));
+        c.setAttribute('r', (dotR * w).toFixed(1));
+      });
+      // C: the whole drawing slides left; the numerals cross over.
       const shift = Math.max(0, drawnW - viewW);
       el.style.transform = `translateX(${(-shift * pC).toFixed(1)}px)`;
       // R is gone before D arrives, so the two never overlap half-lit.
@@ -166,7 +182,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       window.removeEventListener('resize', onScroll);
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [seats, rows, reduced]);
+  }, [seats, rows, dotR, reduced]);
 
   return (
     <div className="r3-stage" ref={stage}>
@@ -190,8 +206,8 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
                     <circle
                       key={i}
                       className={`r3-seat r3-seat--${s.party}`}
-                      cx={reduced ? s.ax : s.gx}
-                      cy={reduced ? s.ay : s.gy}
+                      cx={s.ax}
+                      cy={s.ay}
                       r={s.r}
                       ref={(c) => {
                         circles.current[i] = c;
