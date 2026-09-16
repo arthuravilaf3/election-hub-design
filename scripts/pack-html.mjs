@@ -27,7 +27,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const DIST = join(ROOT, 'dist');
 const PUBLIC = join(ROOT, 'public');
-const OUT = join(ROOT, 'election-hub-prototype.html');
+// Which file to write: base by default, the creative edition when packing it.
+const OUT = join(ROOT, process.env.PACK_OUT ?? 'election-hub-prototype.html');
 
 const MIME = {
   '.png': 'image/png',

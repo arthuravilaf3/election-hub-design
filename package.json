@@ -10,8 +10,8 @@
     "test": "vitest run",
     "lint": "eslint src",
     "generate:map": "node scripts/generate-map.mjs",
-    "build:pages": "tsc --noEmit && vite build --base=/election-hub-design/",
-    "pack": "vite build --base=./ && node scripts/pack-html.mjs"
+    "build:pages": "tsc --noEmit && VITE_EDITION=base vite build --base=/election-hub-prototype/ --outDir dist-pages --emptyOutDir && VITE_EDITION=creative vite build --base=/election-hub-prototype/creative/ --outDir dist-pages/creative --emptyOutDir",
+    "pack": "VITE_EDITION=base vite build --base=./ && PACK_OUT=election-hub-prototype.html node scripts/pack-html.mjs && VITE_EDITION=creative vite build --base=./ && PACK_OUT=election-hub-prototype-creative.html node scripts/pack-html.mjs"
   },
   "dependencies": {
     "motion": "^13.1.0",

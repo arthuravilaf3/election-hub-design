@@ -6,3 +6,5 @@ dist
 
 # Single-file build output (regenerate with `npm run pack`).
 election-hub-prototype.html
+election-hub-prototype-creative.html
+dist-pages

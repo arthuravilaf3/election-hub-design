@@ -10,6 +10,7 @@ import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { HouseColors } from './components/HouseColors';
 import { Hemicycle } from './components/Hemicycle';
+import { IS_CREATIVE } from './data/edition';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -216,9 +217,9 @@ export default function App() {
             raceCount={Object.keys(races).length}
           />
 
-          {/* House Colors: the Capitol in the chamber's split, between the
-              dots and the map. */}
-          <HouseColors forecast={forecast} />
+          {/* CREATIVE EDITION: House Colors, the Capitol in the chamber's
+              split, between the dots and the map. */}
+          {IS_CREATIVE && <HouseColors forecast={forecast} />}
 
           <MapCard
             races={races}
@@ -267,7 +268,7 @@ export default function App() {
           {/* R3 + R53: every seat of the chamber in a hemicycle, and the
               projected Republican count, under the map. The Race/Source
               pills stay pinned through here (the gate watches the section). */}
-          <Hemicycle races={races} chamber={state.chamber} sourceId={state.sourceId} />
+          {IS_CREATIVE && <Hemicycle races={races} chamber={state.chamber} sourceId={state.sourceId} />}
           </section>
 
           {/* The boundary between map and feed is now editorial, not chromatic:
