@@ -196,7 +196,6 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
     const B = L.pitch * 0.18; // lean toward the pointer
     const PUSH = L.pitch * 0.34; // …or away from it, across the party line
     const k = 0.2; // lerp per frame (~80ms time constant at 60fps)
-    const SHADE = 0.32; // how much darker a fully stirred dot gets
     // THE DIVIDE (Sep 2026): dots of the SAME colour as the one under the
     // pointer gather toward it; dots of ANOTHER colour push away and shrink
     // a little — the country pulling apart under the reader's hand. The hot
@@ -241,8 +240,6 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       const ns = L.s[i] + (ts - L.s[i]) * k;
       const nx = L.x[i] + (tx - L.x[i]) * k;
       const ny = L.y[i] + (ty - L.y[i]) * k;
-      // Under the hand the dots also go DARKER (Sep 2026), the swell and the
-      // shade rising together: brightness follows how far the dot is from rest.
       const rest = Math.abs(ns - 1) < 0.002 && Math.abs(nx) < 0.05 && Math.abs(ny) < 0.05;
       if (rest) {
         if (L.s[i] !== 1 || L.x[i] !== 0 || L.y[i] !== 0) {
@@ -251,7 +248,6 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
           L.y[i] = 0;
           L.dots[i].style.transform = '';
           L.dots[i].style.zIndex = '';
-          L.dots[i].style.filter = '';
         }
         continue;
       }
@@ -259,10 +255,8 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       L.s[i] = ns;
       L.x[i] = nx;
       L.y[i] = ny;
-      const stir = Math.min(1, Math.max(Math.abs(ns - 1) / A, Math.hypot(nx, ny) / PUSH));
       L.dots[i].style.transform = `translate(${nx.toFixed(2)}px, ${ny.toFixed(2)}px) scale(${ns.toFixed(3)})`;
       L.dots[i].style.zIndex = ns > 1.02 ? '1' : '';
-      L.dots[i].style.filter = `brightness(${(1 - SHADE * stir).toFixed(3)})`;
     }
     if (moving) L.raf = window.requestAnimationFrame(tick);
   };

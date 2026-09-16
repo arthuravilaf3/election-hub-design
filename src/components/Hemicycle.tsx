@@ -9,13 +9,14 @@
 // scroll position SMOOTHED (each frame closes a fraction of the distance to
 // where the scroll actually is), so a wheel notch reads as motion, not a cut:
 //   A  a handful of seats FLOAT loose near the arc's left tip, drifting;
-//      as the scroll starts they gather into the first red seats
+//      as the scroll starts they gather into the first (blue) seats
 //   B  the arc fills ALONG ITS SWEEP — from the left tip up over the crown
 //      and down the other side — each seat rising into place; the camera,
 //      close on the tip at first, pulls back and follows the front
-//   C  "R<n>" lands once the red side is complete, "D<n>" when the blue side
-//      does; both stay, and the finished arc sits centred in the page. Only
-//      then do the seats answer the pointer (the divide, and a race card)
+//   C  "D<n>" lands once the blue side is complete, "R<n>" when the red side
+//      does — on the right, with "The Right Place to Be" under it; both
+//      stay, and the finished arc sits centred in the page. Only then do the
+//      seats answer the pointer (the divide, and a race card)
 // then the pin releases and the page goes on to the feed. Reduced motion:
 // the finished arc, static, with both counts.
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -118,11 +119,14 @@ function buildSeats(total: number, rep: number, toss: number): { seats: Seat[] }
       }
     });
   }
-  // Colour by position along the arc, left to right: rep, toss, dem — the
-  // dots' own order. Each row ends up split in the same proportion.
+  // Colour by position along the arc, left to right: dem, toss, rep — the
+  // MIRROR of the dots under the header (decided Sep 16 2026: the R lands on
+  // the right, where "The Right Place to Be" goes). Each row ends up split
+  // in the same proportion.
+  const dem = total - rep - toss;
   const byT = [...seats].sort((a, b) => a.t - b.t || a.row - b.row);
   byT.forEach((s, i) => {
-    s.party = i < rep ? 'rep' : i < rep + toss ? 'toss' : 'dem';
+    s.party = i < dem ? 'dem' : i < dem + toss ? 'toss' : 'rep';
   });
   // The loose seats float on a sunflower spread around the tip — evenly
   // spaced, never stacked — dealt out in a shuffled order so neighbours on
@@ -164,7 +168,6 @@ const LENS_A = 0.3;
 const LENS_B = PITCH * 0.18;
 const LENS_PUSH = PITCH * 0.34;
 const LENS_K = 0.16;
-const LENS_SHADE = 0.32; // how much darker a fully stirred seat gets
 
 // Where each beat sits on the pinned scroll (0 → 1). The camera and the
 // fill both move from the very first pixel — a static picture under a
@@ -173,8 +176,8 @@ const BEAT = {
   gather: [0, 0.22],
   fill: [0.16, 0.86],
   pullBack: [0.08, 0.6],
-  countR: [0.56, 0.64],
-  countD: [0.86, 0.94],
+  countD: [0.54, 0.62],
+  countR: [0.86, 0.94],
 } as const;
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -211,10 +214,11 @@ const PARTY_SEAT: Record<Party, string> = {
   dem: 'Democratic seat',
 };
 
-/** Seats are ordered by lean across the arc; the ballot's districts, sorted
-    the same way, sit as one block around the party line — the closest
-    races land on the toss-up seats, safe ones stay generic. */
-function assignDistricts(seats: Seat[], districts: District[], sourceId: string, rep: number) {
+/** Seats are ordered by lean across the arc (Democratic tip on the left);
+    the ballot's districts, sorted the same way, sit as one block around the
+    party line — the closest races land on the toss-up seats, safe ones stay
+    generic. */
+function assignDistricts(seats: Seat[], districts: District[], sourceId: string, dem: number) {
   seats.forEach((s) => {
     s.district = undefined;
   });
@@ -226,11 +230,11 @@ function assignDistricts(seats: Seat[], districts: District[], sourceId: string,
       lean: read.kind === 'market' ? (read.demOdds ?? 50) - 50 : read.margin ?? 0,
       toss: ratingOf(read) === 'tossup',
     }))
-    .sort((a, b) => a.lean - b.lean); // most Republican first
+    .sort((a, b) => b.lean - a.lean); // most Democratic first
   if (!scored.length) return;
-  const nRep = scored.filter((x) => x.lean < 0 && !x.toss).length;
+  const nDem = scored.filter((x) => x.lean > 0 && !x.toss).length;
   const byT = [...seats].sort((a, b) => a.t - b.t || a.row - b.row);
-  const start = Math.max(0, Math.min(byT.length - scored.length, rep - nRep));
+  const start = Math.max(0, Math.min(byT.length - scored.length, dem - nDem));
   scored.forEach((x, i) => {
     const seat = byT[start + i];
     if (seat) seat.district = x.d;
@@ -279,7 +283,7 @@ export function Hemicycle({ forecast, chamber, districts, sourceId }: HemicycleP
   const toss = Math.round((total * gap) / 100);
   const rep = Math.max(0, total - dem - toss);
   const { seats } = useMemo(() => buildSeats(total, rep, toss), [total, rep, toss]);
-  useMemo(() => assignDistricts(seats, districts, sourceId, rep), [seats, districts, sourceId, rep]);
+  useMemo(() => assignDistricts(seats, districts, sourceId, dem), [seats, districts, sourceId, dem]);
 
   const stage = useRef<HTMLDivElement>(null);
   const sticky = useRef<HTMLDivElement>(null);
@@ -435,17 +439,9 @@ export function Hemicycle({ forecast, chamber, districts, sourceId }: HemicycleP
         c.setAttribute('cy', (y + ny).toFixed(1));
         c.setAttribute('r', (s.r * (0.55 + 0.45 * vis) * ns).toFixed(1));
         c.style.opacity = vis.toFixed(3);
-        // Blur → sharp as it appears, the way the page's text arrives; and
-        // under the hand a stirred seat goes darker, like the dots above.
-        // Only seats arriving or stirred carry a filter.
-        const stir = Math.min(1, Math.max(Math.abs(ns - 1) / LENS_A, Math.hypot(nx, ny) / LENS_PUSH));
-        const f = [
-          vis < 0.999 ? `blur(${((1 - vis) * 9).toFixed(1)}px)` : '',
-          stir > 0.01 ? `brightness(${(1 - LENS_SHADE * stir).toFixed(3)})` : '',
-        ]
-          .filter(Boolean)
-          .join(' ');
-        c.style.filter = f;
+        // Blur → sharp as it appears, the way the page's text arrives. Only
+        // the seats still arriving carry a filter.
+        c.style.filter = vis < 0.999 ? `blur(${((1 - vis) * 9).toFixed(1)}px)` : '';
       });
       L.moving = lensMoving;
 
@@ -478,9 +474,10 @@ export function Hemicycle({ forecast, chamber, districts, sourceId }: HemicycleP
       // The counts land the way the countdown's digits do — each digit
       // dropping in on its own delay — once their side of the arc is
       // complete, and they STAY. Scrolling back above the cue resets them.
-      // The counts land past their cue and, scrolling back, leave the way
-      // they came (digits climbing back out, last in first out). A count
-      // that never landed stays blank rather than playing an exit.
+      // The counts land past their cue — D as the blue side completes, R
+      // as the red side does, with the tagline under it — and, scrolling
+      // back, leave the way they came (digits climbing back out, last in
+      // first out). A count that never landed stays blank.
       const cue = (el: HTMLDivElement | null, on: boolean) => {
         if (!el) return;
         if (on) {
@@ -562,13 +559,22 @@ export function Hemicycle({ forecast, chamber, districts, sourceId }: HemicycleP
           </svg>
           <div className="r3-tip" ref={tip} role="status" hidden />
         </div>
-        <div className="r3-number r3-number--rep" ref={numRep}>
-          <span className="visually-hidden">Republicans {rep}</span>
-          <Digits text={`R${rep}`} />
-        </div>
         <div className="r3-number r3-number--dem" ref={numDem}>
           <span className="visually-hidden">Democrats {dem}</span>
-          <Digits text={`D${dem}`} />
+          <span className="r3-number-row">
+            <Digits text={`D${dem}`} />
+          </span>
+        </div>
+        <div className="r3-number r3-number--rep" ref={numRep}>
+          <span className="visually-hidden">Republicans {rep}</span>
+          <span className="r3-number-row">
+            <Digits text={`R${rep}`} />
+          </span>
+          {/* The R sits on the right: the header logo's line, written out,
+              landing after its digits. */}
+          <span className="r3-tagline" aria-hidden="true">
+            The <em>Right</em> Place to Be
+          </span>
         </div>
       </div>
     </div>
