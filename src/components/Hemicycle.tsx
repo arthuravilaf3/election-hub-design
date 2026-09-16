@@ -240,11 +240,11 @@ function seatTip(s: Seat, sourceId: string): string {
   const d = s.district;
   const read = d && readFor(d, sourceId);
   if (!d || !read) {
-    return `<p class="map-tooltip-name">${PARTY_SEAT[s.party]}</p><p class="map-tooltip-source">Not among the 2026 races on the map</p>`;
+    return `<p class="r3-tip-name">${PARTY_SEAT[s.party]}</p><p class="r3-tip-source">Not among the 2026 races on the map</p>`;
   }
   const rating = ratingOf(read);
   const line = rating === 'tossup' ? readLine(read) : `${RATING_LABEL[rating]} — ${readLine(read)}`;
-  return `<p class="map-tooltip-name">${d.id}</p><p class="map-tooltip-value">${line}</p><p class="map-tooltip-source">${sourceLabel(sourceId)} · Click to open on the map</p>`;
+  return `<p class="r3-tip-name">${d.id}</p><p class="r3-tip-value">${line}</p><p class="r3-tip-source">${sourceLabel(sourceId)} · Click to open on the map</p>`;
 }
 
 export function Hemicycle({ forecast, chamber, districts, sourceId }: HemicycleProps) {
@@ -539,7 +539,7 @@ export function Hemicycle({ forecast, chamber, districts, sourceId }: HemicycleP
               </g>
             </g>
           </svg>
-          <div className="map-tooltip r3-tip" ref={tip} role="status" hidden />
+          <div className="r3-tip" ref={tip} role="status" hidden />
         </div>
         <div className="r3-number r3-number--rep" ref={numRep}>
           <span className="visually-hidden">Republicans {rep}</span>

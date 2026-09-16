@@ -4953,8 +4953,38 @@ body {
   text-transform: uppercase;
 }
 
+/* The seat tooltip: the map tooltip's look, its own class so the two never
+   get mistaken for each other. */
 .r3-tip {
+  position: fixed;
+  transform: translateY(calc(-100% - 14px));
+  background: var(--ink);
+  color: var(--surface-dim);
+  border-radius: 8px;
+  padding: 8px 12px;
+  pointer-events: none;
   z-index: 30;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.r3-tip p {
+  margin: 0;
+}
+
+.r3-tip-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.r3-tip-value {
+  margin-top: 2px;
+}
+
+.r3-tip-source {
+  margin-top: 4px;
+  font-size: 10px;
+  opacity: 0.75;
 }
 
 /* Each character is its own slot; it drops in from above like the
