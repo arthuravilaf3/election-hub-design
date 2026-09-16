@@ -415,10 +415,12 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
             </g>
           </svg>
         </div>
-        <div className="r3-number r3-number--rep" ref={numRep} aria-label={`Republicans ${rep}`}>
+        <div className="r3-number r3-number--rep" ref={numRep}>
+          <span className="visually-hidden">Republicans {rep}</span>
           <Digits text={`R${rep}`} />
         </div>
-        <div className="r3-number r3-number--dem" ref={numDem} aria-label={`Democrats ${dem}`}>
+        <div className="r3-number r3-number--dem" ref={numDem}>
+          <span className="visually-hidden">Democrats {dem}</span>
           <Digits text={`D${dem}`} />
         </div>
       </div>
