@@ -13,14 +13,15 @@
 //   B  the arc fills ALONG ITS SWEEP — from the left tip up over the crown
 //      and down the other side — each seat rising into place; the camera,
 //      close on the tip at first, pulls back and follows the front
-//   C  "R<n>" lands once the red side is complete; the drawing slides LEFT
-//      so the blue side finishes in view, and "D<n>" lands when it does
+//   C  "R<n>" lands once the red side is complete, "D<n>" when the blue side
+//      does; both stay, and the finished arc sits centred in the page
 // then the pin releases and the page goes on to the feed. Reduced motion:
 // the finished arc, static, with both counts.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import type { ForecastData } from '../data/hero';
 import type { Chamber } from '../data/types';
+import { R3_SEATS } from '../data/r3Layout';
 
 const W = 1925;
 const H = 904;
@@ -74,25 +75,44 @@ function buildSeats(total: number, rep: number, toss: number): { seats: Seat[] }
       }
     });
   const seats: Seat[] = [];
-  radii.forEach((r, k) => {
-    const n = counts[k];
-    for (let i = 0; i < n; i += 1) {
-      const t = (i + 0.5) / n;
-      const a = Math.PI - Math.PI * t;
-      const j = seats.length;
+  if (total === R3_SEATS.length) {
+    // The comp's own arc: every seat where Figma put it. t is its bearing
+    // from the arc's centre, left tip = 0, right tip = 1.
+    R3_SEATS.forEach(([ax, ay], j) => {
+      const bearing = Math.atan2(CY - ay, ax - CX); // π at the left tip → 0 at the right
       seats.push({
         party: 'toss',
-        row: k,
-        t,
-        ax: CX + r * Math.cos(a),
-        ay: CY - r * Math.sin(a),
-        r: dotR,
+        row: 0,
+        t: 1 - bearing / Math.PI,
+        ax,
+        ay,
+        r: 21,
         fx: 0,
         fy: 0,
         ph: noise(j, 3) * Math.PI * 2,
       });
-    }
-  });
+    });
+  } else {
+    radii.forEach((r, k) => {
+      const n = counts[k];
+      for (let i = 0; i < n; i += 1) {
+        const t = (i + 0.5) / n;
+        const a = Math.PI - Math.PI * t;
+        const j = seats.length;
+        seats.push({
+          party: 'toss',
+          row: k,
+          t,
+          ax: CX + r * Math.cos(a),
+          ay: CY - r * Math.sin(a),
+          r: dotR,
+          fx: 0,
+          fy: 0,
+          ph: noise(j, 3) * Math.PI * 2,
+        });
+      }
+    });
+  }
   // Colour by position along the arc, left to right: rep, toss, dem — the
   // dots' own order. Each row ends up split in the same proportion.
   const byT = [...seats].sort((a, b) => a.t - b.t || a.row - b.row);
@@ -109,8 +129,8 @@ function buildSeats(total: number, rep: number, toss: number): { seats: Seat[] }
   order.forEach(([, s], k) => {
     const rr = FLOAT_GAP * Math.sqrt(k + 0.6);
     const ang = k * 2.39996 + noise(k, 8) * 0.5;
-    s.fx = tipX + Math.cos(ang) * rr * 1.25 - s.ax;
-    s.fy = tipY + Math.sin(ang) * rr * 0.8 - s.ay;
+    s.fx = tipX + Math.cos(ang) * rr * 1.3 - s.ax;
+    s.fy = tipY + Math.sin(ang) * rr - s.ay;
   });
   return { seats };
 }
@@ -119,16 +139,16 @@ function buildSeats(total: number, rep: number, toss: number): { seats: Seat[] }
 const ZOOM_START = 2.2;
 // Room between the frame's top edge and the crown once the camera is all
 // the way out — the outer row used to sit right on the edge and get cut.
-const TOP_PAD = 72;
-// Spacing of the loose seats' spread, in drawing units (≈ 1.7 seat widths).
-const FLOAT_GAP = 36;
-const FOLLOW = 0.09; // per-frame fraction of the way to the real scroll position
+const TOP_PAD = 40;
+// Spacing of the loose seats' spread, in drawing units (≈ 3 seat widths).
+const FLOAT_GAP = 64;
+const FOLLOW = 0.06; // per-frame fraction of the way to the real scroll position
 // Seats with t below this are the loose ones that gather first (~20).
 const GATHER_T = 0.045;
-// Loose seats are translucent and only fade up as the scroll starts.
-const LOOSE_MIN = 0.14;
+// Loose seats start invisible and only fade up as the scroll starts.
+const LOOSE_MIN = 0;
 // Softness of the fill front, in t: a seat takes this much scroll to land.
-const FRONT_W = 0.07;
+const FRONT_W = 0.1;
 const DRIFT = 14; // drawing units of bob while a seat floats
 // THE DIVIDE, same as the dots under the header (see RaceHeader): the seat
 // under the pointer swells, its own colour leans in, the other colours
@@ -138,22 +158,20 @@ const LENS_R = PITCH * 1.6;
 const LENS_A = 0.3;
 const LENS_B = PITCH * 0.18;
 const LENS_PUSH = PITCH * 0.34;
-const LENS_K = 0.2;
+const LENS_K = 0.16;
 
 // Where each beat sits on the pinned scroll (0 → 1). The camera and the
 // fill both move from the very first pixel — a static picture under a
 // moving finger is what reads as "stuck". One trackpad flick is roughly 0.1.
 const BEAT = {
   gather: [0, 0.22],
-  fill: [0.16, 0.9],
+  fill: [0.16, 0.86],
   pullBack: [0.08, 0.6],
-  countR: [0.54, 0.62],
-  slide: [0.62, 0.9],
-  countD: [0.88, 0.96],
+  countR: [0.56, 0.64],
+  countD: [0.86, 0.94],
 } as const;
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
-const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const easeSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const span = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
@@ -200,7 +218,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
   // Pointer in drawing units (through the camera), and the lens state per
   // seat — scale and offset, lerped each frame toward their targets.
   const lens = useRef({ px: -1e9, py: -1e9, s: [] as number[], x: [] as number[], y: [] as number[], moving: false });
-  const view = useRef({ scale: 1, tx: 0, ty: 0, zoom: 1 });
+  const view = useRef({ scale: 1, ox: 0, tx: 0, ty: 0, zoom: 1 });
 
   useEffect(() => {
     const st = stage.current;
@@ -212,7 +230,11 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
     const target = () => {
       if (reduced) return 1;
       const stTop = st.getBoundingClientRect().top + window.scrollY;
-      const travel = st.offsetHeight - sk.offsetHeight;
+      // The pin holds while the stage's bottom is below the sticky's bottom
+      // (its top offset included) — past that the frame is pushed up and
+      // the crown would slide under the nav.
+      const pinTop = parseFloat(window.getComputedStyle(sk).top) || 0;
+      const travel = st.offsetHeight - sk.offsetHeight - pinTop;
       return clamp01((window.scrollY - stTop) / Math.max(1, travel));
     };
     const onScreen = () => {
@@ -228,7 +250,6 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       const pG = ease(span(p, ...BEAT.gather)); // loose seats gather into the tip
       const pF = span(p, ...BEAT.fill); // the front travels the sweep
       const pB = easeSine(span(p, ...BEAT.pullBack)); // camera pulls back, follows the front
-      const pC = easeInOut(span(p, ...BEAT.slide)); // slide left so the blue side finishes in view
 
       // A + B: each seat is either loose (gathering) or on the front (landing).
       const front = GATHER_T + (1 - GATHER_T + FRONT_W) * pF;
@@ -266,7 +287,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
           vis = LOOSE_MIN + (1 - LOOSE_MIN) * up;
         } else {
           vis = clamp01((front - s.t) / FRONT_W);
-          y += (1 - vis) * 34; // rises into its slot
+          y += (1 - vis) * 26; // rises into its slot
         }
         // The lens, on top of wherever the choreography put the seat.
         let ts = 1;
@@ -316,12 +337,12 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       });
       L.moving = lensMoving;
 
-      // xMinYMin meet: the drawing is the box's width or its height × aspect,
-      // whichever is smaller — so it never gets clipped by the frame height.
+      // xMidYMin meet: the drawing is the frame's width or its height ×
+      // aspect, whichever is smaller, centred — so the finished arc sits in
+      // the middle of the page at any size. In drawing units the frame's
+      // centre is therefore always CX.
       const box = el.getBoundingClientRect();
       const drawnW = Math.min(box.width, box.height * (W / H));
-      const viewW = sk.clientWidth;
-      const visUnits = (viewW / drawnW) * W; // what the frame shows, in drawing units
       const visUnitsH = (sk.clientHeight / drawnW) * W;
       // The camera: close on the left tip, then out and along the sweep to
       // the crown. Log-space zoom so the pull-back reads at one steady pace.
@@ -333,7 +354,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       const theta = Math.PI - Math.PI * Math.min(0.5, front);
       const focusX = CX + R_MID * Math.cos(theta);
       const focusY = CY - R_MID * Math.sin(theta) * 0.5;
-      const landX = visUnits / 2 + (focusX - visUnits / 2) * pB;
+      const landX = CX + (focusX - CX) * pB;
       const landY = visUnitsH * 0.45 + (focusY + TOP_PAD - visUnitsH * 0.45) * pB;
       const camTx = landX - zoom * focusX;
       const camTy = landY - zoom * focusY;
@@ -341,10 +362,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       if (cam) {
         cam.setAttribute('transform', `translate(${camTx.toFixed(2)} ${camTy.toFixed(2)}) scale(${zoom.toFixed(4)})`);
       }
-      view.current = { scale: W / drawnW, tx: camTx, ty: camTy, zoom };
-      // C: the whole drawing slides left; the numerals take turns.
-      const shift = Math.max(0, drawnW - viewW);
-      el.style.transform = `translateX(${(-shift * pC).toFixed(1)}px)`;
+      view.current = { scale: W / drawnW, ox: (box.width - drawnW) / 2, tx: camTx, ty: camTy, zoom };
       // The counts land the way the countdown's digits do — each digit
       // dropping in on its own delay — once their side of the arc is
       // complete, and they STAY. Scrolling back above the cue resets them.
@@ -365,7 +383,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       const box = el.getBoundingClientRect();
       const v = view.current;
       const L = lens.current;
-      L.px = ((e.clientX - box.left) * v.scale - v.tx) / v.zoom;
+      L.px = ((e.clientX - box.left - v.ox) * v.scale - v.tx) / v.zoom;
       L.py = ((e.clientY - box.top) * v.scale - v.ty) / v.zoom;
       onScroll();
     };
@@ -398,7 +416,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
           role="img"
           aria-label={`${total} ${chamber} seats: Republicans ${rep}, toss-ups ${toss}, Democrats ${dem}.`}
         >
-          <svg ref={svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMinYMin meet" aria-hidden="true">
+          <svg ref={svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMin meet" aria-hidden="true">
             <g ref={camera} className="r3-cam">
               {seats.map((s, i) => (
                 <circle
