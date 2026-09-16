@@ -20,8 +20,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import type { ForecastData } from '../data/hero';
-import type { Chamber } from '../data/types';
+import type { Chamber, District } from '../data/types';
 import { R3_SEATS } from '../data/r3Layout';
+import { RATING_LABEL, ratingOf, readFor, readLine } from '../data/encoding';
+import { sourceLabel } from '../data/sources';
 
 const W = 1925;
 const H = 904;
@@ -30,6 +32,7 @@ const CY = H;
 const R_OUT = 880;
 const R_IN = 372;
 const R_MID = (R_OUT + R_IN) / 2;
+const CROWN_Y = CY - R_OUT; // y of the arc's crown
 
 type Party = 'rep' | 'toss' | 'dem';
 
@@ -46,6 +49,8 @@ interface Seat {
   fy: number;
   /** Phase of its drift, so the loose seats don't bob in unison. */
   ph: number;
+  /** The race this seat stands for, when the ballot has one. */
+  district?: District;
 }
 
 // Deterministic per-seat noise: the float positions are the same on every
@@ -194,9 +199,55 @@ function Digits({ text }: { text: string }) {
 interface HemicycleProps {
   forecast: ForecastData;
   chamber: Chamber;
+  /** Every House district the ballot knows, so seats can name their race. */
+  districts: District[];
+  sourceId: string;
 }
 
-export function Hemicycle({ forecast, chamber }: HemicycleProps) {
+const PARTY_SEAT: Record<Party, string> = {
+  rep: 'Republican seat',
+  toss: 'Toss-up seat',
+  dem: 'Democratic seat',
+};
+
+/** Seats are ordered by lean across the arc; the ballot's districts, sorted
+    the same way, sit as one block around the party line — the closest
+    races land on the toss-up seats, safe ones stay generic. */
+function assignDistricts(seats: Seat[], districts: District[], sourceId: string, rep: number) {
+  seats.forEach((s) => {
+    s.district = undefined;
+  });
+  const scored = districts
+    .map((d) => ({ d, read: readFor(d, sourceId) }))
+    .filter((x): x is { d: District; read: NonNullable<typeof x.read> } => !!x.read)
+    .map(({ d, read }) => ({
+      d,
+      lean: read.kind === 'market' ? (read.demOdds ?? 50) - 50 : read.margin ?? 0,
+      toss: ratingOf(read) === 'tossup',
+    }))
+    .sort((a, b) => a.lean - b.lean); // most Republican first
+  if (!scored.length) return;
+  const nRep = scored.filter((x) => x.lean < 0 && !x.toss).length;
+  const byT = [...seats].sort((a, b) => a.t - b.t || a.row - b.row);
+  const start = Math.max(0, Math.min(byT.length - scored.length, rep - nRep));
+  scored.forEach((x, i) => {
+    const seat = byT[start + i];
+    if (seat) seat.district = x.d;
+  });
+}
+
+function seatTip(s: Seat, sourceId: string): string {
+  const d = s.district;
+  const read = d && readFor(d, sourceId);
+  if (!d || !read) {
+    return `<p class="map-tooltip-name">${PARTY_SEAT[s.party]}</p><p class="map-tooltip-source">Not among the 2026 races on the map</p>`;
+  }
+  const rating = ratingOf(read);
+  const line = rating === 'tossup' ? readLine(read) : `${RATING_LABEL[rating]} — ${readLine(read)}`;
+  return `<p class="map-tooltip-name">${d.id}</p><p class="map-tooltip-value">${line}</p><p class="map-tooltip-source">${sourceLabel(sourceId)} · Click to open on the map</p>`;
+}
+
+export function Hemicycle({ forecast, chamber, districts, sourceId }: HemicycleProps) {
   // Identical to the dots under the header, so the two never disagree.
   const total = forecast.dem + forecast.rep;
   const gap = forecast.tossupShare;
@@ -205,6 +256,8 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
   const toss = Math.round((total * gap) / 100);
   const rep = Math.max(0, total - dem - toss);
   const { seats } = useMemo(() => buildSeats(total, rep, toss), [total, rep, toss]);
+  useMemo(() => assignDistricts(seats, districts, sourceId, rep), [seats, districts, sourceId, rep]);
+  const majority = Math.floor(total / 2) + 1;
 
   const stage = useRef<HTMLDivElement>(null);
   const sticky = useRef<HTMLDivElement>(null);
@@ -214,10 +267,22 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
   const seatsBox = useRef<HTMLDivElement>(null);
   const numRep = useRef<HTMLDivElement>(null);
   const numDem = useRef<HTMLDivElement>(null);
+  const majorityRef = useRef<SVGGElement>(null);
+  const tip = useRef<HTMLDivElement>(null);
+  const tipSeat = useRef(-1);
   const [reduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   // Pointer in drawing units (through the camera), and the lens state per
   // seat — scale and offset, lerped each frame toward their targets.
-  const lens = useRef({ px: -1e9, py: -1e9, s: [] as number[], x: [] as number[], y: [] as number[], moving: false });
+  const lens = useRef({
+    px: -1e9,
+    py: -1e9,
+    clientX: 0,
+    clientY: 0,
+    s: [] as number[],
+    x: [] as number[],
+    y: [] as number[],
+    moving: false,
+  });
   const view = useRef({ scale: 1, ox: 0, tx: 0, ty: 0, zoom: 1 });
 
   useEffect(() => {
@@ -225,6 +290,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
     const sk = sticky.current;
     const el = svg.current;
     if (!st || !sk || !el) return;
+    const sb = seatsBox.current;
     let raf = 0;
     let shown = -1; // smoothed progress; -1 = not painted yet
     const target = () => {
@@ -270,6 +336,22 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
         });
       }
       const hotParty = hot >= 0 && hotD2 < LENS_R * LENS_R * 4 ? seats[hot].party : null;
+      // The tooltip names the seat under the pointer (a little past its
+      // edge) and follows it; the seat with a race gets a pointer cursor.
+      const under = hot >= 0 && hotD2 < seats[hot].r * seats[hot].r * 2 ? hot : -1;
+      const tipEl = tip.current;
+      if (tipEl) {
+        if (under !== tipSeat.current) {
+          tipSeat.current = under;
+          if (under >= 0) tipEl.innerHTML = seatTip(seats[under], sourceId);
+          tipEl.hidden = under < 0;
+          if (sb) sb.style.cursor = under >= 0 && seats[under].district ? 'pointer' : '';
+        }
+        if (under >= 0) {
+          tipEl.style.left = `${L.clientX}px`;
+          tipEl.style.top = `${L.clientY}px`;
+        }
+      }
       let lensMoving = false;
       seats.forEach((s, i) => {
         const c = circles.current[i];
@@ -367,6 +449,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       // dropping in on its own delay — once their side of the arc is
       // complete, and they STAY. Scrolling back above the cue resets them.
       numRep.current?.classList.toggle('is-in', reduced || p >= BEAT.countR[0]);
+      majorityRef.current?.classList.toggle('is-in', reduced || p >= BEAT.countR[0]);
       numDem.current?.classList.toggle('is-in', reduced || p >= BEAT.countD[0]);
       // Keep painting while the scroll is still settling, or while loose
       // seats are drifting in view.
@@ -385,14 +468,28 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       const L = lens.current;
       L.px = ((e.clientX - box.left - v.ox) * v.scale - v.tx) / v.zoom;
       L.py = ((e.clientY - box.top) * v.scale - v.ty) / v.zoom;
+      L.clientX = e.clientX;
+      L.clientY = e.clientY;
       onScroll();
     };
     const onPointerLeave = () => {
       lens.current.px = -1e9;
       lens.current.py = -1e9;
+      if (tip.current) tip.current.hidden = true;
+      tipSeat.current = -1;
+      if (sb) sb.style.cursor = '';
       onScroll();
     };
-    const sb = seatsBox.current;
+    // A click on a seat with a race opens that state on the map above.
+    const onClick = () => {
+      const i = tipSeat.current;
+      const d = i >= 0 ? seats[i].district : undefined;
+      if (!d) return;
+      window.dispatchEvent(
+        new CustomEvent('dw-open-map', { detail: { stateId: d.id.slice(0, 2), chamber: 'house' } })
+      );
+    };
+    sb?.addEventListener('click', onClick);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
@@ -403,9 +500,10 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       window.removeEventListener('resize', onScroll);
       sb?.removeEventListener('pointermove', onPointerMove);
       sb?.removeEventListener('pointerleave', onPointerLeave);
+      sb?.removeEventListener('click', onClick);
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [seats, reduced]);
+  }, [seats, reduced, sourceId]);
 
   return (
     <div className="r3-stage" ref={stage}>
@@ -430,8 +528,18 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
                   }}
                 />
               ))}
+              {/* The line control sits on: the middle seat of the chamber.
+                  Whichever colour crosses it holds the majority. */}
+              <g className="r3-majority" ref={majorityRef}>
+                <line className="r3-majority-halo" x1={CX} y1={CROWN_Y - 10} x2={CX} y2={CY - R_IN + 140} />
+                <line className="r3-majority-line" x1={CX} y1={CROWN_Y - 10} x2={CX} y2={CY - R_IN + 140} />
+                <text className="r3-majority-label" x={CX} y={CY - R_IN + 196} textAnchor="middle">
+                  {majority} for control
+                </text>
+              </g>
             </g>
           </svg>
+          <div className="map-tooltip r3-tip" ref={tip} role="status" hidden />
         </div>
         <div className="r3-number r3-number--rep" ref={numRep}>
           <span className="visually-hidden">Republicans {rep}</span>

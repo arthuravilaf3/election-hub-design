@@ -4915,6 +4915,48 @@ body {
   right: var(--rail-pad);
 }
 
+/* The 218 line: a dashed radial through the middle seat with a dark halo
+   so it reads over the seats, and its label in the empty centre. Lands
+   with the R count. */
+.r3-majority {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 600ms var(--intro-ease),
+    transform 600ms var(--intro-ease);
+  pointer-events: none;
+}
+
+.r3-majority.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.r3-majority-halo {
+  stroke: var(--surface-dim);
+  stroke-width: 12;
+  stroke-opacity: 0.85;
+}
+
+.r3-majority-line {
+  stroke: #efe1d4;
+  stroke-width: 2.5;
+  stroke-dasharray: 10 10;
+  stroke-opacity: 0.85;
+}
+
+.r3-majority-label {
+  fill: #efe1d4;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.r3-tip {
+  z-index: 30;
+}
+
 /* Each character is its own slot; it drops in from above like the
    countdown's digits (same keyframes, same ease), on its own delay, and
    stays. Off cue the slot is empty. */
@@ -4941,6 +4983,9 @@ body {
   .r3-sticky {
     position: static;
     height: 70vh;
+  }
+  .r3-majority {
+    transition: none;
   }
   .r3-number.is-in .r3-digit-in {
     animation: none;
