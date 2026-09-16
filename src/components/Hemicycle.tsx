@@ -8,18 +8,18 @@
 // The stage pins for ~4 screens of scroll and plays, in order, with the
 // scroll position SMOOTHED (each frame closes a fraction of the distance to
 // where the scroll actually is), so a wheel notch reads as motion, not a cut:
-//   A  the camera sits so close to the arc's crown that the rows read as
-//      STRAIGHT lines; the seats arrive row by row from the top, the way
-//      the page's text arrives (blur → sharp, 0 → 1)
-//   B  the camera pulls back; row after row comes into frame until the
-//      whole shape is in view and reads as an arc — then "R<n>" comes in
-//   C  the arc slides LEFT until its blue end is in view; "R<n>" gives way
-//      to "D<n>" on the right
+//   A  a handful of seats FLOAT loose near the arc's left tip, drifting;
+//      as the scroll starts they gather into the first red seats
+//   B  the arc fills ALONG ITS SWEEP — from the left tip up over the crown
+//      and down the other side — each seat rising into place; the camera,
+//      close on the tip at first, pulls back and follows the front
+//   C  "R<n>" lands once the red side is complete; the drawing slides LEFT
+//      so the blue side finishes in view, and "D<n>" lands when it does
 // then the pin releases and the page goes on to the feed. Reduced motion:
 // the finished arc, static, with both counts.
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { ForecastData } from "../data/hero";
-import type { Chamber } from "../data/types";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ForecastData } from '../data/hero';
+import type { Chamber } from '../data/types';
 
 const W = 1925;
 const H = 904;
@@ -27,26 +27,33 @@ const CX = W / 2;
 const CY = H;
 const R_OUT = 880;
 const R_IN = 372;
+const R_MID = (R_OUT + R_IN) / 2;
 
-type Party = "rep" | "toss" | "dem";
+type Party = 'rep' | 'toss' | 'dem';
 
 interface Seat {
   party: Party;
   row: number;
-  /** Radius of the seat's row on the arc. */
-  rr: number;
-  /** 0 = left end, 1 = right end of the arc; also the order along a row. */
+  /** 0 = left end, 1 = right end of the arc — the order the arc fills in. */
   t: number;
   ax: number; // arc slot
   ay: number;
   r: number;
+  /** Where the seat floats from before it gathers (drawing units, relative). */
+  fx: number;
+  fy: number;
+  /** Phase of its drift, so the loose seats don't bob in unison. */
+  ph: number;
 }
 
-function buildSeats(
-  total: number,
-  rep: number,
-  toss: number,
-): { seats: Seat[]; rows: number } {
+// Deterministic per-seat noise: the float positions are the same on every
+// visit and in every screenshot.
+function noise(i: number, k: number) {
+  const x = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function buildSeats(total: number, rep: number, toss: number): { seats: Seat[] } {
   const rows = total >= 400 ? 12 : total >= 100 ? 6 : 4;
   const step = rows > 1 ? (R_OUT - R_IN) / (rows - 1) : 0;
   const radii = Array.from({ length: rows }, (_, k) => R_OUT - k * step); // outer row first (top)
@@ -71,14 +78,17 @@ function buildSeats(
     for (let i = 0; i < n; i += 1) {
       const t = (i + 0.5) / n;
       const a = Math.PI - Math.PI * t;
+      const j = seats.length;
       seats.push({
-        party: "toss",
+        party: 'toss',
         row: k,
-        rr: r,
         t,
         ax: CX + r * Math.cos(a),
         ay: CY - r * Math.sin(a),
         r: dotR,
+        fx: 0,
+        fy: 0,
+        ph: noise(j, 3) * Math.PI * 2,
       });
     }
   });
@@ -86,27 +96,45 @@ function buildSeats(
   // dots' own order. Each row ends up split in the same proportion.
   const byT = [...seats].sort((a, b) => a.t - b.t || a.row - b.row);
   byT.forEach((s, i) => {
-    s.party = i < rep ? "rep" : i < rep + toss ? "toss" : "dem";
+    s.party = i < rep ? 'rep' : i < rep + toss ? 'toss' : 'dem';
   });
-  return { seats, rows };
+  // The loose seats float on a sunflower spread around the tip — evenly
+  // spaced, never stacked — dealt out in a shuffled order so neighbours on
+  // the arc don't sit next to each other in the cloud.
+  const loose = seats.filter((s) => s.t < GATHER_T);
+  const order = loose.map((s, k) => [noise(k, 7), s] as const).sort((a, b) => a[0] - b[0]);
+  const tipX = CX - R_MID;
+  const tipY = CY - 110;
+  order.forEach(([, s], k) => {
+    const rr = FLOAT_GAP * Math.sqrt(k + 0.6);
+    const ang = k * 2.39996 + noise(k, 8) * 0.5;
+    s.fx = tipX + Math.cos(ang) * rr * 1.25 - s.ax;
+    s.fy = tipY + Math.sin(ang) * rr * 0.8 - s.ay;
+  });
+  return { seats };
 }
 
-// How close the camera starts: the crown of the arc at this scale is what
-// the frame shows first, and at 3.4× a 880-radius row is straight to the eye.
-const ZOOM_START = 3.4;
-const CROWN_Y = CY - R_OUT; // y of the arc's crown, in drawing units
-const CROWN_PAD = 120; // drawing units between the frame's top and the crown
+// How close the camera starts on the arc's left tip.
+const ZOOM_START = 2.2;
+// Spacing of the loose seats' spread, in drawing units (≈ 1.7 seat widths).
+const FLOAT_GAP = 36;
 const FOLLOW = 0.09; // per-frame fraction of the way to the real scroll position
+// Seats with t below this are the loose ones that gather first.
+const GATHER_T = 0.09;
+// Softness of the fill front, in t: a seat takes this much scroll to land.
+const FRONT_W = 0.07;
+const DRIFT = 14; // drawing units of bob while a seat floats
 
-// Where each beat sits on the pinned scroll (0 → 1). The camera moves from
-// the very first pixel — a static picture under a moving finger is what
-// reads as "stuck" — and the counts get their own stretch once it stops.
-// One trackpad flick is roughly 0.1.
+// Where each beat sits on the pinned scroll (0 → 1). The camera and the
+// fill both move from the very first pixel — a static picture under a
+// moving finger is what reads as "stuck". One trackpad flick is roughly 0.1.
 const BEAT = {
-  arrive: [0, 0.4],
-  pullBack: [0, 0.56],
-  countR: [0.56, 0.66],
-  slide: [0.72, 0.92],
+  gather: [0, 0.22],
+  fill: [0.16, 0.9],
+  pullBack: [0.08, 0.6],
+  countR: [0.54, 0.62],
+  slide: [0.62, 0.9],
+  countD: [0.88, 0.96],
 } as const;
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -128,19 +156,14 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
   const dem = Math.round((total * demShare) / 100);
   const toss = Math.round((total * gap) / 100);
   const rep = Math.max(0, total - dem - toss);
-  const { seats, rows } = useMemo(
-    () => buildSeats(total, rep, toss),
-    [total, rep, toss],
-  );
+  const { seats } = useMemo(() => buildSeats(total, rep, toss), [total, rep, toss]);
 
   const stage = useRef<HTMLDivElement>(null);
   const sticky = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
   const camera = useRef<SVGGElement>(null);
-  const rowGroups = useRef<Array<SVGGElement | null>>([]);
-  const [reduced] = useState(
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
+  const circles = useRef<Array<SVGCircleElement | null>>([]);
+  const [reduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   useEffect(() => {
     const st = stage.current;
@@ -155,66 +178,95 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       const travel = st.offsetHeight - sk.offsetHeight;
       return clamp01((window.scrollY - stTop) / Math.max(1, travel));
     };
-    const paint = () => {
+    const onScreen = () => {
+      const r = sk.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight;
+    };
+    const paint = (now: number) => {
       raf = 0;
       const want = target();
       shown = shown < 0 || reduced ? want : shown + (want - shown) * FOLLOW;
       if (Math.abs(want - shown) < 0.0005) shown = want;
       const p = shown;
-      const pA = span(p, ...BEAT.arrive); // rows arrive, top first
-      const pB = easeSine(span(p, ...BEAT.pullBack)); // camera pulls back to the whole arc
-      const pR = ease(span(p, ...BEAT.countR)); // "R<n>" comes in once the arc reads as one
-      const pC = easeInOut(span(p, ...BEAT.slide)); // slide left, D count
+      const pG = ease(span(p, ...BEAT.gather)); // loose seats gather into the tip
+      const pF = span(p, ...BEAT.fill); // the front travels the sweep
+      const pB = easeSine(span(p, ...BEAT.pullBack)); // camera pulls back, follows the front
+      const pR = ease(span(p, ...BEAT.countR)); // "R<n>" lands
+      const pC = easeInOut(span(p, ...BEAT.slide)); // slide left so the blue side finishes in view
+      const pD = ease(span(p, ...BEAT.countD)); // "D<n>" lands
 
-      // A: rows arrive from the top — blur and opacity per row group.
-      rowGroups.current.forEach((g, k) => {
-        if (!g) return;
-        const local = clamp01(pA * (rows + 1.5) - k * 1.0);
-        g.style.opacity = String(local);
-        g.style.filter =
-          local < 1 ? `blur(${((1 - local) * 6).toFixed(1)}px)` : "";
+      // A + B: each seat is either loose (gathering) or on the front (landing).
+      const front = GATHER_T + (1 - GATHER_T + FRONT_W) * pF;
+      const wob = now / 900;
+      seats.forEach((s, i) => {
+        const c = circles.current[i];
+        if (!c) return;
+        let x = s.ax;
+        let y = s.ay;
+        let vis = 1;
+        if (s.t < GATHER_T) {
+          const loose = 1 - pG;
+          x += (s.fx + Math.sin(wob + s.ph) * DRIFT) * loose;
+          y += (s.fy + Math.cos(wob * 0.8 + s.ph) * DRIFT) * loose;
+        } else {
+          vis = clamp01((front - s.t) / FRONT_W);
+          y += (1 - vis) * 34; // rises into its slot
+        }
+        c.setAttribute('cx', x.toFixed(1));
+        c.setAttribute('cy', y.toFixed(1));
+        c.setAttribute('r', (s.r * (0.55 + 0.45 * vis)).toFixed(1));
+        c.style.opacity = vis.toFixed(3);
       });
+
       // xMinYMin meet: the drawing is the box's width or its height × aspect,
       // whichever is smaller — so it never gets clipped by the frame height.
       const box = el.getBoundingClientRect();
       const drawnW = Math.min(box.width, box.height * (W / H));
       const viewW = sk.clientWidth;
       const visUnits = (viewW / drawnW) * W; // what the frame shows, in drawing units
-      // B: the camera. Scale about the crown, which travels from the middle
-      // of the frame's top edge to its natural spot in the drawing.
-      // Log-space zoom: 3.4× → 1.7× looks like the same amount of change as
-      // 1.7× → 1×, so the pull-back reads at one steady pace.
+      const visUnitsH = (sk.clientHeight / drawnW) * W;
+      // The camera: close on the left tip, then out and along the sweep to
+      // the crown. Log-space zoom so the pull-back reads at one steady pace.
+      // At pB = 1 it is the identity, which phase C's slide builds on.
       const zoom = Math.exp(Math.log(ZOOM_START) * (1 - pB));
-      const crownX = visUnits / 2 + (CX - visUnits / 2) * pB;
-      const crownY = CROWN_PAD + (CROWN_Y - CROWN_PAD) * pB;
+      // The focus rides the fill front (never past the crown), halfway
+      // between the baseline and the front's height, so the tip's bottom
+      // seats stay in frame above the numeral band while it climbs.
+      const theta = Math.PI - Math.PI * Math.min(0.5, front);
+      const focusX = CX + R_MID * Math.cos(theta);
+      const focusY = CY - R_MID * Math.sin(theta) * 0.5;
+      const landX = visUnits / 2 + (focusX - visUnits / 2) * pB;
+      const landY = visUnitsH * 0.45 + (focusY - visUnitsH * 0.45) * pB;
       const cam = camera.current;
       if (cam) {
         cam.setAttribute(
-          "transform",
-          `translate(${(crownX - zoom * CX).toFixed(2)} ${(crownY - zoom * CROWN_Y).toFixed(2)}) scale(${zoom.toFixed(4)})`,
+          'transform',
+          `translate(${(landX - zoom * focusX).toFixed(2)} ${(landY - zoom * focusY).toFixed(2)}) scale(${zoom.toFixed(4)})`
         );
       }
-      // C: the whole drawing slides left; the numerals cross over.
+      // C: the whole drawing slides left; the numerals take turns.
       const shift = Math.max(0, drawnW - viewW);
       el.style.transform = `translateX(${(-shift * pC).toFixed(1)}px)`;
-      // R is gone before D arrives, so the two never overlap half-lit.
-      sk.style.setProperty("--num-r", String(1 - Math.min(1, pC * 2.2)));
-      sk.style.setProperty("--num-d", String(Math.max(0, pC * 2.2 - 1.2)));
-      sk.style.setProperty("--num-in", String(pR));
-      if (p !== want && !raf) raf = window.requestAnimationFrame(paint);
+      sk.style.setProperty('--num-in', String(pR));
+      sk.style.setProperty('--num-r', String(1 - ease(span(pC, 0, 0.4))));
+      sk.style.setProperty('--num-d', String(pD));
+      // Keep painting while the scroll is still settling, or while loose
+      // seats are drifting in view.
+      const drifting = !reduced && p < BEAT.gather[1] && onScreen();
+      if ((p !== want || drifting) && !raf) raf = window.requestAnimationFrame(paint);
     };
     const onScroll = () => {
       if (!raf) raf = window.requestAnimationFrame(paint);
     };
-    paint();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [seats, rows, reduced]);
+  }, [seats, reduced]);
 
   return (
     <div className="r3-stage" ref={stage}>
@@ -224,47 +276,27 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
           role="img"
           aria-label={`${total} ${chamber} seats: Republicans ${rep}, toss-ups ${toss}, Democrats ${dem}.`}
         >
-          <svg
-            ref={svg}
-            viewBox={`0 0 ${W} ${H}`}
-            preserveAspectRatio="xMinYMin meet"
-            aria-hidden="true"
-          >
+          <svg ref={svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMinYMin meet" aria-hidden="true">
             <g ref={camera} className="r3-cam">
-              {Array.from({ length: rows }, (_, k) => (
-                <g
-                  key={k}
-                  className="r3-row"
-                  ref={(g) => {
-                    rowGroups.current[k] = g;
+              {seats.map((s, i) => (
+                <circle
+                  key={i}
+                  className={`r3-seat r3-seat--${s.party}`}
+                  cx={s.ax}
+                  cy={s.ay}
+                  r={s.r}
+                  ref={(c) => {
+                    circles.current[i] = c;
                   }}
-                >
-                  {seats.map((s, i) =>
-                    s.row === k ? (
-                      <circle
-                        key={i}
-                        className={`r3-seat r3-seat--${s.party}`}
-                        cx={s.ax}
-                        cy={s.ay}
-                        r={s.r}
-                      />
-                    ) : null,
-                  )}
-                </g>
+                />
               ))}
             </g>
           </svg>
         </div>
-        <div
-          className="r3-number r3-number--rep"
-          aria-label={`Republicans ${rep}`}
-        >
+        <div className="r3-number r3-number--rep" aria-label={`Republicans ${rep}`}>
           R{rep}
         </div>
-        <div
-          className="r3-number r3-number--dem"
-          aria-label={`Democrats ${dem}`}
-        >
+        <div className="r3-number r3-number--dem" aria-label={`Democrats ${dem}`}>
           D{dem}
         </div>
       </div>
