@@ -1,9 +1,12 @@
 // "House Colors" (Figma frame 10222:111601, Sep 2026): a strip of the
 // Capitol between the seat dots and the map, in the chamber's colours. Two
-// prints of the same photo — house_red and house_blue — share the frame:
-// the red print covers the Republican share (plus the toss-ups), the blue
-// print the Democratic share (plus the toss-ups), and where they overlap the
-// blue LIGHTENS over the red, so the toss-up band is the two colours fused.
+// prints of the same photo — house_red and house_blue — share the frame the
+// way the Figma lays them (10373:204131): both at the photo's own scale
+// (1052 of 1440 wide) and sitting on the frame's bottom edge, the red one
+// flush left, the blue one flush right. The red print shows up to the
+// Republican share plus the toss-ups, the blue from the Republican share
+// on, and where they overlap the blue LIGHTENS over the red, so the toss-up
+// band is the two colours fused.
 // The split IS the race's projected split under the active source, so the
 // strip moves with the dots. Both prints drift vertically together as the
 // page scrolls (parallax), a touch slower than the page; still under
@@ -64,8 +67,12 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
     >
       {/* Red on the left, blue on the right — the order of the seat dots
           above. The blue print is on top and lightens over the red. */}
-      <img className="house-colors-photo house-colors-photo--rep" src={asset('house_red.png')} alt="" ref={red} />
-      <img className="house-colors-photo house-colors-photo--dem" src={asset('house_blue.png')} alt="" ref={blue} />
+      <span className="house-colors-print house-colors-print--rep">
+        <img className="house-colors-photo house-colors-photo--rep" src={asset('house_red.png')} alt="" ref={red} />
+      </span>
+      <span className="house-colors-print house-colors-print--dem">
+        <img className="house-colors-photo house-colors-photo--dem" src={asset('house_blue.png')} alt="" ref={blue} />
+      </span>
     </div>
   );
 }
