@@ -18,6 +18,7 @@
 // then the pin releases and the page goes on to the feed. Reduced motion:
 // the finished arc, static, with both counts.
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type React from 'react';
 import type { ForecastData } from '../data/hero';
 import type { Chamber } from '../data/types';
 
@@ -116,6 +117,9 @@ function buildSeats(total: number, rep: number, toss: number): { seats: Seat[] }
 
 // How close the camera starts on the arc's left tip.
 const ZOOM_START = 2.2;
+// Room between the frame's top edge and the crown once the camera is all
+// the way out — the outer row used to sit right on the edge and get cut.
+const TOP_PAD = 72;
 // Spacing of the loose seats' spread, in drawing units (≈ 1.7 seat widths).
 const FLOAT_GAP = 36;
 const FOLLOW = 0.09; // per-frame fraction of the way to the real scroll position
@@ -154,6 +158,21 @@ const easeSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const span = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
 
+/** One slot per character, so each can drop in on its own delay. */
+function Digits({ text }: { text: string }) {
+  return (
+    <>
+      {text.split('').map((ch, i) => (
+        <span className="r3-digit" key={i} aria-hidden="true">
+          <span className="r3-digit-in" style={{ '--i': i } as React.CSSProperties}>
+            {ch}
+          </span>
+        </span>
+      ))}
+    </>
+  );
+}
+
 interface HemicycleProps {
   forecast: ForecastData;
   chamber: Chamber;
@@ -175,6 +194,8 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
   const camera = useRef<SVGGElement>(null);
   const circles = useRef<Array<SVGCircleElement | null>>([]);
   const seatsBox = useRef<HTMLDivElement>(null);
+  const numRep = useRef<HTMLDivElement>(null);
+  const numDem = useRef<HTMLDivElement>(null);
   const [reduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   // Pointer in drawing units (through the camera), and the lens state per
   // seat — scale and offset, lerped each frame toward their targets.
@@ -207,9 +228,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       const pG = ease(span(p, ...BEAT.gather)); // loose seats gather into the tip
       const pF = span(p, ...BEAT.fill); // the front travels the sweep
       const pB = easeSine(span(p, ...BEAT.pullBack)); // camera pulls back, follows the front
-      const pR = ease(span(p, ...BEAT.countR)); // "R<n>" lands
       const pC = easeInOut(span(p, ...BEAT.slide)); // slide left so the blue side finishes in view
-      const pD = ease(span(p, ...BEAT.countD)); // "D<n>" lands
 
       // A + B: each seat is either loose (gathering) or on the front (landing).
       const front = GATHER_T + (1 - GATHER_T + FRONT_W) * pF;
@@ -291,6 +310,9 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
         c.setAttribute('cy', (y + ny).toFixed(1));
         c.setAttribute('r', (s.r * (0.55 + 0.45 * vis) * ns).toFixed(1));
         c.style.opacity = vis.toFixed(3);
+        // Blur → sharp as it appears, the way the page's text arrives. Only
+        // the seats still arriving carry a filter.
+        c.style.filter = vis < 0.999 ? `blur(${((1 - vis) * 9).toFixed(1)}px)` : '';
       });
       L.moving = lensMoving;
 
@@ -303,7 +325,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       const visUnitsH = (sk.clientHeight / drawnW) * W;
       // The camera: close on the left tip, then out and along the sweep to
       // the crown. Log-space zoom so the pull-back reads at one steady pace.
-      // At pB = 1 it is the identity, which phase C's slide builds on.
+      // At pB = 1 it is a plain drop of TOP_PAD, which phase C's slide builds on.
       const zoom = Math.exp(Math.log(ZOOM_START) * (1 - pB));
       // The focus rides the fill front (never past the crown), halfway
       // between the baseline and the front's height, so the tip's bottom
@@ -312,7 +334,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       const focusX = CX + R_MID * Math.cos(theta);
       const focusY = CY - R_MID * Math.sin(theta) * 0.5;
       const landX = visUnits / 2 + (focusX - visUnits / 2) * pB;
-      const landY = visUnitsH * 0.45 + (focusY - visUnitsH * 0.45) * pB;
+      const landY = visUnitsH * 0.45 + (focusY + TOP_PAD - visUnitsH * 0.45) * pB;
       const camTx = landX - zoom * focusX;
       const camTy = landY - zoom * focusY;
       const cam = camera.current;
@@ -323,9 +345,11 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       // C: the whole drawing slides left; the numerals take turns.
       const shift = Math.max(0, drawnW - viewW);
       el.style.transform = `translateX(${(-shift * pC).toFixed(1)}px)`;
-      sk.style.setProperty('--num-in', String(pR));
-      sk.style.setProperty('--num-r', String(1 - ease(span(pC, 0, 0.4))));
-      sk.style.setProperty('--num-d', String(pD));
+      // The counts land the way the countdown's digits do — each digit
+      // dropping in on its own delay — once their side of the arc is
+      // complete, and they STAY. Scrolling back above the cue resets them.
+      numRep.current?.classList.toggle('is-in', reduced || p >= BEAT.countR[0]);
+      numDem.current?.classList.toggle('is-in', reduced || p >= BEAT.countD[0]);
       // Keep painting while the scroll is still settling, or while loose
       // seats are drifting in view.
       const drifting = !reduced && p < BEAT.gather[1] && onScreen();
@@ -391,11 +415,11 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
             </g>
           </svg>
         </div>
-        <div className="r3-number r3-number--rep" aria-label={`Republicans ${rep}`}>
-          R{rep}
+        <div className="r3-number r3-number--rep" ref={numRep} aria-label={`Republicans ${rep}`}>
+          <Digits text={`R${rep}`} />
         </div>
-        <div className="r3-number r3-number--dem" aria-label={`Democrats ${dem}`}>
-          D{dem}
+        <div className="r3-number r3-number--dem" ref={numDem} aria-label={`Democrats ${dem}`}>
+          <Digits text={`D${dem}`} />
         </div>
       </div>
     </div>

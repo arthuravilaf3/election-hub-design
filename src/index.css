@@ -4860,7 +4860,7 @@ body {
   content: '';
   position: absolute;
   inset: auto 0 0;
-  height: calc(clamp(120px, 26vh, 360px) * 0.8 + 32px + 24px);
+  height: calc(clamp(110px, 22vh, 300px) * 0.9 + 32px + 24px);
   background: linear-gradient(180deg, transparent, var(--surface-dim) 40%);
   pointer-events: none;
 }
@@ -4898,26 +4898,41 @@ body {
   position: absolute;
   bottom: 0;
   left: var(--rail-pad);
+  display: flex;
   padding: 24px 0 8px;
-  font-size: clamp(120px, 26vh, 360px);
-  line-height: 0.8;
+  font-size: clamp(110px, 22vh, 300px);
+  line-height: 0.9;
   font-weight: 700;
   letter-spacing: -0.02em;
-  /* Only the glyphs fade; the band under them stays dark so the seats
-     sliding past never show through the digits. */
-  --num-o: calc(var(--num-in, 1) * var(--num-r, 1));
-  color: color-mix(in srgb, #efe1d4 calc(var(--num-o) * 100%), transparent);
+  color: #efe1d4;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   pointer-events: none;
   z-index: 1;
-  transform: translateY(calc((1 - var(--num-o)) * 28px));
 }
 
 .r3-number--dem {
   left: auto;
   right: var(--rail-pad);
-  --num-o: var(--num-d, 0);
+}
+
+/* Each character is its own slot; it drops in from above like the
+   countdown's digits (same keyframes, same ease), on its own delay, and
+   stays. Off cue the slot is empty. */
+.r3-digit {
+  display: block;
+  height: 0.9em;
+  overflow: hidden;
+}
+
+.r3-digit-in {
+  display: block;
+  opacity: 0;
+}
+
+.r3-number.is-in .r3-digit-in {
+  animation: digit-in 520ms var(--intro-ease) both;
+  animation-delay: calc(var(--i) * 70ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4928,8 +4943,8 @@ body {
     position: static;
     height: 70vh;
   }
-  .r3-number,
-  .r3-number--dem {
-    --num-o: 1;
+  .r3-number.is-in .r3-digit-in {
+    animation: none;
+    opacity: 1;
   }
 }
