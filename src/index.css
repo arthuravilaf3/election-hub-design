@@ -4837,7 +4837,7 @@ body {
 /* ~3 screens of travel; the sticky frame is one screen under the nav and
    above the ticker. */
 .r3-stage {
-  height: 320vh;
+  height: 420vh;
   margin-top: 96px;
 }
 
@@ -4847,6 +4847,17 @@ body {
   top: 64px;
   height: calc(100vh - 64px - var(--ticker-h));
   overflow: hidden;
+}
+
+/* The band the numerals sit on runs the full width, so seats passing
+   under it fade out wherever they are, not just behind the digits. */
+.r3-sticky::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(clamp(120px, 26vh, 360px) * 0.8 + 32px + 24px);
+  background: linear-gradient(180deg, transparent, var(--surface-dim) 40%);
+  pointer-events: none;
 }
 
 .r3-seats {
@@ -4894,7 +4905,7 @@ body {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent, var(--surface-dim) 28%);
+  z-index: 1;
 }
 
 .r3-number--dem {
