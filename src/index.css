@@ -4841,7 +4841,7 @@ body {
   content: '';
   position: absolute;
   inset: auto 0 0;
-  height: calc(clamp(110px, 22vh, 300px) * 0.9 + 36px + 40px + 24px);
+  height: calc(clamp(110px, 22vh, 300px) * 0.9 + 36px + 40px + 24px + 44px);
   background: linear-gradient(180deg, transparent, var(--surface-dim) 40%);
   pointer-events: none;
 }
@@ -4858,9 +4858,9 @@ body {
    under the numerals anyway) and the arc reads bigger. */
 .r3-seats svg {
   display: block;
-  width: 116%;
-  margin-left: -8%;
-  height: 100%;
+  width: 108%;
+  margin-left: -4%;
+  height: calc(100% - 24px);
 }
 
 .r3-row {
@@ -4879,7 +4879,7 @@ body {
    arc's feet fade under them. R on the left; D takes over on the right. */
 .r3-number {
   position: absolute;
-  bottom: 0;
+  bottom: 44px; /* breathing room above the Polymarket ticker */
   left: var(--rail-pad);
   display: flex;
   flex-direction: column;
