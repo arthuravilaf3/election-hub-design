@@ -164,6 +164,7 @@ const LENS_A = 0.3;
 const LENS_B = PITCH * 0.18;
 const LENS_PUSH = PITCH * 0.34;
 const LENS_K = 0.16;
+const LENS_SHADE = 0.32; // how much darker a fully stirred seat gets
 
 // Where each beat sits on the pinned scroll (0 → 1). The camera and the
 // fill both move from the very first pixel — a static picture under a
@@ -434,9 +435,17 @@ export function Hemicycle({ forecast, chamber, districts, sourceId }: HemicycleP
         c.setAttribute('cy', (y + ny).toFixed(1));
         c.setAttribute('r', (s.r * (0.55 + 0.45 * vis) * ns).toFixed(1));
         c.style.opacity = vis.toFixed(3);
-        // Blur → sharp as it appears, the way the page's text arrives. Only
-        // the seats still arriving carry a filter.
-        c.style.filter = vis < 0.999 ? `blur(${((1 - vis) * 9).toFixed(1)}px)` : '';
+        // Blur → sharp as it appears, the way the page's text arrives; and
+        // under the hand a stirred seat goes darker, like the dots above.
+        // Only seats arriving or stirred carry a filter.
+        const stir = Math.min(1, Math.max(Math.abs(ns - 1) / LENS_A, Math.hypot(nx, ny) / LENS_PUSH));
+        const f = [
+          vis < 0.999 ? `blur(${((1 - vis) * 9).toFixed(1)}px)` : '',
+          stir > 0.01 ? `brightness(${(1 - LENS_SHADE * stir).toFixed(3)})` : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+        c.style.filter = f;
       });
       L.moving = lensMoving;
 
