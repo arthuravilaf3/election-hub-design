@@ -4837,7 +4837,7 @@ body {
 /* ~3 screens of travel; the sticky frame is one screen under the nav and
    above the ticker. */
 .r3-stage {
-  height: 420vh;
+  height: 500vh;
   margin-top: 96px;
 }
 
@@ -4906,6 +4906,7 @@ body {
   white-space: nowrap;
   pointer-events: none;
   z-index: 1;
+  transform: translateY(calc((1 - var(--num-o)) * 28px));
 }
 
 .r3-number--dem {

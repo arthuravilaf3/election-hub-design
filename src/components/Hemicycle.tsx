@@ -96,9 +96,22 @@ function buildSeats(
 const ZOOM_START = 3.4;
 const CROWN_Y = CY - R_OUT; // y of the arc's crown, in drawing units
 const CROWN_PAD = 120; // drawing units between the frame's top and the crown
-const FOLLOW = 0.14; // per-frame fraction of the way to the real scroll position
+const FOLLOW = 0.09; // per-frame fraction of the way to the real scroll position
+
+// Where each beat sits on the pinned scroll (0 → 1). The camera moves from
+// the very first pixel — a static picture under a moving finger is what
+// reads as "stuck" — and the counts get their own stretch once it stops.
+// One trackpad flick is roughly 0.1.
+const BEAT = {
+  arrive: [0, 0.4],
+  pullBack: [0, 0.56],
+  countR: [0.56, 0.66],
+  slide: [0.72, 0.92],
+} as const;
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const easeSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const span = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
 
@@ -148,10 +161,10 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       shown = shown < 0 || reduced ? want : shown + (want - shown) * FOLLOW;
       if (Math.abs(want - shown) < 0.0005) shown = want;
       const p = shown;
-      const pA = span(p, 0, 0.5); // rows arrive, top first (unhurried: they also need to come into frame)
-      const pB = ease(span(p, 0.1, 0.62)); // camera pulls back to the whole arc
-      const pR = ease(span(p, 0.6, 0.7)); // "R<n>" comes in once the arc reads as one
-      const pC = ease(span(p, 0.74, 0.96)); // slide left, D count
+      const pA = span(p, ...BEAT.arrive); // rows arrive, top first
+      const pB = easeSine(span(p, ...BEAT.pullBack)); // camera pulls back to the whole arc
+      const pR = ease(span(p, ...BEAT.countR)); // "R<n>" comes in once the arc reads as one
+      const pC = easeInOut(span(p, ...BEAT.slide)); // slide left, D count
 
       // A: rows arrive from the top — blur and opacity per row group.
       rowGroups.current.forEach((g, k) => {
@@ -169,7 +182,9 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       const visUnits = (viewW / drawnW) * W; // what the frame shows, in drawing units
       // B: the camera. Scale about the crown, which travels from the middle
       // of the frame's top edge to its natural spot in the drawing.
-      const zoom = ZOOM_START + (1 - ZOOM_START) * pB;
+      // Log-space zoom: 3.4× → 1.7× looks like the same amount of change as
+      // 1.7× → 1×, so the pull-back reads at one steady pace.
+      const zoom = Math.exp(Math.log(ZOOM_START) * (1 - pB));
       const crownX = visUnits / 2 + (CX - visUnits / 2) * pB;
       const crownY = CROWN_PAD + (CROWN_Y - CROWN_PAD) * pB;
       const cam = camera.current;
