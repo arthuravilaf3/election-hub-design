@@ -1,40 +1,48 @@
-// R3 + R53 (Figma 10373:204824 / 10373:205502, Sep 2026): a hemicycle of
-// every seat in the chamber, rated under the active source, drawn wider than
-// the page (1925 across, left-aligned to the rail, clipped on the right —
-// as composed), and under it the projected Republican count as a huge beige
-// numeral. Both re-deal when the race or the source changes.
+// R3 + R53 as a scroll-driven stage (creative edition, Sep 16 2026).
 //
-// Motion: the seats deal in as a wave from the left end of the arc; the
-// numeral counts up to its value and settles, once, when it scrolls into view.
+// The seats are THE SAME seats as the dots under the header — rep, toss-up,
+// dem, from the projected split under the active source — drawn 43px wide
+// in a 1925 × 904 group (Figma 10373:204824), left on the rail, and the
+// numeral is the same count the dots carry.
+//
+// The stage pins for ~3 screens of scroll and plays, in order:
+//   A  the seats appear as a STRAIGHT block, row by row from the top, the
+//      way the page's text arrives (blur → sharp, 0 → 1), with "R<n>"
+//   B  every seat travels from its slot in the block to its slot on the ARC
+//   C  the arc slides LEFT until its blue end is in view; "R<n>" gives way
+//      to "D<n>" on the right
+// then the pin releases and the page goes on to the feed. Reduced motion:
+// the finished arc, static, with both counts.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { type Rating } from '../data/encoding';
-import { RATING_ORDER, republicanProjection, seatBuckets } from '../data/seats';
-import type { Chamber, StateRace } from '../data/types';
+import type { ForecastData } from '../data/hero';
+import type { Chamber } from '../data/types';
 
 const W = 1925;
 const H = 904;
 const CX = W / 2;
-const CY = H; // the arc's centre sits on the group's bottom edge
+const CY = H;
 const R_OUT = 880;
 const R_IN = 372;
 
+type Party = 'rep' | 'toss' | 'dem';
+
 interface Seat {
-  x: number;
-  y: number;
-  r: number;
-  rating: Rating;
-  /** 0 at the left end of the arc, 1 at the right — the deal-in order. */
+  party: Party;
+  row: number;
+  /** 0 = left end, 1 = right end of the arc; also the order along a row. */
   t: number;
+  ax: number; // arc slot
+  ay: number;
+  gx: number; // straight-block slot
+  gy: number;
+  r: number;
 }
 
-/** Rows and radii for a chamber of `total` seats, then the seats themselves,
-    filled left to right (Republican end first) in rating order. */
-function layout(total: number, buckets: Record<Rating, number>): Seat[] {
+function buildSeats(total: number, rep: number, toss: number): { seats: Seat[]; rows: number } {
   const rows = total >= 400 ? 12 : total >= 100 ? 6 : 4;
   const step = rows > 1 ? (R_OUT - R_IN) / (rows - 1) : 0;
-  const radii = Array.from({ length: rows }, (_, k) => R_IN + k * step);
+  const radii = Array.from({ length: rows }, (_, k) => R_OUT - k * step); // outer row first (top)
   const dotR = Math.min(21, (rows > 1 ? step : 120) * 0.47);
-  // Seats per row ∝ arc length, largest remainder to land on `total`.
   const arcs = radii.map((r) => Math.PI * r);
   const sum = arcs.reduce((a, b) => a + b, 0);
   const raw = arcs.map((a) => (a / sum) * total);
@@ -53,106 +61,154 @@ function layout(total: number, buckets: Record<Rating, number>): Seat[] {
   radii.forEach((r, k) => {
     const n = counts[k];
     for (let i = 0; i < n; i += 1) {
-      const t = (i + 0.5) / n; // 0 = left end
+      const t = (i + 0.5) / n;
       const a = Math.PI - Math.PI * t;
-      seats.push({ x: CX + r * Math.cos(a), y: CY - r * Math.sin(a), r: dotR, rating: 'tossup', t });
+      seats.push({ party: 'toss', row: k, t, ax: CX + r * Math.cos(a), ay: CY - r * Math.sin(a), gx: 0, gy: 0, r: dotR });
     }
   });
-  // Rate them by angle, left to right, so each rating is a wedge.
-  seats.sort((a, b) => a.t - b.t);
-  let idx = 0;
-  for (const rating of RATING_ORDER) {
-    for (let n = 0; n < buckets[rating] && idx < seats.length; n += 1) {
-      seats[idx].rating = rating;
-      idx += 1;
-    }
-  }
-  return seats;
+  // Colour by position along the arc, left to right: rep, toss, dem — the
+  // dots' own order. Each row ends up split in the same proportion.
+  const byT = [...seats].sort((a, b) => a.t - b.t || a.row - b.row);
+  byT.forEach((s, i) => {
+    s.party = i < rep ? 'rep' : i < rep + toss ? 'toss' : 'dem';
+  });
+  // The straight block: a RECTANGLE of the same rows, filled row by row in
+  // arc order (outer row first, left to right), so red lands on the left
+  // and blue on the right, and every seat travels from its block slot to
+  // its arc slot.
+  const cols = Math.ceil(total / rows);
+  const pitch = dotR * 2.15;
+  const blockTop = 24;
+  const byRow = [...seats].sort((a, b) => a.row - b.row || a.t - b.t);
+  byRow.forEach((s, i) => {
+    s.gx = dotR + (i % cols) * pitch;
+    s.gy = blockTop + dotR + Math.floor(i / cols) * pitch;
+  });
+  return { seats, rows };
 }
+
+const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const span = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
 
 interface HemicycleProps {
-  races: Record<string, StateRace>;
+  forecast: ForecastData;
   chamber: Chamber;
-  sourceId: string;
 }
 
-export function Hemicycle({ races, chamber, sourceId }: HemicycleProps) {
-  const buckets = useMemo(() => seatBuckets(races, chamber, sourceId), [races, chamber, sourceId]);
-  const total = Object.values(buckets).reduce((a, b) => a + b, 0);
-  const seats = useMemo(() => layout(total, buckets), [total, buckets]);
-  const rep = republicanProjection(buckets);
+export function Hemicycle({ forecast, chamber }: HemicycleProps) {
+  // Identical to the dots under the header, so the two never disagree.
+  const total = forecast.dem + forecast.rep;
+  const gap = forecast.tossupShare;
+  const demShare = Math.max(0, forecast.demShare - gap / 2);
+  const dem = Math.round((total * demShare) / 100);
+  const toss = Math.round((total * gap) / 100);
+  const rep = Math.max(0, total - dem - toss);
+  const { seats, rows } = useMemo(() => buildSeats(total, rep, toss), [total, rep, toss]);
 
-  /* The numeral counts up once, when it comes into view; a re-deal (race or
-     source change) counts from the previous value to the new one. */
-  const numRef = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(0);
-  const seen = useRef(false);
-  const from = useRef(0);
+  const stage = useRef<HTMLDivElement>(null);
+  const sticky = useRef<HTMLDivElement>(null);
+  const svg = useRef<SVGSVGElement>(null);
+  const circles = useRef<Array<SVGCircleElement | null>>([]);
+  const rowGroups = useRef<Array<SVGGElement | null>>([]);
+  const [reduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
   useEffect(() => {
-    const el = numRef.current;
-    if (!el) return;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const st = stage.current;
+    const sk = sticky.current;
+    const el = svg.current;
+    if (!st || !sk || !el) return;
     let raf = 0;
-    const run = () => {
-      if (reduced) {
-        setShown(rep);
-        from.current = rep;
-        return;
-      }
-      const start = from.current;
-      const t0 = performance.now();
-      const dur = 900;
-      const tick = (now: number) => {
-        const t = Math.min(1, (now - t0) / dur);
-        const e = 1 - Math.pow(1 - t, 3);
-        setShown(Math.round(start + (rep - start) * e));
-        if (t < 1) raf = requestAnimationFrame(tick);
-        else from.current = rep;
-      };
-      raf = requestAnimationFrame(tick);
+    const paint = () => {
+      raf = 0;
+      const stTop = st.getBoundingClientRect().top + window.scrollY;
+      const travel = st.offsetHeight - sk.offsetHeight;
+      const p = reduced ? 1 : clamp01((window.scrollY - stTop) / Math.max(1, travel));
+      const pA = ease(span(p, 0, 0.3)); // appear, top row first
+      const pB = ease(span(p, 0.32, 0.62)); // block → arc
+      const pC = ease(span(p, 0.66, 0.92)); // slide left, D count
+
+      // A: rows arrive from the top — blur and opacity per row group.
+      rowGroups.current.forEach((g, k) => {
+        if (!g) return;
+        const local = clamp01(pA * (rows + 2) - k) ; // stagger by row
+        g.style.opacity = String(local);
+        g.style.filter = local < 1 ? `blur(${((1 - local) * 10).toFixed(1)}px)` : '';
+      });
+      // B: each seat between its two slots.
+      seats.forEach((s, i) => {
+        const c = circles.current[i];
+        if (!c) return;
+        c.setAttribute('cx', (s.gx + (s.ax - s.gx) * pB).toFixed(1));
+        c.setAttribute('cy', (s.gy + (s.ay - s.gy) * pB).toFixed(1));
+      });
+      // C: the whole drawing slides left; the numerals cross over.
+      // xMinYMin meet: the drawing is the box's width or its height × aspect,
+      // whichever is smaller — so it never gets clipped by the frame height.
+      const box = el.getBoundingClientRect();
+      const drawnW = Math.min(box.width, box.height * (W / H));
+      const viewW = sk.clientWidth;
+      const shift = Math.max(0, drawnW - viewW);
+      el.style.transform = `translateX(${(-shift * pC).toFixed(1)}px)`;
+      // R is gone before D arrives, so the two never overlap half-lit.
+      sk.style.setProperty('--num-r', String(1 - Math.min(1, pC * 2.2)));
+      sk.style.setProperty('--num-d', String(Math.max(0, pC * 2.2 - 1.2)));
+      sk.style.setProperty('--num-in', String(pA));
     };
-    if (seen.current) {
-      run();
-      return () => cancelAnimationFrame(raf);
-    }
-    const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !seen.current) {
-        seen.current = true;
-        run();
-        io.disconnect();
-      }
-    }, { threshold: 0.3 });
-    io.observe(el);
+    const onScroll = () => {
+      if (!raf) raf = window.requestAnimationFrame(paint);
+    };
+    paint();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
     return () => {
-      io.disconnect();
-      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [rep]);
+  }, [seats, rows, reduced]);
 
   return (
-    <div className="hemicycle-block">
-      <div
-        className="hemicycle"
-        role="img"
-        aria-label={`${total} seats by rating under the current source: ${RATING_ORDER.map((r) => `${buckets[r]} ${r.replace('-', ' ')}`).join(', ')}.`}
-      >
-        {/* Keyed on race + source so a change re-deals the wave. */}
-        <svg key={`${chamber}:${sourceId}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} aria-hidden="true">
-          {seats.map((s, i) => (
-            <circle
-              key={i}
-              className={`seat seat--${s.rating}`}
-              cx={s.x}
-              cy={s.y}
-              r={s.r}
-              style={{ '--i': s.t } as React.CSSProperties}
-            />
-          ))}
-        </svg>
-      </div>
-      <div className="r-number" ref={numRef} aria-label={`Projected Republican seats: ${rep}`}>
-        <span className="r-number-letter">R</span>
-        <span className="r-number-value">{shown}</span>
+    <div className="r3-stage" ref={stage}>
+      <div className="r3-sticky" ref={sticky}>
+        <div
+          className="r3-seats"
+          role="img"
+          aria-label={`${total} ${chamber} seats: Republicans ${rep}, toss-ups ${toss}, Democrats ${dem}.`}
+        >
+          <svg ref={svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMinYMin meet" aria-hidden="true">
+            {Array.from({ length: rows }, (_, k) => (
+              <g
+                key={k}
+                className="r3-row"
+                ref={(g) => {
+                  rowGroups.current[k] = g;
+                }}
+              >
+                {seats.map((s, i) =>
+                  s.row === k ? (
+                    <circle
+                      key={i}
+                      className={`r3-seat r3-seat--${s.party}`}
+                      cx={reduced ? s.ax : s.gx}
+                      cy={reduced ? s.ay : s.gy}
+                      r={s.r}
+                      ref={(c) => {
+                        circles.current[i] = c;
+                      }}
+                    />
+                  ) : null
+                )}
+              </g>
+            ))}
+          </svg>
+        </div>
+        <div className="r3-number r3-number--rep" aria-label={`Republicans ${rep}`}>
+          R{rep}
+        </div>
+        <div className="r3-number r3-number--dem" aria-label={`Democrats ${dem}`}>
+          D{dem}
+        </div>
       </div>
     </div>
   );

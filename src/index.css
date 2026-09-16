@@ -4832,89 +4832,87 @@ body {
   }
 }
 
-/* ---------- R3 hemicycle + R53 numeral (Figma 10373:204824 / :205502) ---------- */
-.hemicycle-block {
-  margin-top: 150px;
+/* ---------- R3 + R53: the scroll-driven stage (creative edition) ---------- */
+
+/* ~3 screens of travel; the sticky frame is one screen under the nav and
+   above the ticker. */
+.r3-stage {
+  height: 320vh;
+  margin-top: 96px;
 }
 
-/* Drawn at its composed size (1925 × 904), left on the rail, clipped by the
-   page on the right — exactly as laid out. */
-.hemicycle {
+.r3-sticky {
   position: relative;
-  height: 904px;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px - var(--ticker-h));
   overflow: hidden;
 }
 
-.hemicycle svg {
+.r3-seats {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* The drawing is wider than the frame on purpose — that overflow is what
+   phase C slides through. Its feet run under the numeral band. */
+.r3-seats svg {
   display: block;
-  width: 1925px;
-  height: 904px;
+  width: 150%;
+  height: 112%;
+  will-change: transform;
 }
 
-.seat {
+.r3-row {
+  will-change: opacity, filter;
+}
+
+.r3-seat {
   transition: fill 300ms cubic-bezier(0.22, 1, 0.36, 1);
-  /* Deal-in wave from the left end of the arc (--i is the seat's position
-     along it, 0..1). backwards so the fill lets go when it ends. */
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: seat-in 420ms cubic-bezier(0.32, 1.5, 0.5, 1) backwards;
-  animation-delay: calc(var(--i, 0) * 700ms);
 }
 
-@keyframes seat-in {
-  from {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-  60% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
+.r3-seat--rep { fill: var(--bar-rep); }
+.r3-seat--toss { fill: var(--rating-tossup); }
+.r3-seat--dem { fill: var(--bar-dem); }
 
-.seat--safe-rep { fill: var(--rating-safe-rep); }
-.seat--likely-rep { fill: var(--rating-likely-rep); }
-.seat--lean-rep { fill: var(--rating-lean-rep); }
-.seat--tossup { fill: var(--rating-tossup); }
-.seat--lean-dem { fill: var(--rating-lean-dem); }
-.seat--likely-dem { fill: var(--rating-likely-dem); }
-.seat--safe-dem { fill: var(--rating-safe-dem); }
-
-/* The numeral: 352px cap height in the comp (≈ 500px Libre Franklin), the
-   comp's own beige, tabular so a count-up never jitters. */
-.r-number {
-  margin-top: 48px;
-  font-size: 500px;
-  line-height: 0.72;
+/* The numerals sit in a band along the bottom, on the page's ground so the
+   arc's feet fade under them. R on the left; D takes over on the right. */
+.r3-number {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 24px 0 8px;
+  font-size: clamp(120px, 26vh, 360px);
+  line-height: 0.8;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #efe1d4;
+  /* Only the glyphs fade; the band under them stays dark so the seats
+     sliding past never show through the digits. */
+  --num-o: calc(var(--num-in, 1) * var(--num-r, 1));
+  color: color-mix(in srgb, #efe1d4 calc(var(--num-o) * 100%), transparent);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, var(--surface-dim) 28%);
+}
+
+.r3-number--dem {
+  left: auto;
+  right: 0;
+  --num-o: var(--num-d, 0);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .seat {
-    animation: none;
-    transition: none;
+  .r3-stage {
+    height: auto;
   }
-}
-
-@media (max-width: 1100px) {
-  .hemicycle-block {
-    margin-top: 80px;
+  .r3-sticky {
+    position: static;
+    height: 70vh;
   }
-  .hemicycle {
-    height: 60vw;
-  }
-  .hemicycle svg {
-    width: 128vw;
-    height: 60vw;
-  }
-  .r-number {
-    font-size: 34vw;
+  .r3-number,
+  .r3-number--dem {
+    --num-o: 1;
   }
 }

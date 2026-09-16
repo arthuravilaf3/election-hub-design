@@ -268,7 +268,7 @@ export default function App() {
           {/* R3 + R53: every seat of the chamber in a hemicycle, and the
               projected Republican count, under the map. The Race/Source
               pills stay pinned through here (the gate watches the section). */}
-          {IS_CREATIVE && <Hemicycle races={races} chamber={state.chamber} sourceId={state.sourceId} />}
+          {IS_CREATIVE && <Hemicycle forecast={forecast} chamber={state.chamber} />}
           </section>
 
           {/* The boundary between map and feed is now editorial, not chromatic:
