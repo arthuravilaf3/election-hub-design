@@ -35,7 +35,10 @@ const NO_DATA_ITEM: Item = ['No data from this source', 'var(--no-read)'];
 
 const RESULTS_ITEMS: Array<[string, string, boolean?]> = [
   ['Uncalled — no results yet', 'var(--uncalled)'],
-  ['Leading — counting, not called', 'var(--rep-2)', true],
+  ['Leading, <25% in', 'var(--rep-1)', true],
+  ['<50% in', 'var(--rep-2)', true],
+  ['<75% in', 'var(--rep-3)', true],
+  ['75%+ in', 'var(--rep-4)', true],
   ['✓ Called — certified result', 'var(--rep-5)'],
   ['Not on ballot', 'var(--not-on-ballot)'],
 ];

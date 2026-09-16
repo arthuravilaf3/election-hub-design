@@ -26,55 +26,56 @@
  */
 
 :root {
-  /* ---- Data-viz base tokens ---- */
-  --party-dem: #1d5fa6; /* democrat blue (step-5 anchor) */
-  --party-rep: #b01f24; /* republican red — crimson, distinct from brand #DB3D3B */
+  /* ---- Data-viz tokens — DS "chart" proposal, Sep 16 2026 ----
+     Hexes straight from the token sheet (nothing is a Figma variable yet);
+     names below map 1:1 to the semantic tokens noted beside each. */
+  --party-dem: #0f45db; /* chart.dem.safe = indigo/500 */
+  --party-rep: #fc002c; /* chart.rep.safe = crimson/500 */
 
-  /* Democratic scale */
-  --dem-1: #e3edf9;
-  --dem-2: #b9d2ee;
-  --dem-3: #7fa9db;
-  --dem-4: #4478be;
+  /* chart.dem.reporting.1…5 — indigo 900 → 500; 5 = called = safe */
+  --dem-1: #100440;
+  --dem-2: #17075d;
+  --dem-3: #001b7e;
+  --dem-4: #0017a3;
   --dem-5: var(--party-dem);
 
-  /* Republican scale */
-  --rep-1: #f9e6e4;
-  --rep-2: #efbfbb;
-  --rep-3: #de8b84;
-  --rep-4: #c9544c;
+  /* chart.rep.reporting.1…5 — crimson 900 → 500; 5 = called = safe */
+  --rep-1: #33003b;
+  --rep-2: #65003a;
+  --rep-3: #99003b;
+  --rep-4: #cc003b;
   --rep-5: var(--party-rep);
 
-  /* Data-viz neutrals — three different kinds of "no color", kept distinct:
-     tossup       = we have data, it says too close to call
-     no-read      = the race exists, this provider didn't rate it
-     not-on-ballot= there is no race here in this chamber (the majority of
-                    states for Senate, so it must read as deliberate, not broken)
-     uncalled     = results mode, counting hasn't produced a leader yet */
-  --tossup: #ebe1d8;        /* DW colors/beige — clearly "no lean", warm vs both ramps */
-  --no-read: #545454;       /* mid gray — something is here, this source is silent */
-  --not-on-ballot: #1f1f1f; /* barely above the card surface — the state is inert */
-  --uncalled: #424242;      /* DW gray/600 — "no information" recedes into the dark canvas */
-  --state-border: #151515;  /* strokes between states = card surface, so shapes read as cutouts */
+  /* Map neutrals (chart.neutral.*) — three kinds of "no colour", kept distinct:
+     no-read      = the race exists, this provider didn't rate it   (nodata)
+     not-on-ballot= there is no race here in this chamber            (offballot = card)
+     uncalled     = results mode, counting hasn't produced a leader  (unreported) */
+  --tossup: #8b5cf6;        /* chart.tossup = purple/500 (base edition beige retired) */
+  --no-read: #5c5c5c;       /* chart.neutral.nodata = gray/500 */
+  --not-on-ballot: #151515; /* chart.neutral.offballot = gray/800 = card */
+  --uncalled: #292929;      /* chart.neutral.unreported = gray/700 */
+  --state-border: #151515;  /* chart.map.border = card */
 
-  /* ---- Rating scale (redesign Aug 2026, from the DW WIP Q3 Figma) ----
-     Categorical Safe/Likely/Lean × party + Toss-up, replacing the continuous
-     margin ramp in prediction mode. Values lifted verbatim from the design. */
-  /* Scale from Arthur's Sep 11 2026 swatch: bright red through a near-black
-     purple to light cyan. Ten stops read by eye from the image; the seven
-     ratings sit on 1 · 2 · 3.5 · 5.5 · 7.5 · 9 · 10. */
-  --rating-safe-rep: #e5302e;
-  --rating-likely-rep: #b12a3c;
-  --rating-lean-rep: #7a1d3d;
-  --rating-tossup: #2b0c3f;
-  --rating-lean-dem: #0a1b8f;
-  --rating-likely-dem: #1c4ad8;
-  --rating-safe-dem: #5acbf5;
+  /* Rating scale = chart.rep.* / chart.dem.* / chart.tossup */
+  --rating-safe-rep: #fc002c;   /* crimson/500 */
+  --rating-likely-rep: #cc003b; /* crimson/600 */
+  --rating-lean-rep: #99003b;   /* crimson/700 */
+  --rating-tossup: #8b5cf6;     /* purple/500 */
+  --rating-lean-dem: #001b7e;   /* indigo/700 */
+  --rating-likely-dem: #0017a3; /* indigo/600 */
+  --rating-safe-dem: #0f45db;   /* indigo/500 */
+
+  /* Overlays (chart.overlay.*) */
+  --lift-face: rgb(255 255 255 / 0.12);  /* chart.overlay.lift-face */
+  --lift-side-k: 0.7;                     /* chart.overlay.lift-side = black 30% */
+  --dim-k: 0.5;                           /* chart.overlay.dim = black 50% */
+  --hatch: rgb(255 255 255 / 0.35);       /* chart.overlay.hatch */
 
   /* Balance bar + candidate bars (drawer) */
   /* The dots and bars take the scale's two ends. */
-  --bar-dem: #1c4ad8;
-  --bar-rep: #e5302e;
-  --cand-ind: #2e9e44;
+  --bar-dem: #0f45db;  /* chart.dem.safe */
+  --bar-rep: #fc002c;  /* chart.rep.safe */
+  --cand-ind: #10b981; /* chart.ind = green/500 */
 
   /* Prediction Game promo */
   --promo: #9527ae;
@@ -93,7 +94,7 @@
   --surface-2: #212121;     /* background/neutral/subtlest (buttons, inputs) */
   --surface-hover: #292929; /* DW legacy gray-16 — hover state on dark surfaces */
   --border: #424242;        /* gray/600 hairlines */
-  --selection: #fafafa;     /* border/neutral/bold — selection + focus ring on dark */
+  --selection: #ffffff;     /* chart.map.focus = gray/25 */
 
   /* Brand (chrome only — never data) */
   --brand: #db3d3b;         /* color/brand/500 */

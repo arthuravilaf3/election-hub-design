@@ -556,14 +556,15 @@ button,
   animation: lift-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* The slab under the face: the same fill, darkened, stepped down. */
+/* The slab under the face: the same fill under chart.overlay.lift-side. */
 .lift-side {
-  filter: brightness(0.45) saturate(0.9);
+  filter: brightness(var(--lift-side-k));
 }
 
-/* The face: a touch brighter than the map, with a light top edge. */
-.lift-shape {
-  filter: brightness(1.08);
+/* The face: chart.overlay.lift-face, painted as a copy over the fill. */
+.lift-face {
+  fill: var(--lift-face);
+  pointer-events: none;
 }
 
 /* The lifted copy carries a stroke highlight so elevation is not
@@ -808,7 +809,12 @@ button,
   transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.map-wrap.is-zoomed .map-rest,
+/* chart.overlay.dim: the rest of the map under a black veil (a brightness
+   drop is the same thing as a black overlay, and keeps the hues). */
+.map-wrap.is-zoomed .map-rest {
+  filter: brightness(var(--dim-k));
+}
+
 .map-wrap.is-zoomed .trust-markers,
 .map-wrap.is-zoomed .state-label:not(.state-label--open) {
   opacity: 0.3;
@@ -1359,11 +1365,7 @@ button,
 }
 
 .legend-swatch-hatched {
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(20, 24, 29, 0.22) 0 2px,
-    transparent 2px 4px
-  );
+  background-image: repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 4px);
 }
 
 /* Mirrors the map's no-data stripes (lighter, wider, opposite angle). */
@@ -2091,6 +2093,13 @@ button,
 .state-label--dim {
   fill: var(--ink-soft);
   opacity: 0.45;
+}
+
+/* On the map's neutrals the ink follows the theme (chart.text.on-dark on
+   the dark grays, on-light on the light ones). */
+.state-label--neutral {
+  fill: var(--ink);
+  opacity: 0.8;
 }
 
 /* ---------- Coverage feed ---------- */
@@ -4178,11 +4187,17 @@ button,
   /* Both DS text tones collapse onto gray/500 in light mode. */
   --ink-subtle: #5c5c5c;
   --ink-subtlest: #5c5c5c;
-  /* Map neutrals: "no information" recedes into the LIGHT canvas now. */
-  --state-border: #f4f4f4;
-  --not-on-ballot: #e4e4e4;
-  --no-read: #bdbdbd;
-  --uncalled: #cfcfcf;
+  /* chart.* light values (DS token sheet, Sep 16 2026) */
+  --state-border: #f0f0f0;  /* chart.map.border = gray/100 = card */
+  --not-on-ballot: #f0f0f0; /* chart.neutral.offballot */
+  --no-read: #8f8f8f;       /* chart.neutral.nodata = gray/400 */
+  --uncalled: #dfdfdf;      /* chart.neutral.unreported = gray/200 */
+  --tossup: #7c3aed;        /* chart.tossup = purple/600 */
+  --rating-tossup: #7c3aed;
+  --cand-ind: #059669;      /* chart.ind = green/600 */
+  --selection: #0a0909;     /* chart.map.focus = gray/900 */
+  --dim-k: 0.6;             /* chart.overlay.dim = black 40% */
+  --hatch: rgb(0 0 0 / 0.25); /* chart.overlay.hatch */
 }
 
 /* Label tones swap roles: "dark ink on light fills" is now real ink, and

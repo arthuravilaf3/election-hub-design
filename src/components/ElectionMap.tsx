@@ -438,7 +438,7 @@ export function ElectionMap({
                 patternUnits="userSpaceOnUse"
                 patternTransform="rotate(45)"
               >
-                <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(20, 24, 29, 0.22)" strokeWidth="2" />
+                <line x1="0" y1="0" x2="0" y2="6" stroke="var(--hatch)" strokeWidth="2" />
               </pattern>
               {/* Wider, lighter stripes on the gray no-read fill — the
                   non-color channel for "this source has no data". */}
@@ -537,6 +537,7 @@ export function ElectionMap({
                     className="lift-shape"
                     style={{ fill: fillFor(liftRace, srcFor(liftShape.id)) }}
                   />
+                  <path d={liftShape.d} className="lift-face" aria-hidden="true" />
                   {isHatched(liftRace) && (
                     <path d={liftShape.d} className="hatch-overlay" fill="url(#hatch-counting)" />
                   )}

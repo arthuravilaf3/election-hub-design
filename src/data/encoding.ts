@@ -62,11 +62,13 @@ export function ratingOf(read: SourceRead): Rating {
   return `safe-${side}`;
 }
 
-/** Counting races: reporting % -> step, hard-capped at 3 (never solid). */
-export function countingStep(reporting: number): 1 | 2 | 3 {
-  if (reporting < 40) return 1;
-  if (reporting < 80) return 2;
-  return 3;
+/** Counting races: reporting % -> chart.*.reporting step 1-4; 5 is
+    reserved for called (never reached while counting). */
+export function countingStep(reporting: number): 1 | 2 | 3 | 4 {
+  if (reporting < 25) return 1;
+  if (reporting < 50) return 2;
+  if (reporting < 75) return 3;
+  return 4;
 }
 
 /** The active provider's read of a race or district, if it published one. */
@@ -106,18 +108,21 @@ export function fillFor(race: StateRace, sourceId: string): string {
  * (lean/tossup steps) take dark ink; saturated fills take light ink;
  * not-on-ballot dims. Must track the rating palette in colors.css.
  */
-export function labelToneFor(race: StateRace | undefined, sourceId: string): 'dark' | 'light' | 'dim' {
+export function labelToneFor(
+  race: StateRace | undefined,
+  sourceId: string
+): 'dark' | 'light' | 'dim' | 'neutral' {
   if (!race) return 'dim'; // not on ballot
+  // Every party fill (rating, reporting, called) is a saturated mid-to-dark
+  // colour: chart.text.on-dark. The neutrals flip with the theme.
   if (race.mode === 'results') {
     const r = race.results;
-    if (!r || r.status === 'uncalled') return 'light';
-    if (r.status === 'counting') return 'dark'; // steps 1-3 are light fills
-    return 'light'; // called: solid party color
+    if (!r || r.status === 'uncalled') return 'neutral';
+    return 'light';
   }
   const read = readFor(race, sourceId);
-  if (!read) return 'light'; // no-read gray
-  const rating = ratingOf(read);
-  return rating === 'tossup' || rating.startsWith('lean') ? 'dark' : 'light';
+  if (!read) return 'neutral'; // no-read gray
+  return 'light';
 }
 
 /**

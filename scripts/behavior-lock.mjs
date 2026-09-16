@@ -202,8 +202,10 @@ const zoom = await page.evaluate(() => {
 });
 // The camera flies to the state: a scale above 1 on the group (MAX 7).
 check('the camera flies to the state', zoom.camera, (v) => { const m = /matrix\(([-\d.]+)/.exec(v); return !!m && parseFloat(m[1]) > 1.05 && parseFloat(m[1]) <= 7.01; });
-check('no blur on the rest', zoom.restFilter, 'none');
-check('other states dim to 30%', zoom.restOpacity, '0.3');
+// chart.overlay.dim (DS token test, Sep 16 2026): the rest sits under a
+// black veil — a brightness drop, never a blur — and keeps full opacity.
+check('the rest dims by brightness, not blur', zoom.restFilter, (v) => /^brightness\(0\.[4-7]\d*\)$/.test(v));
+check('other states keep full opacity', zoom.restOpacity, '1');
 check('labels hide while zoomed (the scale would blow them up)', zoom.labelsHidden, '0');
 check('the map keeps its padding (no reflow)', zoom.padding, paddingBefore);
 check('drawer is a modal dialog', `${zoom.dialog}/${zoom.modal}`, 'dialog/true');

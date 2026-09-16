@@ -33,7 +33,7 @@ describe('results mode keeps the status encoding', () => {
       ...base,
       results: { status: 'counting' as const, reporting: 100, leader: 'rep' as const, source: 'AP' },
     };
-    expect(fillFor(counting, 'dw-poll-avg')).toBe('var(--rep-3)');
+    expect(fillFor(counting, 'dw-poll-avg')).toBe('var(--rep-4)');
     const called = {
       ...base,
       results: { status: 'called' as const, reporting: 62, leader: 'rep' as const, source: 'AP' },
