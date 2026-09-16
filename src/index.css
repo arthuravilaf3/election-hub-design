@@ -4837,6 +4837,11 @@ body {
 /* ~3 screens of travel; the sticky frame is one screen under the nav and
    above the ticker. */
 .r3-stage {
+  /* Edge to edge (Sep 2026): the seats run out to the viewport, not the
+     rail — the same escape the feed used to make. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
   height: 500vh;
   margin-top: 96px;
 }
@@ -4892,7 +4897,7 @@ body {
 .r3-number {
   position: absolute;
   bottom: 0;
-  left: 0;
+  left: var(--rail-pad);
   padding: 24px 0 8px;
   font-size: clamp(120px, 26vh, 360px);
   line-height: 0.8;
@@ -4911,7 +4916,7 @@ body {
 
 .r3-number--dem {
   left: auto;
-  right: 0;
+  right: var(--rail-pad);
   --num-o: var(--num-d, 0);
 }
 
