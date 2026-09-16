@@ -27,7 +27,7 @@ const MIDTERMS_ID = 'midterms';
 
 /** The Midterms dropdown: the hub's two destinations. */
 const MIDTERMS_MENU = [
-  { id: 'map', label: 'Midterms Election Map', sub: 'Every race, two sources, one map', href: 'https://www.dailywire.com/midterms' },
+  { id: 'map', label: 'Midterms Election Map', sub: 'Full 2026 election coverage, race by race', href: 'https://www.dailywire.com/midterms' },
   { id: 'play', label: 'Make your Prediction', sub: 'Call the races and track your streak', href: 'https://www.dailywire.com/midterms/predict' },
 ];
 

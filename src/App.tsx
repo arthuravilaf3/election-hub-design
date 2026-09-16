@@ -51,11 +51,6 @@ export default function App() {
     () => summarize(races, state.chamber, state.sourceId, HOUSE_DISTRICT_COUNT),
     [races, state.chamber, state.sourceId]
   );
-  // Every House district the ballot carries, for the hemicycle's seats.
-  const houseDistricts = useMemo(
-    () => Object.values(state.ballot.house).flatMap((r) => r.districts ?? []),
-    [state.ballot]
-  );
   const forecast = useMemo(
     () => forecastFor(races, state.chamber, state.sourceId, summary.seatsUp),
     [races, state.chamber, state.sourceId, summary.seatsUp]
@@ -274,12 +269,7 @@ export default function App() {
               projected Republican count, under the map. The Race/Source
               pills stay pinned through here (the gate watches the section). */}
           {IS_CREATIVE && (
-            <Hemicycle
-              forecast={forecast}
-              chamber={state.chamber}
-              districts={houseDistricts}
-              sourceId={state.sourceId}
-            />
+            <Hemicycle forecast={forecast} chamber={state.chamber} />
           )}
           </section>
 
