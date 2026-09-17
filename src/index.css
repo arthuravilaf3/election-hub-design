@@ -1094,6 +1094,7 @@ button,
    labels beside them, a caption after. */
 .countdown--compact {
   justify-content: flex-start;
+  align-items: baseline;
   gap: 18px;
   padding: 20px 0 0;
 }
@@ -1102,6 +1103,12 @@ button,
   flex-direction: row;
   align-items: baseline;
   gap: 6px;
+}
+
+/* The figure's clipped box is block-level; a baseline for the row comes
+   from the digits themselves. */
+.countdown--compact .countdown-num {
+  align-items: baseline;
 }
 
 .countdown--compact .countdown-num {
@@ -1115,9 +1122,9 @@ button,
 }
 
 .countdown-caption {
-  align-self: baseline;
   margin-left: -6px;
   white-space: nowrap;
+  line-height: 1;
 }
 
 /* ---------- Seat line (creative): headline → seats → map ---------- */
@@ -1136,7 +1143,8 @@ button,
 }
 
 .dots--creative .dots-title {
-  max-width: 22ch;
+  white-space: nowrap;
+  font-size: clamp(32px, 3.6vw, 52px);
 }
 
 .dots--creative .countdown--compact {
