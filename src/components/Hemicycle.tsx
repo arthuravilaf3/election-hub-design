@@ -521,7 +521,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
           className="r3-seats"
           ref={seatsBox}
           role="img"
-          aria-label={`${total} ${chamber} seats: Republicans ${rep}, toss-ups ${toss}, Democrats ${dem}.`}
+          aria-label={`${total} ${CHAMBER_BODY[chamber]} seats: Republicans ${rep}, toss-ups ${toss}, Democrats ${dem}.`}
         >
           <svg ref={svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMin meet" aria-hidden="true">
             <g ref={camera} className="r3-cam">
