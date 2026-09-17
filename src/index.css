@@ -4864,6 +4864,25 @@ body {
   overflow: hidden;
 }
 
+/* The invitation on the empty frame: the map-hint's voice, centred, gone
+   with the first pixel of scroll. */
+.r3-hint {
+  position: absolute;
+  top: 42%;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  color: var(--ink-subtlest);
+  pointer-events: none;
+  transition: opacity 260ms ease-out;
+}
+
+.r3-hint.is-hidden {
+  opacity: 0;
+}
+
 /* The band the numerals sit on runs the full width, so seats passing
    under it fade out wherever they are, not just behind the digits. */
 .r3-sticky::after {

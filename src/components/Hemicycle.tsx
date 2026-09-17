@@ -229,6 +229,8 @@ function Digits({ text }: { text: string }) {
 // to the right, at the map's own pace, instead of all at once.
 const WAVE_MS = 900;
 
+const CHAMBER_BODY: Record<Chamber, string> = { house: 'House', senate: 'Senate', governor: 'governors' };
+
 interface HemicycleProps {
   forecast: ForecastData;
   chamber: Chamber;
@@ -252,6 +254,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
   const seatsBox = useRef<HTMLDivElement>(null);
   const numRep = useRef<HTMLDivElement>(null);
   const numDem = useRef<HTMLDivElement>(null);
+  const hint = useRef<HTMLParagraphElement>(null);
   const [reduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   // Pointer in drawing units (through the camera), and the lens state per
   // seat — scale and offset, lerped each frame toward their targets.
@@ -449,6 +452,9 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       };
       cue(numRep.current, reduced || p >= BEAT.countR[0]);
       cue(numDem.current, reduced || p >= BEAT.countD[0]);
+      // The invitation shows on the empty frame and goes with the first
+      // pixel of scroll.
+      hint.current?.classList.toggle('is-hidden', reduced || p > 0.02);
       // Keep painting while the scroll is still settling, or while loose
       // seats are drifting in view.
       const drifting = !reduced && p < BEAT.gather[1] && onScreen();
@@ -517,6 +523,11 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
             </g>
           </svg>
         </div>
+        {/* The frame is empty before the scroll (the loose seats start at 0%),
+            so it says what to do — the same voice as "Tap on a state". */}
+        <p className="r3-hint" ref={hint} aria-hidden="true">
+          Scroll to seat the {CHAMBER_BODY[chamber]}
+        </p>
         <div className="r3-number r3-number--dem" ref={numDem}>
           <span className="visually-hidden">Democrats {dem}</span>
           <span className="r3-number-row">
