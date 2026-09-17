@@ -19,6 +19,8 @@ import { INTRO_AT, Letters, introDelay } from './Intro';
 
 import { Countdown } from './Countdown';
 import { asset } from '../data/assets';
+import { IS_CREATIVE } from '../data/edition';
+import { CURRENT_SEATS } from '../data/summary';
 import polymarketLogo from '../images/polymarketlogo.png';
 import type { ForecastData } from '../data/hero';
 import type { Chamber } from '../data/types';
@@ -95,11 +97,26 @@ export function RaceHeader({
         />
       </header>
 
-      <Countdown />
+      {!IS_CREATIVE && <Countdown compact />}
 
-      {/* Keyed on the RACE only: a race change rebuilds the grid and replays
+      {/* CREATIVE (Sep 17 2026, after the Kalshi hub): the headline with
+          its percentage, the countdown as its caption, then one line with
+          the seats — projected counts at the ends, the bar between them
+          with the majority marked — and straight on to the map. */}
+      {IS_CREATIVE ? (
+        <section className="dots dots--creative" aria-label={`${CHAMBER_BODY[chamber]} forecast`}>
+          <div className="dots-copy" key={headline}>
+            <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
+              {headline}
+            </h2>
+            <Countdown compact />
+          </div>
+          <SeatLine forecast={forecast} chamber={chamber} />
+        </section>
+      ) : (
+      /* Keyed on the RACE only: a race change rebuilds the grid and replays
           the entry sweep; a source change keeps the same dots and just
-          recolours them in place (the background transition). */}
+          recolours them in place (the background transition). */
       <Dots
         key={`${chamber}:${resultsMode ? 'results' : 'forecast'}`}
         forecast={forecast}
@@ -108,7 +125,66 @@ export function RaceHeader({
         resultsMode={resultsMode}
         called={called}
       />
+      )}
     </>
+  );
+}
+
+const CHAMBER_BODY: Record<Chamber, string> = { house: 'House', senate: 'Senate', governor: 'Governors' };
+
+/**
+ * The seat line (creative edition): projected seats at the two ends, the
+ * bar between them in five runs — seats each party holds and keeps, seats
+ * each gains under this source, the toss-ups — and the majority marked
+ * where it falls. Same projection as the dots and the hemicycle.
+ */
+function SeatLine({ forecast, chamber }: { forecast: ForecastData; chamber: Chamber }) {
+  const total = forecast.dem + forecast.rep;
+  const gap = forecast.tossupShare;
+  const pd = Math.round((total * Math.max(0, forecast.demShare - gap / 2)) / 100);
+  const toss = Math.round((total * gap) / 100);
+  const pr = Math.max(0, total - pd - toss);
+  const cur = CURRENT_SEATS[chamber];
+  const keepD = Math.min(cur.dem, pd);
+  const keepR = Math.min(cur.rep, pr);
+  const majority = Math.floor(total / 2) + 1;
+  const pct = (n: number) => `${((n / total) * 100).toFixed(2)}%`;
+  const runs: Array<[string, number]> = [
+    ['keep-dem', keepD],
+    ['gain-dem', pd - keepD],
+    ['toss', toss],
+    ['gain-rep', pr - keepR],
+    ['keep-rep', keepR],
+  ];
+  return (
+    <div className="seatline intro-rise" style={introDelay(INTRO_AT.statement + 120)}>
+      <div className="seatline-ends">
+        <span className="seatline-end seatline-end--dem">
+          <b className="seatline-big">{pd}</b>
+          <span className="seatline-label">Democrats</span>
+        </span>
+        <span className="seatline-win" style={{ left: pct(majority) }}>
+          {majority} to win
+        </span>
+        <span className="seatline-end seatline-end--rep">
+          <span className="seatline-label">Republicans</span>
+          <b className="seatline-big">{pr}</b>
+        </span>
+      </div>
+      <div
+        className="seatline-bar"
+        role="img"
+        aria-label={`Projected: Democrats ${pd}, toss-ups ${toss}, Republicans ${pr} of ${total}; ${majority} to win.`}
+      >
+        {runs.map(([k, n]) => (
+          <span key={k} className={`seatline-run seatline-run--${k}`} style={{ width: pct(n) }} />
+        ))}
+      </div>
+      <div className="seatline-current">
+        <span>{cur.dem} current</span>
+        <span>{cur.rep} current</span>
+      </div>
+    </div>
   );
 }
 

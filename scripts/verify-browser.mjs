@@ -6,7 +6,9 @@ import { chromium } from 'playwright';
 
 // The harness exercises the FULL prototype: last phase, plus the trusted-
 // source picker that has no phase yet (see src/data/phases.ts).
-const BASE = process.env.HUB_URL ?? 'http://localhost:5174/?phase=4&trust=1';
+// The base edition: the dots grid and the two-column hero are its contract
+// (the creative edition swaps them for the seat line, Sep 17 2026).
+const BASE = process.env.HUB_URL ?? 'http://localhost:5174/?phase=4&trust=1&edition=base';
 const SHOT = (name) => `/tmp/usmap-${name}.png`;
 
 /* Redesign Sep 2026: the header's race tabs and the three-up source segments

@@ -151,12 +151,16 @@
   color: #cc003b; /* the logo's red */
 }
 
-.r3-number.is-in .r3-tagline {
+.r3-tagline--spacer {
+  visibility: hidden;
+}
+
+.r3-number.is-in .r3-tagline:not(.r3-tagline--spacer) {
   animation: r3-tag-in 600ms var(--intro-ease) both;
   animation-delay: 520ms;
 }
 
-.r3-number.is-out .r3-tagline {
+.r3-number.is-out .r3-tagline:not(.r3-tagline--spacer) {
   animation: r3-tag-out 320ms var(--intro-ease) both;
 }
 

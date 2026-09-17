@@ -62,7 +62,10 @@ function buildSeats(total: number, rep: number, toss: number): { seats: Seat[] }
   const rows = total >= 400 ? 12 : total >= 100 ? 6 : 4;
   const step = rows > 1 ? (R_OUT - R_IN) / (rows - 1) : 0;
   const radii = Array.from({ length: rows }, (_, k) => R_OUT - k * step); // outer row first (top)
-  const dotR = Math.min(21, (rows > 1 ? step : 120) * 0.47);
+  // The House's 435 seats are 21 wide (the comp); a smaller chamber gets
+  // seats scaled to its looser rows — the Senate's 100 come out ~42, the
+  // governors' 50 ~48 — so the arc reads as big as the House's.
+  const dotR = total >= 400 ? Math.min(21, step * 0.47) : Math.min(48, step * 0.42);
   const arcs = radii.map((r) => Math.PI * r);
   const sum = arcs.reduce((a, b) => a + b, 0);
   const raw = arcs.map((a) => (a / sum) * total);
@@ -549,6 +552,11 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
           <span className="visually-hidden">Democrats {dem}</span>
           <span className="r3-number-row">
             <Digits text={`D${dem}`} />
+          </span>
+          {/* Same height as the tagline under the R, so the two counts share
+              a top edge. */}
+          <span className="r3-tagline r3-tagline--spacer" aria-hidden="true">
+            The Right Place to Be
           </span>
         </div>
         <div className="r3-number r3-number--rep" ref={numRep}>

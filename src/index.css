@@ -1090,6 +1090,153 @@ button,
   color: var(--ink-subtlest);
 }
 
+/* The small countdown (Sep 17 2026): one line, figures a third the size,
+   labels beside them, a caption after. */
+.countdown--compact {
+  justify-content: flex-start;
+  gap: 18px;
+  padding: 20px 0 0;
+}
+
+.countdown--compact .countdown-unit {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.countdown--compact .countdown-num {
+  font-size: 22px;
+}
+
+.countdown--compact .countdown-label,
+.countdown-caption {
+  font-size: 13px;
+  color: var(--ink-subtlest);
+}
+
+.countdown-caption {
+  align-self: baseline;
+  margin-left: -6px;
+  white-space: nowrap;
+}
+
+/* ---------- Seat line (creative): headline → seats → map ---------- */
+.dots.dots--creative {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  margin-top: 48px;
+}
+
+.dots--creative .dots-copy {
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+
+.dots--creative .dots-title {
+  max-width: 22ch;
+}
+
+.dots--creative .countdown--compact {
+  justify-content: center;
+  padding: 0;
+}
+
+.seatline {
+  width: 100%;
+  max-width: 1202px;
+}
+
+.seatline-ends {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.seatline-end {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.seatline-big {
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.seatline-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.seatline-end--dem .seatline-big,
+.seatline-end--dem .seatline-label {
+  color: var(--rating-safe-dem);
+}
+
+.seatline-end--rep .seatline-big,
+.seatline-end--rep .seatline-label {
+  color: var(--rating-safe-rep);
+}
+
+/* The majority, marked where it falls on the bar. */
+.seatline-win {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  padding-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.seatline-win::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 1px;
+  height: 8px;
+  background: var(--ink);
+}
+
+.seatline-bar {
+  display: flex;
+  gap: 3px;
+  height: 12px;
+}
+
+.seatline-run {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.seatline-run--keep-dem { background: var(--rating-likely-dem); }
+.seatline-run--gain-dem { background: var(--rating-safe-dem); }
+.seatline-run--toss { background: var(--rating-tossup); }
+.seatline-run--gain-rep { background: var(--rating-safe-rep); }
+.seatline-run--keep-rep { background: var(--rating-likely-rep); }
+
+.seatline-current {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--ink-subtlest);
+}
+
 /* ---------- Dots (the forecast beside every seat) ---------- */
 
 .dots {

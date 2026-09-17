@@ -87,9 +87,11 @@ export function Figure({ value, order = null }: { value: string; order?: number 
 interface CountdownProps {
   /** Test seam: freeze the clock at a given instant. */
   now?: number;
+  /** The small form (Sep 17 2026): one line of figures, a caption after. */
+  compact?: boolean;
 }
 
-export function Countdown({ now }: CountdownProps) {
+export function Countdown({ now, compact = false }: CountdownProps) {
   const [tick, setTick] = useState(() => now ?? Date.now());
   useEffect(() => {
     if (now !== undefined) return;
@@ -109,7 +111,7 @@ export function Countdown({ now }: CountdownProps) {
     /* role=timer, no aria-live: announcing every second would be noise. The
        label reads the whole figure once, on focus or on demand. */
     <div
-      className="countdown"
+      className={`countdown${compact ? ' countdown--compact' : ''}`}
       role="timer"
       aria-label={
         t.over
@@ -128,6 +130,7 @@ export function Countdown({ now }: CountdownProps) {
           </span>
         </span>
       ))}
+      {compact && <span className="countdown-caption">to Election Day</span>}
     </div>
   );
 }

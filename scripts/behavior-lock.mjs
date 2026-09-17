@@ -22,7 +22,8 @@ const check = (name, actual, expected) => {
 
 const browser = await chromium.launch({ channel: 'chrome' });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-await page.goto(`${BASE}/?phase=4`);
+// The base edition — the dots grid is its contract (creative has the seat line).
+await page.goto(`${BASE}/?phase=4&edition=base`);
 await page.waitForSelector('.state-shape');
 await page.waitForTimeout(800);
 
