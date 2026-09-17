@@ -88,9 +88,17 @@ export function RaceHeader({
         {/* The campaign mark (creative, Sep 2026): the "Right Place to Be"
             hemicycle, in place of the typeset tagline. */}
         <img
-          className="hub-rightplace intro-rise"
+          className="hub-rightplace hub-rightplace--dark intro-rise"
           style={introDelay(INTRO_AT.statement)}
           src={asset('logos/the-right-place.svg')}
+          alt="The Right Place to Be"
+          width={300}
+          height={147}
+        />
+        <img
+          className="hub-rightplace hub-rightplace--light intro-rise"
+          style={introDelay(INTRO_AT.statement)}
+          src={asset('logos/the-right-place-light.svg')}
           alt="The Right Place to Be"
           width={300}
           height={147}

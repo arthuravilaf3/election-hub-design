@@ -25,6 +25,7 @@ import type React from 'react';
 import type { ForecastData } from '../data/hero';
 import type { Chamber } from '../data/types';
 import { R3_SEATS } from '../data/r3Layout';
+import { asset } from '../data/assets';
 
 const W = 1925;
 const H = 904;
@@ -63,9 +64,10 @@ function buildSeats(total: number, rep: number, toss: number): { seats: Seat[] }
   const step = rows > 1 ? (R_OUT - R_IN) / (rows - 1) : 0;
   const radii = Array.from({ length: rows }, (_, k) => R_OUT - k * step); // outer row first (top)
   // The House's 435 seats are 21 wide (the comp); a smaller chamber gets
-  // seats scaled to its looser rows — the Senate's 100 come out ~42, the
-  // governors' 50 ~48 — so the arc reads as big as the House's.
-  const dotR = total >= 400 ? Math.min(21, step * 0.47) : Math.min(48, step * 0.42);
+  // seats scaled to its looser rows — the Senate's 100 come out ~43, the
+  // governors' 50 ~71 — so the arc reads as big as the House's whatever the
+  // count. The cap only guards a chamber smaller still.
+  const dotR = total >= 400 ? Math.min(21, step * 0.47) : Math.min(80, step * 0.42);
   const arcs = radii.map((r) => Math.PI * r);
   const sum = arcs.reduce((a, b) => a + b, 0);
   const raw = arcs.map((a) => (a / sum) * total);
@@ -555,20 +557,28 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
           </span>
           {/* Same height as the tagline under the R, so the two counts share
               a top edge. */}
-          <span className="r3-tagline r3-tagline--spacer" aria-hidden="true">
-            The Right Place to Be
-          </span>
+          <span className="r3-tagline r3-tagline--spacer" aria-hidden="true" />
         </div>
         <div className="r3-number r3-number--rep" ref={numRep}>
           <span className="visually-hidden">Republicans {rep}</span>
           <span className="r3-number-row">
             <Digits text={`R${rep}`} />
           </span>
-          {/* The R sits on the right: the header logo's line, written out,
-              landing after its digits. */}
-          <span className="r3-tagline" aria-hidden="true">
-            The <em>Right</em> Place to Be
-          </span>
+          {/* The R sits on the right, and under it the header logo's own
+              lettering — the same artwork, without the hemicycle — in the
+              theme's ink. */}
+          <img
+            className="r3-tagline r3-tagline--dark"
+            src={asset('logos/the-right-place-text.svg')}
+            alt=""
+            aria-hidden="true"
+          />
+          <img
+            className="r3-tagline r3-tagline--light"
+            src={asset('logos/the-right-place-text-light.svg')}
+            alt=""
+            aria-hidden="true"
+          />
         </div>
       </div>
     </div>

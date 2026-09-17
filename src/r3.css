@@ -135,22 +135,30 @@
 
 /* "The Right Place to Be", from the header's logo, under the R: lands
    after the digits and leaves before them. */
+/* The header logo's lettering, cropped out of the same artwork: one file
+   per theme, the other display:none. Height drives it; the width follows. */
 .r3-tagline {
   display: block;
-  margin-top: 6px;
-  font-size: clamp(18px, 3.2vh, 30px);
-  line-height: 1.1;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--ink);
+  height: clamp(20px, 3.4vh, 34px);
+  width: auto;
+  margin-top: 10px;
   opacity: 0;
 }
 
-.r3-tagline em {
-  font-style: normal;
-  color: #cc003b; /* the logo's red */
+.r3-tagline--light {
+  display: none;
 }
 
+:root[data-theme='light'] .r3-tagline--dark {
+  display: none;
+}
+
+:root[data-theme='light'] .r3-tagline--light {
+  display: block;
+}
+
+/* Under the D: no artwork, just its height, so the two counts share a top
+   edge. */
 .r3-tagline--spacer {
   visibility: hidden;
 }
