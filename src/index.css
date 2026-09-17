@@ -4984,6 +4984,7 @@ body {
    countdown's digits (same keyframes, same ease), on its own delay, and
    stays. Off cue the slot is empty. */
 .r3-digit {
+  position: relative;
   display: block;
   height: 0.9em;
   overflow: hidden;
@@ -4997,6 +4998,21 @@ body {
 .r3-number.is-in .r3-digit-in {
   animation: digit-in 520ms var(--intro-ease) both;
   animation-delay: calc(var(--i) * 70ms);
+}
+
+/* A value change while landed: the digit rolls like the countdown's — the
+   new figure rises from below, the old one leaves upward. */
+.r3-number.is-in .r3-digit-in--roll {
+  opacity: 1; /* roll-in only declares its start; the rest state is visible */
+  animation: roll-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0ms;
+}
+
+.r3-digit-out {
+  position: absolute;
+  inset: 0;
+  display: block;
+  animation: roll-out 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Scrolling back past the cue: the digits climb out the way they came in,
@@ -5039,6 +5055,9 @@ body {
   .r3-number.is-out .r3-tagline {
     animation: none;
     opacity: 0;
+  }
+  .r3-digit-out {
+    display: none;
   }
   .r3-number.is-in .r3-digit-in {
     animation: none;

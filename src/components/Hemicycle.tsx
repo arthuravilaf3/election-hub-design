@@ -19,7 +19,7 @@
 //      seats answer the pointer (the divide)
 // then the pin releases and the page goes on to the feed. Reduced motion:
 // the finished arc, static, with both counts.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import type { ForecastData } from '../data/hero';
 import type { Chamber } from '../data/types';
@@ -181,20 +181,53 @@ const easeSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const span = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
 
-/** One slot per character, so each can drop in on its own delay. */
+/** One slot per character: it drops in on its own delay when the count
+    lands, and when its value changes while landed (a source or race switch)
+    it ROLLS like the countdown's digits — the new figure rises from below
+    while the old one leaves upward, inside the slot's clipped box. */
+function Slot({ ch, i, n }: { ch: string; i: number; n: number }) {
+  const prev = useRef(ch);
+  const [leaving, setLeaving] = useState<string | null>(null);
+  const [rolled, setRolled] = useState(false);
+  useEffect(() => {
+    if (prev.current === ch) return;
+    setLeaving(prev.current);
+    prev.current = ch;
+    setRolled(true);
+    const id = window.setTimeout(() => setLeaving(null), 450);
+    return () => window.clearTimeout(id);
+  }, [ch]);
+  return (
+    <span className="r3-digit" aria-hidden="true">
+      <span
+        key={`in-${ch}`}
+        className={`r3-digit-in${rolled ? ' r3-digit-in--roll' : ''}`}
+        style={{ '--i': i, '--n': n } as React.CSSProperties}
+      >
+        {ch}
+      </span>
+      {leaving !== null && (
+        <span key={`out-${leaving}`} className="r3-digit-out">
+          {leaving}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function Digits({ text }: { text: string }) {
   return (
     <>
       {text.split('').map((ch, i) => (
-        <span className="r3-digit" key={i} aria-hidden="true">
-          <span className="r3-digit-in" style={{ '--i': i, '--n': text.length } as React.CSSProperties}>
-            {ch}
-          </span>
-        </span>
+        <Slot ch={ch} i={i} n={text.length} key={`${text.length}-${i}`} />
       ))}
     </>
   );
 }
+
+// A source or race switch recolours the seats in a WAVE from the left tip
+// to the right, at the map's own pace, instead of all at once.
+const WAVE_MS = 900;
 
 interface HemicycleProps {
   forecast: ForecastData;
@@ -231,13 +264,24 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
     moving: false,
   });
   const view = useRef({ scale: 1, ox: 0, tx: 0, ty: 0, zoom: 1 });
+  // The parties the seats had before the latest data change, and when the
+  // recolour wave started (0 = no wave running).
+  const wave = useRef<{ from: Party[]; start: number }>({ from: [], start: 0 });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const st = stage.current;
     const sk = sticky.current;
     const el = svg.current;
     if (!st || !sk || !el) return;
     const sb = seatsBox.current;
+    // Same chamber, new split: run the wave from the previous colours.
+    // A different chamber is a different arc — it just rebuilds.
+    const prevParties = wave.current.from;
+    if (!reduced && prevParties.length === seats.length && seats.some((s, i) => s.party !== prevParties[i])) {
+      wave.current = { from: prevParties, start: performance.now() };
+    } else {
+      wave.current = { from: seats.map((s) => s.party), start: 0 };
+    }
     let raf = 0;
     let shown = -1; // smoothed progress; -1 = not painted yet
     const target = () => {
@@ -285,10 +329,18 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       // The seats only answer the pointer once the arc is complete.
       const settled = reduced || p >= BEAT.fill[1];
       const hotParty = settled && hot >= 0 && hotD2 < LENS_R * LENS_R * 4 ? seats[hot].party : null;
+      // The recolour wave: seats left of its front already wear the new
+      // colour, seats right of it still the old one.
+      const wv = wave.current;
+      const waveP = wv.start ? clamp01((now - wv.start) / WAVE_MS) : 1;
+      const waveFront = waveP * (1 + FRONT_W);
       let lensMoving = false;
       seats.forEach((s, i) => {
         const c = circles.current[i];
         if (!c) return;
+        const party = wv.start && s.t > waveFront ? wv.from[i] : s.party;
+        const cls = `r3-seat r3-seat--${party}`;
+        if (c.getAttribute('class') !== cls) c.setAttribute('class', cls);
         let x = s.ax;
         let y = s.ay;
         let vis = 1;
@@ -400,7 +452,9 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       // Keep painting while the scroll is still settling, or while loose
       // seats are drifting in view.
       const drifting = !reduced && p < BEAT.gather[1] && onScreen();
-      if ((p !== want || drifting || lensMoving) && !raf) raf = window.requestAnimationFrame(paint);
+      if (wv.start && waveP >= 1) wave.current = { from: seats.map((x) => x.party), start: 0 };
+      const waving = wave.current.start > 0;
+      if ((p !== want || drifting || lensMoving || waving) && !raf) raf = window.requestAnimationFrame(paint);
     };
     const onScroll = () => {
       if (!raf) raf = window.requestAnimationFrame(paint);
@@ -432,6 +486,8 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       sb?.removeEventListener('pointermove', onPointerMove);
       sb?.removeEventListener('pointerleave', onPointerLeave);
       if (raf) window.cancelAnimationFrame(raf);
+      // Whatever the seats wore last is where the next wave starts from.
+      wave.current = { from: seats.map((x) => x.party), start: 0 };
     };
   }, [seats, reduced]);
 
