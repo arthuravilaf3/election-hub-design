@@ -3801,6 +3801,12 @@ button,
     margin-top: -2px;
   }
 
+  /* The header stacks on a phone, and the campaign mark centres under the
+     brand block instead of hanging off its left edge. */
+  .hub-rightplace {
+    align-self: center;
+  }
+
   .countdown {
     padding-top: 24px;
     gap: 8px;
