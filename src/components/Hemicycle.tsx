@@ -225,6 +225,9 @@ function Digits({ text }: { text: string }) {
   );
 }
 
+// Scroll past the pin's end over which the closing curtain plays.
+const CLOSE_PX = 320;
+
 // A source or race switch recolours the seats in a WAVE from the left tip
 // to the right, at the map's own pace, instead of all at once.
 const WAVE_MS = 900;
@@ -287,6 +290,9 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
     }
     let raf = 0;
     let shown = -1; // smoothed progress; -1 = not painted yet
+    // How far past the pin's end the page has scrolled, 0 → 1 over the
+    // first CLOSE_PX: the curtain that closes the chapter before the feed.
+    let over = 0;
     const target = () => {
       if (reduced) return 1;
       const stTop = st.getBoundingClientRect().top + window.scrollY;
@@ -295,7 +301,9 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       // the crown would slide under the nav.
       const pinTop = parseFloat(window.getComputedStyle(sk).top) || 0;
       const travel = st.offsetHeight - sk.offsetHeight - pinTop;
-      return clamp01((window.scrollY - stTop) / Math.max(1, travel));
+      const raw = (window.scrollY - stTop) / Math.max(1, travel);
+      over = clamp01(((raw - 1) * travel) / CLOSE_PX);
+      return clamp01(raw);
     };
     const onScreen = () => {
       const r = sk.getBoundingClientRect();
@@ -455,6 +463,12 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       // The invitation shows on the empty frame and goes with the first
       // pixel of scroll.
       hint.current?.classList.toggle('is-hidden', reduced || p > 0.02);
+      // The curtain: as the stage scrolls away, the counts shrink and fade a
+      // little and the arc dims, so the chapter closes instead of just
+      // leaving. Only CSS vars; the rules are in index.css.
+      const close = ease(over);
+      sk.style.setProperty('--r3-close', close.toFixed(3));
+      if (sb) sb.style.filter = close > 0 ? `brightness(${(1 - 0.15 * close).toFixed(3)})` : '';
       // Keep painting while the scroll is still settling, or while loose
       // seats are drifting in view.
       const drifting = !reduced && p < BEAT.gather[1] && onScreen();

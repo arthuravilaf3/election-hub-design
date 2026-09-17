@@ -4925,10 +4925,16 @@ body {
 
 /* The numerals sit in a band along the bottom, on the page's ground so the
    arc's feet fade under them. R on the left; D takes over on the right. */
+/* The curtain (--r3-close, 0 → 1 as the stage scrolls away): counts shrink
+   8% and lose 30%; the arc's dimming is set inline by the stage, and only
+   while it plays, so the seats never sit under a filter at rest. */
 .r3-number {
   position: absolute;
   bottom: 44px; /* breathing room above the Polymarket ticker */
   left: var(--rail-pad);
+  transform-origin: bottom left;
+  transform: scale(calc(1 - 0.08 * var(--r3-close, 0)));
+  opacity: calc(1 - 0.3 * var(--r3-close, 0));
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -4948,6 +4954,7 @@ body {
   left: auto;
   right: var(--rail-pad);
   align-items: flex-end;
+  transform-origin: bottom right;
 }
 
 .r3-number-row {
