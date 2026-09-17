@@ -306,30 +306,6 @@ button,
   }
 }
 
-/* ---------- Header ---------- */
-
-.app-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.app-header h1 {
-  font-size: 20px;
-  line-height: 28px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0;
-}
-
-.app-header-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .mode-chip {
   font-size: 12px;
   font-weight: 600;
@@ -752,37 +728,9 @@ button,
   accent-color: var(--brand);
 }
 
-/* ---------- Sourcing disclosure ---------- */
-
-.sourcing {
-  margin-bottom: 12px;
-}
-
-.sourcing-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  font-size: 12px;
-  color: var(--ink-soft);
-}
-
-.sourcing-source {
-  color: var(--ink);
-}
-
-.sourcing-freshness.is-stale,
 .is-stale {
   color: var(--warning);
   font-weight: 600;
-}
-
-.sourcing-disclaimer {
-  margin: 4px 0 0;
-  font-size: 10px;
-  line-height: 16px;
-  color: var(--ink-soft);
-  max-width: 68ch;
 }
 
 /* ---------- Open state (dim the rest) ---------- */
@@ -1045,11 +993,6 @@ button,
   filter: brightness(0) invert(1);
 }
 
-.hub-presenter {
-  font-weight: 600;
-  color: var(--ink);
-}
-
 .hub-dot {
   color: var(--ink-subtlest);
 }
@@ -1060,20 +1003,6 @@ button,
   width: 297px;
   height: 114px;
   display: block;
-}
-
-.hub-tagline {
-  flex: none;
-  margin: 0;
-  font-size: 20px;
-  line-height: 1;
-  color: var(--ink-subtle);
-  text-align: right;
-}
-
-.hub-tagline strong {
-  font-weight: 700;
-  color: var(--brand-hover); /* brand/500 is 4.49:1 here, a hair under AA */
 }
 
 /* ---------- Countdown (live) ---------- */
@@ -1760,11 +1689,6 @@ button,
   color: var(--ink-soft);
 }
 
-.drawer-big-read {
-  margin: 4px 0 0;
-  font-size: 16px;
-}
-
 .race-panel-status {
   margin: 16px 0 4px;
   font-size: 18px;
@@ -1789,26 +1713,7 @@ button,
  */
 
 /* Picked: accent border, no color-only signal — the badge says it in words. *//* Right slot stacks state over freshness: the "as of" line moves down
-   instead of being squeezed out. *//* Idle cards stay quiet: the invitation only appears on hover/focus. *//* Microcopy under the section title, and its inline reset action. */@media (prefers-reduced-motion: reduce) {}/* The kind disclaimer, same words as the map's source control. */
-.source-kind {
-  display: block;
-  font-style: normal;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}/* Lean chips (comparison rows + district rows) */
-.district-chip {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  display: inline-block;
-}
-
-.district-chip-dem { background: var(--rating-likely-dem); }
-.district-chip-rep { background: var(--rating-likely-rep); }
-.district-chip-tossup { background: var(--rating-tossup); }
+   instead of being squeezed out. *//* Idle cards stay quiet: the invitation only appears on hover/focus. *//* Microcopy under the section title, and its inline reset action. *//* The kind disclaimer, same words as the map's source control. *//* Lean chips (comparison rows + district rows) */
 /* Expander: the delegation opens in place, no new surface. */
 .district-expander {
   font: inherit;
@@ -2049,24 +1954,6 @@ button,
   color: var(--ink-soft);
 }
 
-/* The picker's menu: brand on the left, kind disclaimer on the right. */
-.source-menu {
-  z-index: 20;
-}
-
-.source-menu .dock-menu-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.source-menu .dock-menu-item em {
-  font-style: normal;
-  font-size: 11px;
-  color: var(--ink-soft);
-}
-
 /* State abbreviation labels: decorative geometry captions. Tone follows the
    fill (dark ink on light ratings, light ink on saturated ones). */
 .state-labels {
@@ -2180,12 +2067,6 @@ button,
   letter-spacing: -0.01em;
 }
 
-.feed-filters {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 /* DS Chip (DW 3.0), Size=Default: 52px pill, 16px side padding, 14/155%
    Regular with 2% tracking. Off = transparent + gray-16 stroke; On/Active
    = solid --surface, no stroke. */
@@ -2217,10 +2098,6 @@ button,
   border-color: transparent;
 }
 
-.feed-group {
-  margin-top: 32px;
-}
-
  /* Day header, per the comp: DS label/600/lg over a hairline rule. */
 /* Right after the filter bar (a filter is on): the date sits where the
    "Latest shorts" title sits in browse mode — 28px under the bar, allowing
@@ -2238,12 +2115,6 @@ button,
   color: var(--ink);
   padding: 8px 8px 16px 0;
   border-bottom: 1px solid var(--border);
-}
-
-.feed-group ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 /* The comp runs the list at 864 inside a 1440 frame — a measure, not the
@@ -2480,9 +2351,6 @@ button,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .race-statement {
-    animation: none;
-  }
 
   .state-labels,
   .feed-filter {
@@ -2524,7 +2392,6 @@ button,
   position: relative;
   isolation: isolate;
 }
-
 
 /* DS utility button: 40px round, subtle surface, 20px icon. */
 .utility-btn {
@@ -2753,9 +2620,7 @@ button,
    Exactly two typographic systems. */
 /* Opinion carries the component's tone=exclusive and nothing else: no
    eyebrow, no lock, no badge — the comp's own rows are exactly headline,
-   dek and meta, and the serif IS the signal. */
-.feed-item--opinion .feed-headline,
-.related-item--opinion .related-headline {
+   dek and meta, and the serif IS the signal. */.feed-item--opinion .feed-headline {
   font-family: var(--font-exclusive);
   font-weight: 500;
   letter-spacing: -0.02em;
@@ -3001,12 +2866,9 @@ button,
   cursor: pointer;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .short-card,
-  .host-row-collapse,
-  .host-chip,
-  .feed-tag,
-  .feed-more {
+@media (prefers-reduced-motion: reduce) {.short-card,
+.feed-tag,
+.feed-more {
     transition: none;
   }
 
@@ -3269,13 +3131,6 @@ button,
   }
 }
 
-/* ---------- Race tag dot + hovercard, plan banner (Aug 2026) ---------- */
-
-.race-tag-wrap {
-  position: relative;
-  display: inline-flex;
-}
-
 /* Status dot inside the tag: the exact color this race wears on the map
    right now (live ballot + active source, results included). */
 .race-dot {
@@ -3522,163 +3377,6 @@ button,
    short brand underline — visually distinct from the white chamber-tab
    underline above it. Lives INSIDE the scroll, so it rides away with the
    content. */
-.drawer-subtabs {
-  display: flex;
-  gap: 20px;
-  margin: 16px 0 6px;
-}
-
-.drawer-subtab {
-  font: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 0 0 5px;
-  border: 0;
-  background: none;
-  color: var(--ink-soft);
-  cursor: pointer;
-  text-decoration: none;
-  transition: color 140ms ease-out;
-}
-
-.drawer-subtab:hover {
-  color: var(--ink);
-}
-
-.drawer-subtab.is-active {
-  color: var(--ink);
-  text-decoration: underline;
-  text-decoration-color: var(--brand);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 7px;
-}
-
-.related {
-  margin-top: 12px;
-}
-
-.related-search {
-  font: inherit;
-  font-size: 13px;
-  width: 100%;
-  height: 38px;
-  padding: 0 14px;
-  border: 1px solid var(--surface-hover);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--ink);
-}
-
-.related-search::placeholder {
-  color: var(--ink-soft);
-}
-
-.related-search:focus-visible {
-  outline: 2px solid var(--selection);
-  outline-offset: 1px;
-}
-
-/* Mini pills — DS chip family at drawer scale. */
-.related-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.related-pill {
-  font: inherit;
-  font-size: 12px;
-  letter-spacing: 0.02em;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  border: 1px solid var(--surface-hover);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  transition: background 140ms ease-out;
-}
-
-.related-pill:hover {
-  background: var(--surface-2);
-}
-
-.related-pill.is-active {
-  background: var(--surface-2);
-  border-color: transparent;
-}
-
-.related-state-anchor {
-  position: relative;
-  margin-left: auto;
-}
-
-.related-state-menu {
-  right: 0;
-  left: auto;
-}
-
-.related-empty {
-  margin: 22px 2px 8px;
-  font-size: 13px;
-  color: var(--ink-soft);
-}
-
-.related-list {
-  list-style: none;
-  margin: 14px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.related-item {
-  font: inherit;
-  display: block;
-  width: 100%;
-  text-align: left;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--ink);
-  padding: 10px 10px 11px;
-  cursor: pointer;
-  transition: background 140ms ease-out;
-}
-
-.related-item:hover {
-  background: var(--surface-2);
-}
-
-.related-kicker {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-
-.related-headline {
-  display: block;
-  margin-top: 3px;
-  /* Same DS heading, size=sm. */
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.related-meta {
-  display: block;
-  margin-top: 3px;
-  font-size: 11px;
-  color: var(--ink-soft);
-}
 
 /* The visited treatment is off for now — the comp has no visited state, so
    the class stays on the element (the click is still recorded) with nothing
@@ -3702,13 +3400,6 @@ button,
 .state-menu {
   left: auto;
   right: 0;
-}
-
-/* Opinion shelves: section titles between format groups. */
-.feed-shelf-title {
-  margin: 30px 0 4px;
-  font-size: 15px;
-  font-weight: 700;
 }
 
 /* Hovercard hand-off button. */
@@ -3775,9 +3466,7 @@ button,
 /* ---------- Feed polish round (Aug 2026) ---------- */
 
 /* State menus take a scrollbar — a real 50-state list is taller than any
-   dropdown should be. The search stays pinned while options scroll. */
-.state-menu,
-.related-state-menu {
+   dropdown should be. The search stays pinned while options scroll. */.state-menu {
   max-height: 264px;
   overflow-y: auto;
 }
@@ -3803,10 +3492,7 @@ button,
    the visited dim (declared later, same specificity). */
 .feed-item {
   cursor: pointer;
-}
-
-.feed-headline,
-.related-headline {
+}.feed-headline {
   transition: color 140ms ease-out;
 }
 
@@ -3815,11 +3501,8 @@ button,
    brand-colored and it never underlines.
    NOTE: that exact token (gray/400 dark, gray/500 light) is not in this
    prototype's colors.css — --ink-soft is the nearest existing token, a
-   shade lighter. Worth adding the real one to the shared token file. */
-.feed-item:hover .feed-headline,
-.related-item:hover .related-headline,
-.feed-item:active .feed-headline,
-.related-item:active .related-headline {
+   shade lighter. Worth adding the real one to the shared token file. */.feed-item:hover .feed-headline,
+.feed-item:active .feed-headline {
   color: var(--ink-subtlest);
 }
 
@@ -3866,20 +3549,6 @@ button,
   .dw-nav-sections,
   .dw-nav-divider {
     display: none;
-  }
-
-  .race-header {
-    margin-top: 24px;
-  }
-
-  .race-title {
-    font-size: 26px;
-    line-height: 32px;
-    max-width: none;
-  }
-
-  .race-byline {
-    font-size: 12px;
   }
 
   /* Phone: a headline truncated to five words says nothing — the pinned bar
@@ -3946,11 +3615,6 @@ button,
     width: 56px;
     height: 48px;
     margin-top: -2px;
-  }
-
-  .hub-tagline {
-    font-size: 16px;
-    text-align: left;
   }
 
   .countdown {
@@ -4122,6 +3786,15 @@ button,
   background: var(--surface-2);
 }
 
+.mobile-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+
 .mobile-overlay {
   position: fixed;
   inset: 0;
@@ -4136,6 +3809,7 @@ button,
 
 /* Phone bezel around a REAL 390px viewport (iframe → media queries apply). */
 .mobile-frame {
+  position: relative; /* above the backdrop button */
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: 38px;
@@ -4778,332 +4452,4 @@ body {
 .dw-nav-menu-sub {
   font-size: 12px;
   color: var(--ink-subtlest);
-}
-
-/* ---------- House Colors (Figma 10222:111601) ---------- */
-.house-colors {
-  position: relative;
-  /* Full bleed (Sep 2026): the Figma frame is 1440 × 342 edge to edge, so
-     the strip runs out to the page padding on both sides. */
-  aspect-ratio: 1440 / 342;
-  margin: 72px calc(-1 * var(--rail-pad)) 0;
-  overflow: hidden;
-  background: var(--surface);
-  isolation: isolate;
-}
-
-/* Two prints of the same photo, one red and one blue (house_red /
-   house_blue, Sep 16 2026), laid as in the Figma: at the photo's own scale
-   (1052 of the 1440 frame), on the bottom edge, the red flush left and the
-   blue flush right. Each print sits in a full-width clip so the split is
-   measured in frame terms: red up to the Republican share plus the
-   toss-ups, blue from the Republican share on; the overlap is the toss-up
-   band, where the blue lightens over the red. */
-.house-colors-print {
-  position: absolute;
-  inset: 0;
-  transition: clip-path 600ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* The red runs 14% past the toss-ups so the fused band reads the way the
-   comp's does; the blue's edge — the Republican share — is the real line. */
-.house-colors-print--rep {
-  clip-path: inset(0 calc(100% - var(--rep) - var(--toss) - 14%) 0 0);
-}
-
-.house-colors-print--dem {
-  clip-path: inset(0 0 0 var(--rep));
-  mix-blend-mode: lighten;
-}
-
-/* Bottom-anchored with a little hanging below the frame, so the drift
-   never shows the frame's edge. */
-.house-colors-photo {
-  position: absolute;
-  bottom: -40px;
-  width: 73.06%;
-  height: auto;
-  transform: translateY(0);
-  will-change: transform;
-}
-
-.house-colors-photo--rep {
-  left: 0;
-}
-
-.house-colors-photo--dem {
-  right: 0;
-}
-
-@media (max-width: 700px) {
-  .house-colors {
-    height: 160px;
-    margin-top: 40px;
-  }
-}
-
-/* ---------- R3 + R53: the scroll-driven stage (creative edition) ---------- */
-
-/* ~3 screens of travel; the sticky frame is one screen under the nav and
-   above the ticker. */
-.r3-stage {
-  /* Edge to edge (Sep 2026): the seats run out to the viewport, not the
-     rail — the same escape the feed used to make. */
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  height: 500vh;
-  margin-top: 96px;
-}
-
-.r3-sticky {
-  position: relative;
-  position: sticky;
-  top: 64px;
-  height: calc(100vh - 64px - var(--ticker-h));
-  overflow: hidden;
-}
-
-/* The invitation on the empty frame: the map-hint's voice, centred, gone
-   with the first pixel of scroll. */
-.r3-hint {
-  position: absolute;
-  top: 42%;
-  left: 0;
-  right: 0;
-  margin: 0;
-  text-align: center;
-  font-size: 15px;
-  color: var(--ink-subtlest);
-  pointer-events: none;
-  transition: opacity 260ms ease-out;
-}
-
-.r3-hint.is-hidden {
-  opacity: 0;
-}
-
-/* The band the numerals sit on runs the full width, so seats passing
-   under it fade out wherever they are, not just behind the digits. */
-.r3-sticky::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0;
-  height: calc(clamp(110px, 22vh, 300px) * 0.9 + 36px + 40px + 24px + 44px);
-  background: linear-gradient(180deg, transparent, var(--surface-dim) 40%);
-  pointer-events: none;
-}
-
-.r3-seats {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-/* The drawing is wider than the frame on purpose — that overflow is what
-   phase C slides through. Its feet run under the numeral band. */
-/* A touch wider than the frame: the tips run past the edges (they sit
-   under the numerals anyway) and the arc reads bigger. */
-.r3-seats svg {
-  display: block;
-  width: 108%;
-  margin-left: -4%;
-  height: calc(100% - 24px);
-}
-
-.r3-row {
-  will-change: opacity, filter;
-}
-
-.r3-seat {
-  transition: fill 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.r3-seat--rep { fill: var(--bar-rep); }
-
-/* Once the arc is complete the toss-ups breathe: a slow rise and fall of
-   brightness, the seats that decide it, alive. Off under reduced motion
-   (the class is never set). */
-.r3-sticky.is-settled .r3-seat--toss {
-  animation: r3-breathe 2.4s ease-in-out infinite;
-}
-
-@keyframes r3-breathe {
-  0%,
-  100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.22);
-  }
-}
-.r3-seat--toss { fill: var(--rating-tossup); }
-.r3-seat--dem { fill: var(--bar-dem); }
-
-/* The numerals sit in a band along the bottom, on the page's ground so the
-   arc's feet fade under them. R on the left; D takes over on the right. */
-/* The curtain (--r3-close, 0 → 1 as the stage scrolls away): counts shrink
-   8% and lose 30%; the arc's dimming is set inline by the stage, and only
-   while it plays, so the seats never sit under a filter at rest. */
-.r3-number {
-  position: absolute;
-  bottom: 44px; /* breathing room above the Polymarket ticker */
-  left: var(--rail-pad);
-  transform-origin: bottom left;
-  transform: scale(calc(1 - 0.08 * var(--r3-close, 0)));
-  opacity: calc(1 - 0.3 * var(--r3-close, 0));
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 24px 0 12px;
-  font-size: clamp(110px, 22vh, 300px);
-  line-height: 0.9;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.r3-number--rep {
-  left: auto;
-  right: var(--rail-pad);
-  align-items: flex-end;
-  transform-origin: bottom right;
-}
-
-.r3-number-row {
-  display: flex;
-}
-
-/* "The Right Place to Be", from the header's logo, under the R: lands
-   after the digits and leaves before them. */
-.r3-tagline {
-  display: block;
-  margin-top: 6px;
-  font-size: clamp(18px, 3.2vh, 30px);
-  line-height: 1.1;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-  opacity: 0;
-}
-
-.r3-tagline em {
-  font-style: normal;
-  color: #cc003b; /* the logo's red */
-}
-
-.r3-number.is-in .r3-tagline {
-  animation: r3-tag-in 600ms var(--intro-ease) both;
-  animation-delay: 520ms;
-}
-
-.r3-number.is-out .r3-tagline {
-  animation: r3-tag-out 320ms var(--intro-ease) both;
-}
-
-@keyframes r3-tag-in {
-  from {
-    transform: translateY(14px);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-
-@keyframes r3-tag-out {
-  to {
-    transform: translateY(14px);
-    opacity: 0;
-  }
-}
-
-/* Each character is its own slot; it drops in from above like the
-   countdown's digits (same keyframes, same ease), on its own delay, and
-   stays. Off cue the slot is empty. */
-.r3-digit {
-  position: relative;
-  display: block;
-  height: 0.9em;
-  overflow: hidden;
-}
-
-.r3-digit-in {
-  display: block;
-  opacity: 0;
-}
-
-.r3-number.is-in .r3-digit-in {
-  animation: digit-in 520ms var(--intro-ease) both;
-  animation-delay: calc(var(--i) * 70ms);
-}
-
-/* A value change while landed: the digit rolls like the countdown's — the
-   new figure rises from below, the old one leaves upward. */
-.r3-number.is-in .r3-digit-in--roll {
-  opacity: 1; /* roll-in only declares its start; the rest state is visible */
-  animation: roll-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0ms;
-}
-
-.r3-digit-out {
-  position: absolute;
-  inset: 0;
-  display: block;
-  animation: roll-out 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-/* Scrolling back past the cue: the digits climb out the way they came in,
-   last one first. */
-.r3-number.is-out .r3-digit-in {
-  animation: r3-digit-out 420ms var(--intro-ease) both;
-  animation-delay: calc((var(--n) - 1 - var(--i)) * 60ms);
-}
-
-@keyframes r3-digit-out {
-  from {
-    transform: none;
-    opacity: 1;
-  }
-  65% {
-    opacity: 0;
-  }
-  to {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .r3-stage {
-    height: auto;
-  }
-  .r3-sticky {
-    position: static;
-    height: 70vh;
-  }
-  .r3-number.is-out .r3-digit-in {
-    animation: none;
-    opacity: 0;
-  }
-  .r3-number.is-in .r3-tagline {
-    animation: none;
-    opacity: 1;
-  }
-  .r3-number.is-out .r3-tagline {
-    animation: none;
-    opacity: 0;
-  }
-  .r3-digit-out {
-    display: none;
-  }
-  .r3-number.is-in .r3-digit-in {
-    animation: none;
-    opacity: 1;
-  }
 }

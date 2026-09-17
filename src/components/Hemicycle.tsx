@@ -19,6 +19,7 @@
 //      seats answer the pointer (the divide)
 // then the pin releases and the page goes on to the feed. Reduced motion:
 // the finished arc, static, with both counts.
+import '../r3.css';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import type { ForecastData } from '../data/hero';

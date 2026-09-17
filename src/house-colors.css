@@ -1,0 +1,64 @@
+/* House Colors strip (creative edition). Imported by components/HouseColors.tsx;
+   was a section of index.css until Sep 17 2026 — moved as-is. */
+
+/* ---------- House Colors (Figma 10222:111601) ---------- */
+.house-colors {
+  position: relative;
+  /* Full bleed (Sep 2026): the Figma frame is 1440 × 342 edge to edge, so
+     the strip runs out to the page padding on both sides. */
+  aspect-ratio: 1440 / 342;
+  margin: 72px calc(-1 * var(--rail-pad)) 0;
+  overflow: hidden;
+  background: var(--surface);
+  isolation: isolate;
+}
+
+/* Two prints of the same photo, one red and one blue (house_red /
+   house_blue, Sep 16 2026), laid as in the Figma: at the photo's own scale
+   (1052 of the 1440 frame), on the bottom edge, the red flush left and the
+   blue flush right. Each print sits in a full-width clip so the split is
+   measured in frame terms: red up to the Republican share plus the
+   toss-ups, blue from the Republican share on; the overlap is the toss-up
+   band, where the blue lightens over the red. */
+.house-colors-print {
+  position: absolute;
+  inset: 0;
+  transition: clip-path 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The red runs 14% past the toss-ups so the fused band reads the way the
+   comp's does; the blue's edge — the Republican share — is the real line. */
+.house-colors-print--rep {
+  clip-path: inset(0 calc(100% - var(--rep) - var(--toss) - 14%) 0 0);
+}
+
+.house-colors-print--dem {
+  clip-path: inset(0 0 0 var(--rep));
+  mix-blend-mode: lighten;
+}
+
+/* Bottom-anchored with a little hanging below the frame, so the drift
+   never shows the frame's edge. */
+.house-colors-photo {
+  position: absolute;
+  bottom: -40px;
+  width: 73.06%;
+  height: auto;
+  transform: translateY(0);
+  will-change: transform;
+}
+
+.house-colors-photo--rep {
+  left: 0;
+}
+
+.house-colors-photo--dem {
+  right: 0;
+}
+
+@media (max-width: 700px) {
+  .house-colors {
+    height: 160px;
+    margin-top: 40px;
+  }
+}

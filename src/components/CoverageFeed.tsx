@@ -364,6 +364,10 @@ export function CoverageFeed() {
   const [typeScope, setTypeScope] = useState<TypeScope>('all');
   const [typeMenuOpen, setTypeMenuOpen] = useState(false);
   const [stateQuery, setStateQuery] = useState('');
+  // The search field takes focus when its menu opens (the menu is the only
+  // thing on screen that wants it; done here rather than with autoFocus so
+  // it is tied to the menu opening, not to mount).
+  const stateSearchRef = useRef<HTMLInputElement>(null);
   const [announcement, setAnnouncement] = useState('');
   // Bumped when an item is marked visited, so the dimmed state paints now.
   const [, bumpVisited] = useState(0);
@@ -546,6 +550,9 @@ export function CoverageFeed() {
   // Host/state dropdowns: click-outside and Escape close (both menus live
   // inside the same anchor).
   useEffect(() => {
+    if (stateMenuOpen) stateSearchRef.current?.focus();
+  }, [stateMenuOpen]);
+  useEffect(() => {
     if (!hostMenuOpen && !stateMenuOpen) return;
     const closeBoth = () => {
       setHostMenuOpen(false);
@@ -637,24 +644,36 @@ export function CoverageFeed() {
   useEffect(() => {
     if (!filtering) setReveal((n) => n + 1);
   }, [filtering]);
+  const openItem = (item: FeedItem) => {
+    markVisited(item.id);
+    bumpVisited((n) => n + 1);
+    track('feed_item_click', { id: item.id, kind: item.kind });
+  };
   const renderFeedItem = (item: FeedItem, i = 0) => {
     // The DS writes the episode number here ("Ep. 1520"); the fixture has none.
     const kindLabel = KIND_LABEL_CARD[item.kind];
     const showDek = (item.kind === 'article' || item.kind === 'opinion') && !!item.dek;
     return (
-      <article
+      <div
         className={`feed-item feed-item--${item.kind}${item.opinion ? ' feed-item--opinion' : ''}${
           isVisited(item.id) ? ' is-visited' : ''
         }`}
         style={{ '--i': i } as React.CSSProperties}
         key={`${reveal}-${item.id}`}
         data-impression={`item-${item.id}`}
-        // No article page yet — a click marks the item as visited
-        // (persisted) instead of navigating.
-        onClick={() => {
-          markVisited(item.id);
-          bumpVisited((n) => n + 1);
-          track('feed_item_click', { id: item.id, kind: item.kind });
+        // No article page yet — a click (or Enter/Space, it is focusable
+        // like the link it stands in for) marks the item as visited
+        // (persisted) instead of navigating. A div, not an <article>: the
+        // link role is what assistive tech should hear for a card that acts
+        // as one, and an article may not carry it.
+        role="link"
+        tabIndex={0}
+        onClick={() => openItem(item)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openItem(item);
+          }
         }}
       >
         {/* Identity mark: the show's art for an episode, initials otherwise
@@ -726,7 +745,7 @@ export function CoverageFeed() {
             </div>
           )}
         </div>
-      </article>
+      </div>
     );
   };
 
@@ -971,7 +990,7 @@ export function CoverageFeed() {
                     placeholder="Search states…"
                     aria-label="Search states"
                     value={stateQuery}
-                    autoFocus
+                    ref={stateSearchRef}
                     onChange={(e) => setStateQuery(e.target.value)}
                   />
                   {stateQuery.trim() === '' && (

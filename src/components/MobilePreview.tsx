@@ -56,14 +56,15 @@ export function MobilePreview() {
       </button>
 
       {open && (
-        <div
-          className="mobile-overlay"
-          role="dialog"
-          aria-label="Mobile preview"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
-          }}
-        >
+        <div className="mobile-overlay" role="dialog" aria-label="Mobile preview">
+          {/* The backdrop is a real button, so closing by clicking outside
+              the frame is keyboard-reachable too (Escape works as well). */}
+          <button
+            type="button"
+            className="mobile-overlay-backdrop"
+            aria-label="Close mobile preview"
+            onClick={() => setOpen(false)}
+          />
           <div className="mobile-frame">
             <iframe src={previewUrl()} title="Mobile preview (390px viewport)" />
           </div>

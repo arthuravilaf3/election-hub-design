@@ -4,6 +4,5 @@
  * Prototype behavior: console only.
  */
 export function track(eventName: string, payload: Record<string, unknown> = {}): void {
-  // eslint-disable-next-line no-console
   console.log('[track]', eventName, payload);
 }

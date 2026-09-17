@@ -11,6 +11,7 @@
 // strip moves with the dots. Both prints drift vertically together as the
 // page scrolls (parallax), a touch slower than the page; still under
 // reduced motion.
+import '../house-colors.css';
 import { useEffect, useRef } from 'react';
 import { asset } from '../data/assets';
 import type { ForecastData } from '../data/hero';
