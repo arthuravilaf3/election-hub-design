@@ -1175,27 +1175,26 @@ button,
   gap: 12px;
 }
 
+/* Same rule as the dots line: the figure stays in ink, only the party name
+   carries the colour — and it reads in sentence case, not caps. */
 .seatline-big {
   font-size: 34px;
   line-height: 1;
   font-weight: 700;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 .seatline-label {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 600;
 }
 
-.seatline-end--dem .seatline-big,
 .seatline-end--dem .seatline-label {
   color: var(--rating-safe-dem);
 }
 
-.seatline-end--rep .seatline-big,
 .seatline-end--rep .seatline-label {
   color: var(--rating-safe-rep);
 }

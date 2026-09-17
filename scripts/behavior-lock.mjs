@@ -413,8 +413,13 @@ check('a far dot stays put', lens.far.a, 1);
 check('only a handful are hot', lens.hot >= 3 && lens.hot <= 24, true);
 check('no filter on the grid, ever', lens.filter, 'none');
 // Fully off the grid (a point still inside it would just re-aim the lens).
+// The assertion is the END STATE, not the speed: the lerp needs ~22 frames
+// to cross its rest threshold, which is ~370ms at 60fps but over 700ms on a
+// loaded machine (Sep 17 2026 — the check failed there while the dots were
+// still at scale 1.001). Wait long enough that a slow frame budget cannot
+// turn "settles" into "did not settle".
 await page.mouse.move(8, 8);
-await page.waitForTimeout(700);
+await page.waitForTimeout(1600);
 check('they settle back to rest', await page.evaluate(() => [...document.querySelectorAll('.dot')].filter((el) => el.style.transform).length), 0);
 const raceBefore = await page.evaluate(() => document.querySelector('.pill-value').textContent.trim());
 await page.locator('.map-selectors .pill').nth(0).focus();
