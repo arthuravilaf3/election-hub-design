@@ -8,7 +8,6 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
-import { HouseColors } from './components/HouseColors';
 import { Hemicycle } from './components/Hemicycle';
 import { IS_CREATIVE } from './data/edition';
 import { SiteFooter } from './components/SiteFooter';
@@ -219,7 +218,6 @@ export default function App() {
 
           {/* CREATIVE EDITION: House Colors, the Capitol in the chamber's
               split, between the dots and the map. */}
-          {IS_CREATIVE && <HouseColors forecast={forecast} />}
 
           <MapCard
             races={races}
