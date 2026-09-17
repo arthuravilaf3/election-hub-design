@@ -136,7 +136,17 @@ export function hasNoRead(race: StateRace, sourceId: string): boolean {
 
 /** True when the diagonal hatch overlay (non-color channel) applies. */
 export function isHatched(race: StateRace): boolean {
-  return race.mode === 'results' && race.results?.status === 'counting' && !!race.results.leader;
+  return (
+    race.mode === 'results' &&
+    race.results?.status === 'counting' &&
+    !!race.results.leader &&
+    countingStep(race.results.reporting) <= 3
+  );
+}
+
+/** Called races carry an outline (chart.*.reporting.5). */
+export function isCalled(race: StateRace): boolean {
+  return race.mode === 'results' && race.results?.status === 'called';
 }
 
 export function isLive(race: StateRace): boolean {

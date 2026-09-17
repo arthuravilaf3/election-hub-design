@@ -1293,6 +1293,10 @@ button,
   flex: none;
 }
 
+.legend-swatch-called {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
 .legend-swatch-hatched {
   background-image: repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 4px);
 }
@@ -1965,6 +1969,22 @@ button,
   text-anchor: middle;
   dominant-baseline: central;
   letter-spacing: 0.02em;
+}
+
+/* Every state label wears a 1px ring of chart.overlay.lift-side, so the
+   glyph separates from any fill (the saturated 500s included). */
+.state-label {
+  paint-order: stroke fill;
+  stroke: rgb(0 0 0 / 0.3);
+  stroke-width: 2px;
+  stroke-linejoin: round;
+}
+
+/* Called: the fill at full colour with an outline in the ink. */
+.state-shape.is-called,
+.lift-shape.is-called {
+  stroke: var(--ink);
+  stroke-width: 1.5;
 }
 
 .state-label--light {
@@ -3863,9 +3883,9 @@ button,
   --ink-subtlest: #5c5c5c;
   /* chart.* light values (DS token sheet, Sep 16 2026) */
   --state-border: #f0f0f0;  /* chart.map.border = gray/100 = card */
-  --not-on-ballot: #f0f0f0; /* chart.neutral.offballot */
-  --no-read: #8f8f8f;       /* chart.neutral.nodata = gray/400 */
-  --uncalled: #dfdfdf;      /* chart.neutral.unreported = gray/200 */
+  --not-on-ballot: #dfdfdf; /* chart.neutral.offballot = gray/200 */
+  --no-read: #5c5c5c;       /* chart.neutral.nodata = gray/500 */
+  --uncalled: #c4c4c4;      /* chart.neutral.unreported = gray/300 (light-mid, hex assumed) */
   --tossup: #7c3aed;        /* chart.tossup = purple/600 */
   --rating-tossup: #7c3aed;
   --cand-ind: #059669;      /* chart.ind = green/600 */

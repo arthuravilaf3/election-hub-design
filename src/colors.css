@@ -32,28 +32,29 @@
   --party-dem: #0f45db; /* chart.dem.safe = indigo/500 */
   --party-rep: #fc002c; /* chart.rep.safe = crimson/500 */
 
-  /* chart.dem.reporting.1…5 — indigo 900 → 500; 5 = called = safe */
-  --dem-1: #100440;
-  --dem-2: #17075d;
-  --dem-3: #001b7e;
-  --dem-4: #0017a3;
-  --dem-5: var(--party-dem);
+  /* chart.dem.reporting.1…5 (revised Sep 17 2026) — 700 → 600 → 500; 3 hatched,
+     4 plain, 5 = called with an outline */
+  --dem-1: #001b7e; /* indigo/700 */
+  --dem-2: #0017a3; /* indigo/600 */
+  --dem-3: #0f45db; /* indigo/500, hatched */
+  --dem-4: #0f45db; /* indigo/500, no hatch */
+  --dem-5: var(--party-dem); /* called: indigo/500 + outline */
 
-  /* chart.rep.reporting.1…5 — crimson 900 → 500; 5 = called = safe */
-  --rep-1: #33003b;
-  --rep-2: #65003a;
-  --rep-3: #99003b;
-  --rep-4: #cc003b;
-  --rep-5: var(--party-rep);
+  /* chart.rep.reporting.1…5 — same steps in crimson */
+  --rep-1: #99003b; /* crimson/700 */
+  --rep-2: #cc003b; /* crimson/600 */
+  --rep-3: #fc002c; /* crimson/500, hatched */
+  --rep-4: #fc002c; /* crimson/500, no hatch */
+  --rep-5: var(--party-rep); /* called: crimson/500 + outline */
 
   /* Map neutrals (chart.neutral.*) — three kinds of "no colour", kept distinct:
      no-read      = the race exists, this provider didn't rate it   (nodata)
      not-on-ballot= there is no race here in this chamber            (offballot = card)
      uncalled     = results mode, counting hasn't produced a leader  (unreported) */
   --tossup: #8b5cf6;        /* chart.tossup = purple/500 (base edition beige retired) */
-  --no-read: #5c5c5c;       /* chart.neutral.nodata = gray/500 */
-  --not-on-ballot: #151515; /* chart.neutral.offballot = gray/800 = card */
-  --uncalled: #292929;      /* chart.neutral.unreported = gray/700 */
+  --no-read: #8f8f8f;       /* chart.neutral.nodata = gray/400 */
+  --not-on-ballot: #292929; /* chart.neutral.offballot = gray/700 (one step above the card) */
+  --uncalled: #424242;      /* chart.neutral.unreported = gray/600 */
   --state-border: #151515;  /* chart.map.border = card */
 
   /* Rating scale = chart.rep.* / chart.dem.* / chart.tossup */
@@ -66,7 +67,7 @@
   --rating-safe-dem: #0f45db;   /* indigo/500 */
 
   /* Overlays (chart.overlay.*) */
-  --lift-face: rgb(255 255 255 / 0.12);  /* chart.overlay.lift-face */
+  --lift-face: rgb(255 255 255 / 0.18);  /* chart.overlay.lift-face */
   --lift-side-k: 0.7;                     /* chart.overlay.lift-side = black 30% */
   --dim-k: 0.5;                           /* chart.overlay.dim = black 50% */
   --hatch: rgb(255 255 255 / 0.35);       /* chart.overlay.hatch */

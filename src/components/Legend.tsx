@@ -33,13 +33,15 @@ const RATING_ITEMS: Item[] = [
    item. */
 const NO_DATA_ITEM: Item = ['No data from this source', 'var(--no-read)'];
 
-const RESULTS_ITEMS: Array<[string, string, boolean?]> = [
+/* Results: the five reporting steps — hatched through step 3, plain at 4,
+   called at 5 with an outline — and the two neutrals. */
+const RESULTS_ITEMS: Array<[string, string, ('hatched' | 'called')?]> = [
   ['Uncalled — no results yet', 'var(--uncalled)'],
-  ['Leading, <25% in', 'var(--rep-1)', true],
-  ['<50% in', 'var(--rep-2)', true],
-  ['<75% in', 'var(--rep-3)', true],
-  ['75%+ in', 'var(--rep-4)', true],
-  ['✓ Called — certified result', 'var(--rep-5)'],
+  ['Leading, <25% in', 'var(--rep-1)', 'hatched'],
+  ['<50% in', 'var(--rep-2)', 'hatched'],
+  ['<75% in', 'var(--rep-3)', 'hatched'],
+  ['75%+ in', 'var(--rep-4)'],
+  ['✓ Called — certified result', 'var(--rep-5)', 'called'],
   ['Not on ballot', 'var(--not-on-ballot)'],
 ];
 
@@ -58,22 +60,25 @@ function ItemLabel({ label, expansion }: { label: string; expansion?: string }) 
 /** `hasTrust` — the override marker is documented only while it is on the
  *  map; a legend for an absent glyph is noise. */
 export function Legend({ mode, hasTrust = false }: { mode: Mode; hasTrust?: boolean }) {
-  const items: Array<[string, string, (string | boolean)?]> =
+  const items: Array<[string, string, string?]> =
     mode === 'results' ? RESULTS_ITEMS : [...RATING_ITEMS, NO_DATA_ITEM];
   return (
     <section className="legend-strip" aria-label="Map legend">
       <ul>
-        {items.map(([label, color, extra]) => (
-          <li key={label}>
-            <span
-              className={`legend-swatch${extra === true ? ' legend-swatch-hatched' : ''}${
-                label === NO_DATA_ITEM[0] ? ' legend-swatch-striped' : ''
-              }`}
-              style={{ background: color }}
-            />
-            <ItemLabel label={label} expansion={typeof extra === 'string' ? extra : undefined} />
-          </li>
-        ))}
+        {items.map(([label, color, extra]) => {
+          const flag = mode === 'results' ? extra : undefined;
+          return (
+            <li key={label}>
+              <span
+                className={`legend-swatch${flag === 'hatched' ? ' legend-swatch-hatched' : ''}${
+                  flag === 'called' ? ' legend-swatch-called' : ''
+                }${label === NO_DATA_ITEM[0] ? ' legend-swatch-striped' : ''}`}
+                style={{ background: color }}
+              />
+              <ItemLabel label={label} expansion={mode === 'results' ? undefined : extra} />
+            </li>
+          );
+        })}
         {hasTrust && (
           <li>
             <span className="legend-swatch legend-swatch-trust" aria-hidden="true" />

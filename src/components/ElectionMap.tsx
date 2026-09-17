@@ -14,7 +14,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { animate } from 'motion';
 import { MAP_VIEWBOX, STATE_SHAPES } from '../data/states';
 import { CAMERA_MS, ZOOM_REGION_W } from '../data/layout';
-import { describeRace, fillFor, isHatched, hasNoRead, labelToneFor } from '../data/encoding';
+import { describeRace, fillFor, isCalled, isHatched, hasNoRead, labelToneFor } from '../data/encoding';
 import { CHAMBER_LABEL } from '../data/summary';
 import type { Chamber, StateRace } from '../data/types';
 import { STAGGER_STEP_MS } from '../state/useElectionData';
@@ -372,7 +372,7 @@ export function ElectionMap({
           d={shape.d}
           className={`state-shape${selected ? ' is-selected' : ''}${race ? '' : ' is-empty'}${
             shape.id === liftId ? ' is-lift-source' : ''
-          }`}
+          }${race && isCalled(race) ? ' is-called' : ''}`}
           style={{
             fill: race ? fillFor(race, src) : 'var(--not-on-ballot)',
             transitionDelay: staggering && !reducedMotion ? `${index * STAGGER_STEP_MS}ms` : '0ms',
@@ -534,7 +534,7 @@ export function ElectionMap({
                   ))}
                   <path
                     d={liftShape.d}
-                    className="lift-shape"
+                    className={`lift-shape${isCalled(liftRace) ? ' is-called' : ''}`}
                     style={{ fill: fillFor(liftRace, srcFor(liftShape.id)) }}
                   />
                   <path d={liftShape.d} className="lift-face" aria-hidden="true" />
