@@ -9,6 +9,7 @@ import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
+import { HouseColors } from './components/HouseColors';
 import { IS_CREATIVE } from './data/edition';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
@@ -217,7 +218,8 @@ export default function App() {
           />
 
           {/* CREATIVE EDITION: House Colors, the Capitol in the chamber's
-              split, between the dots and the map. */}
+              split, between the seat line and the map. */}
+          {IS_CREATIVE && <HouseColors forecast={forecast} />}
 
           <MapCard
             races={races}

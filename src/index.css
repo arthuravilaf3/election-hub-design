@@ -998,10 +998,12 @@ button,
 }
 
 /* Right side: the campaign mark (297×114 from the Figma). */
+/* The campaign mark, 928 × 456 in the Figma (10695:110493) — width follows
+   that ratio so the arc never squashes. */
 .hub-rightplace {
   flex: none;
-  width: 297px;
-  height: 114px;
+  width: 300px;
+  height: 147px;
   display: block;
 }
 

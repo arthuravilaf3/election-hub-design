@@ -92,8 +92,8 @@ export function RaceHeader({
           style={introDelay(INTRO_AT.statement)}
           src={asset('logos/the-right-place.svg')}
           alt="The Right Place to Be"
-          width={297}
-          height={114}
+          width={300}
+          height={147}
         />
       </header>
 
