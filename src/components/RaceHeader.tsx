@@ -105,11 +105,13 @@ export function RaceHeader({
           with the majority marked — and straight on to the map. */}
       {IS_CREATIVE ? (
         <section className="dots dots--creative" aria-label={`${CHAMBER_BODY[chamber]} forecast`}>
+          {/* The countdown sits above the headline and OUTSIDE the keyed
+              block, so a race or source switch leaves it where it is. */}
+          <Countdown compact />
           <div className="dots-copy" key={headline}>
             <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
               {headline}
             </h2>
-            <Countdown compact />
           </div>
           <SeatLine forecast={forecast} chamber={chamber} />
         </section>

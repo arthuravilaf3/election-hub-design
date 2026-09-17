@@ -1133,7 +1133,11 @@ button,
   flex-direction: column;
   align-items: center;
   gap: 36px;
-  margin-top: 48px;
+  margin-top: 40px;
+}
+
+.dots--creative .countdown--compact {
+  margin-bottom: -22px; /* closer to the headline than the headline is to the bar */
 }
 
 .dots--creative .dots-copy {
@@ -2124,15 +2128,6 @@ button,
   text-anchor: middle;
   dominant-baseline: central;
   letter-spacing: 0.02em;
-}
-
-/* Every state label wears a 1px ring of chart.overlay.lift-side, so the
-   glyph separates from any fill (the saturated 500s included). */
-.state-label {
-  paint-order: stroke fill;
-  stroke: rgb(0 0 0 / 0.3);
-  stroke-width: 2px;
-  stroke-linejoin: round;
 }
 
 /* Called: the fill at full colour with an outline in the ink. */
