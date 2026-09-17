@@ -4920,6 +4920,23 @@ body {
 }
 
 .r3-seat--rep { fill: var(--bar-rep); }
+
+/* Once the arc is complete the toss-ups breathe: a slow rise and fall of
+   brightness, the seats that decide it, alive. Off under reduced motion
+   (the class is never set). */
+.r3-sticky.is-settled .r3-seat--toss {
+  animation: r3-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes r3-breathe {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.22);
+  }
+}
 .r3-seat--toss { fill: var(--rating-tossup); }
 .r3-seat--dem { fill: var(--bar-dem); }
 

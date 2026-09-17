@@ -463,6 +463,8 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       // The invitation shows on the empty frame and goes with the first
       // pixel of scroll.
       hint.current?.classList.toggle('is-hidden', reduced || p > 0.02);
+      // With the arc complete the toss-up seats breathe (CSS, see .is-settled).
+      sk.classList.toggle('is-settled', !reduced && settled);
       // The curtain: as the stage scrolls away, the counts shrink and fade a
       // little and the arc dims, so the chapter closes instead of just
       // leaving. Only CSS vars; the rules are in index.css.
