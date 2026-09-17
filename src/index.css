@@ -950,7 +950,7 @@ button,
   align-items: baseline;
   gap: 16px;
   margin: 0;
-  font-size: 64px;
+  font-size: 52px;
   line-height: 1;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -959,8 +959,8 @@ button,
 
 .hub-mark {
   flex: none;
-  width: 90px;
-  height: 77px;
+  width: 73px;
+  height: 63px;
 }
 
 .hub-byline {
@@ -1152,9 +1152,9 @@ button,
   padding: 0;
 }
 
+/* Edge to edge with the map card below it. */
 .seatline {
   width: 100%;
-  max-width: 1202px;
 }
 
 .seatline-ends {
