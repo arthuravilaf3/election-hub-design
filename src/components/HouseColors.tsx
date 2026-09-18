@@ -1,27 +1,30 @@
 // "House Colors" (Figma frame 10222:111601, Sep 2026): a strip of the
-// Capitol between the seat dots and the map, in the chamber's colours. Two
-// prints of the same photo — house_blue and house_red — share the frame:
-// both at the photo's own scale (1052 of 1440 wide) and sitting on the
-// frame's bottom edge, the blue one flush left, the red one flush right —
-// the same order as the seat line above, and as the arc below (decided
-// Sep 17 2026: red is always the right-hand side). The blue print shows up
-// to the Democratic share plus the toss-ups, the red from the Democratic
-// share on, and where they overlap they LIGHTEN into one another, so the
-// toss-up band is the two colours fused.
-// The split IS the race's projected split under the active source, so the
-// strip moves with the dots. Both prints drift vertically together as the
-// page scrolls (parallax), a touch slower than the page; still under
-// reduced motion.
+// Capitol after the map, in the chamber's colours. Two prints of the same
+// photo — house_blue and house_red — share the frame at the photo's own
+// scale (1052 of 1440 wide), the blue one flush left, the red one flush
+// right: the seat line's order (red is always the right-hand side).
+//
+// Revised Sep 18 2026: no blend any more. The two prints meet on one hard
+// line — the Democratic share plus half the toss-ups, so neither side
+// claims the undecided seats — and the split moves with the active source.
+//
+// Motion, in order:
+//   1. SLIDE IN — when the strip comes into view the blue print slides in
+//      from the left and the red from the right, meeting on the split. It
+//      replays if the strip has fully left the viewport and comes back.
+//   2. PARALLAX — as the page scrolls, both prints travel up inside the
+//      frame, together (the seam never breaks): the domes at the top when
+//      the strip enters, the colonnade by the time it leaves.
+// Reduced motion: neither — the prints sit in place, cropped on the domes.
 import '../house-colors.css';
 import { useEffect, useRef } from 'react';
 import { asset } from '../data/assets';
 import type { ForecastData } from '../data/hero';
 
-/* Total travel of the prints across the strip's time on screen. Deep on
-   purpose (Sep 17 2026): the photos are ~130px taller than the frame and sit
-   65px below its bottom edge, so ±65px of drift is the most the frame can
-   take without ever showing an edge. */
-const DRIFT_PX = 130;
+/* How far the prints travel across the strip's time on screen, as a share
+   of the photo's height — about 120px at 1440 wide. Capped by the slack the
+   photo leaves below the frame, so an edge never shows. */
+const TRAVEL = 0.26;
 
 export function HouseColors({ forecast }: { forecast: ForecastData }) {
   const frame = useRef<HTMLDivElement>(null);
@@ -33,6 +36,19 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
     const prints = [red.current, blue.current].filter((x): x is HTMLImageElement => !!x);
     if (!el || prints.length < 2) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // 1. The slide: in once a third of the strip shows; reset only once it
+    //    is entirely off screen, so it never visibly slides back out.
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.intersectionRatio >= 0.33) el.classList.add('is-in');
+        else if (!entry.isIntersecting) el.classList.remove('is-in');
+      },
+      { threshold: [0, 0.33] }
+    );
+    io.observe(el);
+
+    // 2. The parallax.
     let raf = 0;
     const paint = () => {
       raf = 0;
@@ -40,7 +56,9 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
       // 0 when the strip enters at the bottom of the viewport, 1 when it
       // leaves at the top; clamped so an off-screen strip does not stretch.
       const t = Math.min(1, Math.max(0, (window.innerHeight - r.top) / (window.innerHeight + r.height)));
-      const y = `translateY(${((0.5 - t) * DRIFT_PX).toFixed(1)}px)`;
+      const photoH = prints[0].offsetHeight;
+      const travel = Math.min(Math.max(0, photoH - r.height), photoH * TRAVEL);
+      const y = `translateY(${(-travel * t).toFixed(1)}px)`;
       prints.forEach((img) => {
         img.style.transform = y;
       });
@@ -52,16 +70,19 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
     return () => {
+      io.disconnect();
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
       if (raf) window.cancelAnimationFrame(raf);
     };
   }, []);
 
-  // Same carve-out as the dots: the toss-up gap sits between the two blocs.
+  // Same carve-out as the seat line: the toss-up gap sits between the two
+  // blocs, and the prints meet in the middle of it.
   const gap = forecast.tossupShare;
   const dem = Math.max(0, forecast.demShare - gap / 2);
   const rep = Math.max(0, 100 - dem - gap);
+  const split = dem + gap / 2;
 
   return (
     <div
@@ -69,10 +90,9 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
       ref={frame}
       role="img"
       aria-label={`The Capitol, coloured by the projected split: Democrats ${Math.round(dem)}%, toss-ups ${Math.round(gap)}%, Republicans ${Math.round(rep)}%.`}
-      style={{ '--dem': `${dem}%`, '--toss': `${gap}%` } as React.CSSProperties}
+      style={{ '--split': `${split}%` } as React.CSSProperties}
     >
-      {/* Blue on the left, red on the right — the order of the seat line
-          above. The red print is on top and lightens over the blue. */}
+      {/* Blue on the left, red on the right — the seat line's order. */}
       <span className="house-colors-print house-colors-print--dem">
         <img className="house-colors-photo house-colors-photo--dem" src={asset('house_blue.png')} alt="" ref={blue} />
       </span>

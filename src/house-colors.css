@@ -1,50 +1,54 @@
-/* House Colors strip (creative edition). Imported by components/HouseColors.tsx;
-   was a section of index.css until Sep 17 2026 — moved as-is. */
+/* House Colors strip (creative edition). Imported by components/HouseColors.tsx. */
 
 /* ---------- House Colors (Figma 10222:111601) ---------- */
 .house-colors {
   position: relative;
-  /* Full bleed (Sep 2026): the Figma frame is 1440 × 342 edge to edge, so
-     the strip runs out to the page padding on both sides. */
-  aspect-ratio: 1440 / 342;
+  /* Full bleed: the strip runs out to the page padding on both sides.
+     Lower than the comp's 342 since Sep 18 2026 — a band, not a banner. */
+  aspect-ratio: 1440 / 220;
   margin: 72px calc(-1 * var(--rail-pad)) 0;
   overflow: hidden;
   background: var(--surface);
   isolation: isolate;
 }
 
-/* Two prints of the same photo, one blue and one red (house_blue /
-   house_red), at the photo's own scale (1052 of the 1440 frame), on the
-   bottom edge, the blue flush left and the red flush right — the seat
-   line's order. Each print sits in a full-width clip so the split is
-   measured in frame terms: blue up to the Democratic share plus the
-   toss-ups, red from the Democratic share on; the overlap is the toss-up
-   band, where the two lighten into one another. */
+/* Two prints of the same photo, one blue and one red, at the photo's own
+   scale (1052 of the 1440 frame), the blue flush left and the red flush
+   right — the seat line's order. Each sits in a full-width clip, so the
+   split is measured in frame terms, and the two meet on one hard line
+   (--split). No blend: where one ends the other begins. */
 .house-colors-print {
   position: absolute;
   inset: 0;
-  transition: clip-path 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    clip-path 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* The blue runs 14% past the toss-ups so the fused band reads the way the
-   comp's does; the red's edge — the Democratic share — is the real line. */
+/* The slide in: each print waits off its own edge — blue past the left,
+   red past the right — and travels in when the strip gets .is-in. */
 .house-colors-print--dem {
-  clip-path: inset(0 calc(100% - var(--dem) - var(--toss) - 14%) 0 0);
+  clip-path: inset(0 calc(100% - var(--split)) 0 0);
+  transform: translateX(-100%);
 }
 
 .house-colors-print--rep {
-  clip-path: inset(0 0 0 var(--dem));
-  mix-blend-mode: lighten;
+  clip-path: inset(0 0 0 var(--split));
+  transform: translateX(100%);
 }
 
-/* Bottom-anchored, hanging well below the frame: the deeper the print sits,
-   the more of its height is free to drift without ever showing an edge. */
+.house-colors.is-in .house-colors-print {
+  transform: none;
+}
+
+/* Top-anchored; the parallax pulls the prints up from here (JS, inline).
+   The resting crop is on the domes, which is also the reduced-motion view. */
 .house-colors-photo {
   position: absolute;
-  bottom: -65px;
+  top: 0;
   width: 73.06%;
   height: auto;
-  transform: translateY(0);
+  transform: translateY(-9%);
   will-change: transform;
 }
 
@@ -56,9 +60,24 @@
   right: 0;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .house-colors-print,
+  .house-colors.is-in .house-colors-print {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Phone: a fixed band, and larger prints so each dome still sits wholly on
+   its own side of the split. */
 @media (max-width: 700px) {
   .house-colors {
-    height: 160px;
+    aspect-ratio: auto;
+    height: 96px;
     margin-top: 40px;
+  }
+
+  .house-colors-photo {
+    width: 80%;
   }
 }

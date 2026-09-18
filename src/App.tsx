@@ -217,10 +217,6 @@ export default function App() {
             raceCount={Object.keys(races).length}
           />
 
-          {/* CREATIVE EDITION: House Colors, the Capitol in the chamber's
-              split, between the seat line and the map. */}
-          {IS_CREATIVE && <HouseColors forecast={forecast} />}
-
           <MapCard
             races={races}
             chamber={state.chamber}
@@ -264,6 +260,10 @@ export default function App() {
               ) : null
             }
           />
+
+          {/* CREATIVE EDITION: House Colors, the Capitol in the chamber's
+              split, right after the map (moved Sep 18 2026). */}
+          {IS_CREATIVE && <HouseColors forecast={forecast} />}
 
           {/* R3 + R53: every seat of the chamber in a hemicycle, and the
               projected Republican count, under the map. The Race/Source
