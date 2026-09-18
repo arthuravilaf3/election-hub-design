@@ -15,30 +15,40 @@
    columns, centred on the circles (which span 290–1590). */
 .nation-speaks-wave {
   display: block;
-  width: min(680px, 100%);
+  width: min(440px, 100%);
   aspect-ratio: 1380 / 1080;
   object-fit: cover;
   object-position: center;
 }
 
+/* Figma 11194:123883: ONE line of Neue Haas Grotesk Display 55 Roman at
+   32px, auto leading. Neue Haas is not in the DS — Libre Franklin stands in,
+   as it does for the page title (it sets a touch wider). Two colours: "The
+   Nation Speaks." in the logo's red (the comp's #FB1616 is crimson/500 in
+   the DS, the same swap the logo made), the question in the ink token, so
+   it is the comp's near-white on the dark theme and near-black on the
+   light one. It only wraps on a phone. */
 .nation-speaks-title {
+  white-space: nowrap;
   margin: 0;
-  max-width: 24ch;
-  font-size: clamp(28px, 3.4vw, 48px);
-  line-height: 1.08;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: 0;
   color: var(--ink);
 }
 
-@media (min-width: 1100px) {
-  .nation-speaks-title {
-    max-width: none;
-  }
+.nation-speaks-call {
+  color: #fc002c; /* crimson/500 */
 }
 
 @media (max-width: 700px) {
   .nation-speaks {
     margin-top: 56px;
+  }
+
+  .nation-speaks-title {
+    white-space: normal;
+    font-size: 26px;
   }
 }

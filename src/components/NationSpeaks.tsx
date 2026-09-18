@@ -13,8 +13,10 @@ export function NationSpeaks() {
   return (
     <section className="nation-speaks" aria-labelledby="nation-speaks-title">
       <img className="nation-speaks-wave" src={asset('cosmos-waveform.webp')} alt="" loading="lazy" decoding="async" />
+      {/* Figma 11194:123883: one line of type in two colours — the call in
+          the logo's red, the question in the page's ink. */}
       <h2 className="nation-speaks-title" id="nation-speaks-title">
-        The Nation Speaks. Can you predict their voices?
+        <span className="nation-speaks-call">The Nation Speaks.</span> Can you predict their voices?
       </h2>
     </section>
   );
