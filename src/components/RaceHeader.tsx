@@ -86,23 +86,26 @@ export function RaceHeader({
           </p>
         </div>
         {/* The campaign mark (creative, Sep 2026): the "Right Place to Be"
-            hemicycle, in place of the typeset tagline. */}
-        <img
-          className="hub-rightplace hub-rightplace--dark intro-rise"
-          style={introDelay(INTRO_AT.statement)}
-          src={asset('logos/the-right-place.svg')}
-          alt="The Right Place to Be"
-          width={300}
-          height={147}
-        />
-        <img
-          className="hub-rightplace hub-rightplace--light intro-rise"
-          style={introDelay(INTRO_AT.statement)}
-          src={asset('logos/the-right-place-light.svg')}
-          alt="The Right Place to Be"
-          width={300}
-          height={147}
-        />
+            hemicycle, in place of the typeset tagline. The entrance runs on
+            the wrapper, once; the two theme files sit stacked inside it and
+            a theme switch only flips which one is visible — so it recolours
+            in place instead of replaying the entrance. */}
+        <span className="hub-rightplace intro-rise" style={introDelay(INTRO_AT.statement)}>
+          <img
+            className="hub-rightplace-art hub-rightplace-art--dark"
+            src={asset('logos/the-right-place.svg')}
+            alt="The Right Place to Be"
+            width={300}
+            height={147}
+          />
+          <img
+            className="hub-rightplace-art hub-rightplace-art--light"
+            src={asset('logos/the-right-place-light.svg')}
+            alt="The Right Place to Be"
+            width={300}
+            height={147}
+          />
+        </span>
       </header>
 
       {!IS_CREATIVE && <Countdown compact />}

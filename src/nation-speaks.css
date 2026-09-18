@@ -1,0 +1,44 @@
+/* "The Nation Speaks" block (creative edition). Imported by components/NationSpeaks.tsx. */
+.nation-speaks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 96px;
+  text-align: center;
+}
+
+/* The asset is an ANIMATED webp (75 frames, 3s loop): at rest the circles
+   are a thin row, at its peaks the bars reach 1058 of the canvas's 1080px.
+   So the frame keeps the full height — any vertical crop cuts the bars
+   flat at their peaks — and crops only the empty sides: 1380 of the 1920
+   columns, centred on the circles (which span 290–1590). */
+.nation-speaks-wave {
+  display: block;
+  width: min(680px, 100%);
+  aspect-ratio: 1380 / 1080;
+  object-fit: cover;
+  object-position: center;
+}
+
+.nation-speaks-title {
+  margin: 0;
+  max-width: 24ch;
+  font-size: clamp(28px, 3.4vw, 48px);
+  line-height: 1.08;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+@media (min-width: 1100px) {
+  .nation-speaks-title {
+    max-width: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .nation-speaks {
+    margin-top: 56px;
+  }
+}

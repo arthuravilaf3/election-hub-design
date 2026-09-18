@@ -136,25 +136,33 @@
 /* "The Right Place to Be", from the header's logo, under the R: lands
    after the digits and leaves before them. */
 /* The header logo's lettering, cropped out of the same artwork: one file
-   per theme, the other display:none. Height drives it; the width follows. */
+   per theme, stacked in one grid cell, the theme flipping VISIBILITY (as in
+   the header) so a switch recolours without replaying the landing. Height
+   drives it; the width follows. */
 .r3-tagline {
-  display: block;
+  display: grid;
   height: clamp(20px, 3.4vh, 34px);
-  width: auto;
   margin-top: 10px;
   opacity: 0;
 }
 
-.r3-tagline--light {
-  display: none;
-}
-
-:root[data-theme='light'] .r3-tagline--dark {
-  display: none;
-}
-
-:root[data-theme='light'] .r3-tagline--light {
+.r3-tagline-art {
+  grid-area: 1 / 1;
   display: block;
+  height: 100%;
+  width: auto;
+}
+
+.r3-tagline-art--light {
+  visibility: hidden;
+}
+
+:root[data-theme='light'] .r3-tagline-art--dark {
+  visibility: hidden;
+}
+
+:root[data-theme='light'] .r3-tagline-art--light {
+  visibility: visible;
 }
 
 /* Under the D: no artwork, just its height, so the two counts share a top

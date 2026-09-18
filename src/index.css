@@ -1000,24 +1000,35 @@ button,
 /* Right side: the campaign mark (297×114 from the Figma). */
 /* The campaign mark, 928 × 456 in the Figma (10695:110493) — width follows
    that ratio so the arc never squashes. One file per theme (its lettering is
-   ink, not a fixed cream), the other display:none. */
+   ink, not a fixed cream), both stacked in one grid cell. The theme flips
+   VISIBILITY, never display: display:none → block restarts an element's
+   animations, visibility does not, so a theme switch is a recolour and the
+   entrance (on the wrapper) plays once. Hidden art also leaves the
+   accessibility tree, so the alt is read once. */
 .hub-rightplace {
   flex: none;
+  display: grid;
   width: 300px;
   height: 147px;
+}
+
+.hub-rightplace-art {
+  grid-area: 1 / 1;
   display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.hub-rightplace--light {
-  display: none;
+.hub-rightplace-art--light {
+  visibility: hidden;
 }
 
-:root[data-theme='light'] .hub-rightplace--dark {
-  display: none;
+:root[data-theme='light'] .hub-rightplace-art--dark {
+  visibility: hidden;
 }
 
-:root[data-theme='light'] .hub-rightplace--light {
-  display: block;
+:root[data-theme='light'] .hub-rightplace-art--light {
+  visibility: visible;
 }
 
 /* ---------- Countdown (live) ---------- */

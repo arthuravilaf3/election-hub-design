@@ -567,18 +567,14 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
           {/* The R sits on the right, and under it the header logo's own
               lettering — the same artwork, without the hemicycle — in the
               theme's ink. */}
-          <img
-            className="r3-tagline r3-tagline--dark"
-            src={asset('logos/the-right-place-text.svg')}
-            alt=""
-            aria-hidden="true"
-          />
-          <img
-            className="r3-tagline r3-tagline--light"
-            src={asset('logos/the-right-place-text-light.svg')}
-            alt=""
-            aria-hidden="true"
-          />
+          <span className="r3-tagline" aria-hidden="true">
+            <img className="r3-tagline-art r3-tagline-art--dark" src={asset('logos/the-right-place-text.svg')} alt="" />
+            <img
+              className="r3-tagline-art r3-tagline-art--light"
+              src={asset('logos/the-right-place-text-light.svg')}
+              alt=""
+            />
+          </span>
         </div>
       </div>
     </div>

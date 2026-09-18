@@ -10,6 +10,7 @@ import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
 import { HouseColors } from './components/HouseColors';
+import { NationSpeaks } from './components/NationSpeaks';
 import { IS_CREATIVE } from './data/edition';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
@@ -272,6 +273,10 @@ export default function App() {
             <Hemicycle forecast={forecast} chamber={state.chamber} />
           )}
           </section>
+
+          {/* CREATIVE EDITION: the Cosmos Waveform and "The Nation Speaks",
+              after the arc and before the feed (Sep 18 2026). */}
+          {IS_CREATIVE && <NationSpeaks />}
 
           {/* The boundary between map and feed is now editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
