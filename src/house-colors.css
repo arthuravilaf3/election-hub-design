@@ -1,39 +1,93 @@
 /* House Colors strip (creative edition). Imported by components/HouseColors.tsx. */
 
+/* The overlap band's edges, registered so a source switch GLIDES them —
+   both the blue print's clip and the red print's mask follow these. */
+@property --band-start {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 50%;
+}
+
+@property --band-end {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 50%;
+}
+
+/* How opaque the red print is across the overlap. 1 while the prints slide
+   in (so nothing half-transparent ever hangs over the bare page), then it
+   melts to 0.5 once they have met, and the blue shows through. */
+@property --overlap-a {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
 /* ---------- House Colors (Figma 10222:111601) ---------- */
 .house-colors {
   position: relative;
-  /* Full bleed: the strip runs out to the page padding on both sides.
-     Lower than the comp's 342 since Sep 18 2026 — a band, not a banner. */
+  /* Edge to edge of the VIEWPORT, not the rail — the prints come in from
+     the page's own edges (Sep 18 2026), the same escape the arc stage makes.
+     No background: before the prints arrive there is nothing but the page. */
+  width: 100vw;
+  margin: 72px calc(50% - 50vw) 0;
   aspect-ratio: 1440 / 220;
-  margin: 72px calc(-1 * var(--rail-pad)) 0;
   overflow: hidden;
-  background: var(--surface);
   isolation: isolate;
+  --overlap-a: 1;
+  transition:
+    --band-start 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    --band-end 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    --overlap-a 300ms ease-out;
+}
+
+/* Arrived: the overlap melts in after the slide has landed (1100ms). */
+.house-colors.is-in {
+  --overlap-a: 0.5;
+  transition:
+    --band-start 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    --band-end 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    --overlap-a 700ms ease-out 900ms;
 }
 
 /* Two prints of the same photo, one blue and one red, at the photo's own
-   scale (1052 of the 1440 frame), the blue flush left and the red flush
-   right — the seat line's order. Each sits in a full-width clip, so the
-   split is measured in frame terms, and the two meet on one hard line
-   (--split). No blend: where one ends the other begins. */
+   scale (73% of the strip), the blue flush with the page's left edge and the
+   red with its right — the seat line's order. They OVERLAP across a band
+   centred on the toss-ups (--band-start → --band-end): there the red print
+   is half transparent over the blue, so both Capitols show through each
+   other. Each print sits in a full-width layer, so the band is measured in
+   strip terms and travels with its print during the slide. */
 .house-colors-print {
   position: absolute;
   inset: 0;
-  transition:
-    clip-path 600ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* The slide in: each print waits off its own edge — blue past the left,
-   red past the right — and travels in when the strip gets .is-in. */
+/* The slide in: each print waits past its own page edge — blue left, red
+   right — and travels in when the strip gets .is-in. */
+/* The blue runs a hair past the band, under the red's opaque side, so the
+   two clip edges can never leave a sliver of bare page between them. */
 .house-colors-print--dem {
-  clip-path: inset(0 calc(100% - var(--split)) 0 0);
+  clip-path: inset(0 calc(99% - var(--band-end)) 0 0);
   transform: translateX(-100%);
 }
 
 .house-colors-print--rep {
-  clip-path: inset(0 0 0 var(--split));
+  --overlap: rgb(0 0 0 / var(--overlap-a));
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent var(--band-start),
+    var(--overlap) var(--band-start),
+    var(--overlap) var(--band-end),
+    #000 var(--band-end)
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent var(--band-start),
+    var(--overlap) var(--band-start),
+    var(--overlap) var(--band-end),
+    #000 var(--band-end)
+  );
   transform: translateX(100%);
 }
 
@@ -61,6 +115,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .house-colors,
+  .house-colors.is-in {
+    --overlap-a: 0.5;
+    transition: none;
+  }
+
   .house-colors-print,
   .house-colors.is-in .house-colors-print {
     transform: none;
@@ -68,8 +128,8 @@
   }
 }
 
-/* Phone: a fixed band, and larger prints so each dome still sits wholly on
-   its own side of the split. */
+/* Phone: a fixed band, and larger prints so each dome still sits on its own
+   side of the overlap. */
 @media (max-width: 700px) {
   .house-colors {
     aspect-ratio: auto;

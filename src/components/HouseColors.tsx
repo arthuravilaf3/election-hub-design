@@ -4,9 +4,11 @@
 // scale (1052 of 1440 wide), the blue one flush left, the red one flush
 // right: the seat line's order (red is always the right-hand side).
 //
-// Revised Sep 18 2026: no blend any more. The two prints meet on one hard
-// line — the Democratic share plus half the toss-ups, so neither side
-// claims the undecided seats — and the split moves with the active source.
+// Revised Sep 18 2026: no blend mode. The two prints OVERLAP across a band
+// centred on the toss-ups — the red half transparent over the blue, so both
+// Capitols show through each other — and the band moves with the active
+// source. The strip runs to the viewport's edges, with no background of its
+// own, so the prints arrive from the page edges onto the page itself.
 //
 // Motion, in order:
 //   1. SLIDE IN — when the strip comes into view the blue print slides in
@@ -25,6 +27,11 @@ import type { ForecastData } from '../data/hero';
    of the photo's height — about 120px at 1440 wide. Capped by the slack the
    photo leaves below the frame, so an edge never shows. */
 const TRAVEL = 0.26;
+
+/* The overlap is the toss-up share widened by this much (in points of the
+   strip's width) so it reads as two photographs crossing, not a seam. It is
+   centred on the toss-ups, and still grows and shrinks with them. */
+const OVERLAP_PAD = 14;
 
 export function HouseColors({ forecast }: { forecast: ForecastData }) {
   const frame = useRef<HTMLDivElement>(null);
@@ -78,11 +85,12 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
   }, []);
 
   // Same carve-out as the seat line: the toss-up gap sits between the two
-  // blocs, and the prints meet in the middle of it.
+  // blocs, and the overlap is centred on it.
   const gap = forecast.tossupShare;
   const dem = Math.max(0, forecast.demShare - gap / 2);
   const rep = Math.max(0, 100 - dem - gap);
-  const split = dem + gap / 2;
+  const bandStart = Math.max(0, dem - OVERLAP_PAD / 2);
+  const bandEnd = Math.min(100, dem + gap + OVERLAP_PAD / 2);
 
   return (
     <div
@@ -90,7 +98,7 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
       ref={frame}
       role="img"
       aria-label={`The Capitol, coloured by the projected split: Democrats ${Math.round(dem)}%, toss-ups ${Math.round(gap)}%, Republicans ${Math.round(rep)}%.`}
-      style={{ '--split': `${split}%` } as React.CSSProperties}
+      style={{ '--band-start': `${bandStart}%`, '--band-end': `${bandEnd}%` } as React.CSSProperties}
     >
       {/* Blue on the left, red on the right — the seat line's order. */}
       <span className="house-colors-print house-colors-print--dem">
