@@ -1198,14 +1198,13 @@ button,
 }
 
 /* ---------- Seat line (creative): headline → seats → map ---------- */
-/* The comps' hero rail: 1100 wide, centred, whatever the map's width. */
+/* The hero runs the rail's full width, like the map under it. */
 .dots.dots--creative {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 32px;
   width: 100%;
-  max-width: 1100px;
   margin: 40px auto 0;
 }
 
@@ -4543,7 +4542,28 @@ button,
    Same ground as the page, at 80% over a blur, hairline in gray/600. */
 .map-selectors--creative {
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
+}
+
+/* The clock's slot: open at the top of the page, collapsed after the first
+   scroll — the controls slide up into its place. */
+.map-clock {
+  display: grid;
+  grid-template-rows: 1fr;
+  padding-bottom: 16px;
+  transition: grid-template-rows 240ms ease-out, opacity 200ms ease-out, padding-bottom 240ms ease-out;
+}
+
+.map-clock-in {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.map-selectors--creative.is-scrolled .map-clock {
+  grid-template-rows: 0fr;
+  padding-bottom: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .map-controls-row {
@@ -4661,11 +4681,9 @@ button,
   background: var(--surface-2);
 }
 
-/* The cuts' widths (Figma): the map 1100 wide in cuts 1 and 3 and 1312 in
-   cut 2; the legend and the banner 1100 in all three; a 16px card corner. */
-.map-section--c1 .map-block,
-.map-section--c3 .map-block,
-.map-section--c2 .legend-strip,
+/* The cuts' widths: the map and the seat line run to the rail's edges in
+   all three (Arthur, Sep 21 2026 — wider than the comps' 1100); the banner
+   stays 1100; a 16px card corner. */
 .map-section .plan-banner {
   width: 100%;
   max-width: 1100px;

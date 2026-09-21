@@ -21,8 +21,7 @@
 }
 
 .r3-still-frame {
-  position: relative;
-  aspect-ratio: 1925 / 904;
+  position: relative; /* the aspect is inline: the drawing plus its headroom */
 }
 
 .r3-still .r3-seats {

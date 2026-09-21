@@ -34,6 +34,11 @@ const CY = H;
 const R_OUT = 880;
 const R_IN = 372;
 const R_MID = (R_OUT + R_IN) / 2;
+/* The still arc's headroom (drawing units): the Senate's and the governors'
+   bigger seats reach above the outer row's centre line, and the frame must
+   hold them at the same height whatever the chamber — never over the seat
+   line above it. */
+const STILL_HEAD = 100;
 
 type Party = 'rep' | 'toss' | 'dem';
 
@@ -451,9 +456,10 @@ export function Hemicycle({ forecast, chamber, compact = false, still = false }:
       const camTy = landY - zoom * focusY;
       const cam = camera.current;
       if (still) {
-        // No camera: the drawing fills its own frame, edge to edge.
+        // No camera: the drawing fills its own frame, edge to edge, with
+        // the headroom above it (the viewBox starts at -STILL_HEAD).
         cam?.removeAttribute('transform');
-        view.current = { scale: W / drawnW, ox: (box.width - drawnW) / 2, tx: 0, ty: 0, zoom: 1 };
+        view.current = { scale: W / drawnW, ox: (box.width - drawnW) / 2, tx: 0, ty: STILL_HEAD, zoom: 1 };
       } else {
         cam?.setAttribute('transform', `translate(${camTx.toFixed(2)} ${camTy.toFixed(2)}) scale(${zoom.toFixed(4)})`);
         view.current = { scale: W / drawnW, ox: (box.width - drawnW) / 2, tx: camTx, ty: camTy, zoom };
@@ -539,7 +545,12 @@ export function Hemicycle({ forecast, chamber, compact = false, still = false }:
       role="img"
       aria-label={`${total} ${CHAMBER_BODY[chamber]} seats: Republicans ${rep}, toss-ups ${toss}, Democrats ${dem}.`}
     >
-      <svg ref={svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMin meet" aria-hidden="true">
+      <svg
+        ref={svg}
+        viewBox={still ? `0 ${-STILL_HEAD} ${W} ${H + STILL_HEAD}` : `0 0 ${W} ${H}`}
+        preserveAspectRatio="xMidYMin meet"
+        aria-hidden="true"
+      >
         <g ref={camera} className="r3-cam">
           {seats.map((s, i) => (
             <circle
@@ -563,7 +574,11 @@ export function Hemicycle({ forecast, chamber, compact = false, still = false }:
     // sits in the page like the dots grid did.
     return (
       <div className="r3-still" ref={stage}>
-        <div className="r3-still-frame" ref={sticky}>
+        <div
+          className="r3-still-frame"
+          ref={sticky}
+          style={{ aspectRatio: `${W} / ${H + STILL_HEAD}` }}
+        >
           {drawing}
         </div>
       </div>

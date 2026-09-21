@@ -249,14 +249,33 @@ export function MapSelectors({
     return () => io.disconnect();
   }, []);
 
+  /* The clock goes with the first pixel of scroll (Arthur, Sep 21 2026)
+     and is back at the top; the controls stay. The class collapses it, so
+     the row slides down into its place. */
+  const [scrolled, setScrolled] = useState(() => typeof window !== 'undefined' && window.scrollY > 0);
+  useEffect(() => {
+    if (!IS_CREATIVE) return;
+    const onScroll = () => setScrolled(window.scrollY > 0);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   if (IS_CREATIVE) {
     /* CREATIVE (Sep 21 2026, Arthur's three options): the Election Day
        clock in a capsule above the controls, the three pinned together —
        the race as a segmented control, the source as a chip that opens
        its menu. The clock keeps ticking wherever the page is. */
     return (
-      <div className={`map-selectors map-selectors--creative${offscreen ? ' is-offscreen' : ''}`} ref={ref}>
-        <Countdown pill />
+      <div
+        className={`map-selectors map-selectors--creative${offscreen ? ' is-offscreen' : ''}${scrolled ? ' is-scrolled' : ''}`}
+        ref={ref}
+      >
+        <div className="map-clock" aria-hidden={scrolled}>
+          <div className="map-clock-in">
+            <Countdown pill />
+          </div>
+        </div>
         <div className="map-controls-row">
           <RaceSegments chamber={chamber} onChamber={onChamber} />
           {resultsMode ? (

@@ -287,8 +287,9 @@ export default function App() {
           {creative(3) && <Hemicycle forecast={forecast} chamber={state.chamber} compact />}
           </section>
 
-          {/* Layouts 2 and 3 carry the chapter rail down the left edge. */}
-          {(creative(2) || creative(3)) && <ChapterRail />}
+          {/* Layout 3 carries the chapter rail down the left edge (it left
+              layout 2 on Sep 21 2026). */}
+          {creative(3) && <ChapterRail />}
 
           {/* The boundary between map and feed is editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
