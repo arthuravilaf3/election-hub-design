@@ -15,7 +15,9 @@ const OPTIONS: Array<{ id: Option; name: string; hint: string }> = [
 export function OptionSwitcher() {
   if (!OPTIONS_BUILD || IS_PREVIEW_FRAME) return null;
   return (
-    <div className="switch-stack">
+    /* A landmark of its own (axe "region"): prototype chrome outside the
+       page's main. */
+    <aside className="switch-stack" aria-label="Prototype options">
       <div className="layout-switch" role="radiogroup" aria-label="Option">
         <span className="layout-switch-label" aria-hidden="true">
           Option
@@ -40,6 +42,6 @@ export function OptionSwitcher() {
           </button>
         ))}
       </div>
-    </div>
+    </aside>
   );
 }
