@@ -19,7 +19,7 @@ import { INTRO_AT, Letters, introDelay } from './Intro';
 
 import { Countdown } from './Countdown';
 import { asset } from '../data/assets';
-import { IS_CREATIVE, IS_OPTION3 } from '../data/edition';
+import { IS_CREATIVE, IS_OPTION3, type DotsShape } from '../data/edition';
 import { CURRENT_SEATS } from '../data/summary';
 import polymarketLogo from '../images/polymarketlogo.png';
 import type { ForecastData } from '../data/hero';
@@ -30,6 +30,8 @@ export const PAGE_TITLE = '2026 Midterms';
 
 
 interface RaceHeaderProps {
+  /** Option 1: the shape the seats take under the headline. */
+  dotsShape?: DotsShape;
   chamber: Chamber;
   forecast: ForecastData;
   resultsMode: boolean;
@@ -40,6 +42,7 @@ interface RaceHeaderProps {
 }
 
 export function RaceHeader({
+  dotsShape = 'grid',
   chamber,
   forecast,
   resultsMode,
@@ -137,9 +140,10 @@ export function RaceHeader({
           the entry sweep; a source change keeps the same dots and just
           recolours them in place (the background transition). */
       <Dots
-        key={`${chamber}:${resultsMode ? 'results' : 'forecast'}`}
+        key={`${chamber}:${resultsMode ? 'results' : 'forecast'}:${dotsShape}`}
         forecast={forecast}
         chamber={chamber}
+        shape={dotsShape}
         headline={headline}
         resultsMode={resultsMode}
         called={called}
@@ -228,6 +232,7 @@ function SeatLine({ forecast, chamber }: { forecast: ForecastData; chamber: Cham
 interface DotsProps {
   forecast: ForecastData;
   chamber: Chamber;
+  shape: DotsShape;
   headline: string;
   resultsMode: boolean;
   called: number;
@@ -253,7 +258,72 @@ const DOT_GRID: Record<Chamber, { cols: number; gap: number; colsM: number; gapM
   governor: { cols: 12, gap: 8, colsM: 9, gapM: 4 },
 };
 
-function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
+/**
+ * The seats on an arc (option 1's "Arc" and "Semi", Sep 21 2026): the
+ * hemicycle's own geometry — rows of seats along concentric arcs, each row
+ * holding its share by length — in a unit box that the container's aspect
+ * ratio reproduces. Positions come back as fractions of the box, so the
+ * dots are plain absolutely-placed spans and the hover lens works on them
+ * unchanged. The full arc sweeps 180°; the semi-arc 140° on a deeper band.
+ */
+interface ArcLayout {
+  /** Box aspect (w / h) for the container. */
+  aspect: number;
+  /** Dot diameter as a fraction of the box's width. */
+  size: number;
+  /** [x, y] centres as fractions of the box, in row-then-angle order. */
+  pts: Array<[number, number, number]>; // x, y, row
+}
+
+function arcLayout(total: number, shape: 'arc' | 'semi'): ArcLayout {
+  const rows = total >= 400 ? 12 : total >= 100 ? 6 : 4;
+  const R_OUT = 880;
+  const R_IN = shape === 'arc' ? 372 : 300;
+  const sweep = shape === 'arc' ? Math.PI : (140 * Math.PI) / 180;
+  const step = rows > 1 ? (R_OUT - R_IN) / (rows - 1) : 0;
+  const radii = Array.from({ length: rows }, (_, k) => R_OUT - k * step);
+  const arcs = radii.map((r) => sweep * r);
+  const sum = arcs.reduce((a, b) => a + b, 0);
+  const raw = arcs.map((a) => (a / sum) * total);
+  const counts = raw.map(Math.floor);
+  let left = total - counts.reduce((a, b) => a + b, 0);
+  raw
+    .map((v, i) => [v - Math.floor(v), i] as const)
+    .sort((a, b) => b[0] - a[0])
+    .forEach(([, i]) => {
+      if (left > 0) {
+        counts[i] += 1;
+        left -= 1;
+      }
+    });
+  // The dot: no bigger than the row pitch or the along-row spacing allow.
+  const along = sum / total;
+  const dotR = Math.min(total >= 400 ? 21 : 80, step * 0.47, along * 0.47);
+  const pts: Array<[number, number, number]> = [];
+  radii.forEach((r, k) => {
+    const n = counts[k];
+    for (let i = 0; i < n; i += 1) {
+      const t = (i + 0.5) / n; // 0 = left end, 1 = right end
+      const a = Math.PI / 2 + sweep / 2 - sweep * t;
+      pts.push([r * Math.cos(a), -r * Math.sin(a), k]);
+    }
+  });
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  const x0 = Math.min(...xs) - dotR;
+  const x1 = Math.max(...xs) + dotR;
+  const y0 = Math.min(...ys) - dotR;
+  const y1 = Math.max(...ys) + dotR;
+  const w = x1 - x0;
+  const h = y1 - y0;
+  return {
+    aspect: w / h,
+    size: (dotR * 2) / w,
+    pts: pts.map(([x, y, k]) => [(x - x0) / w, (y - y0) / h, k]),
+  };
+}
+
+function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsProps) {
   const total = forecast.dem + forecast.rep;
   const grid = DOT_GRID[chamber];
 
@@ -426,6 +496,23 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
     ...Array<'dem'>(dem).fill('dem'),
   ];
 
+  // The arcs: seats coloured by their bearing, left to right — dem, the
+  // toss-ups at the crown, rep — the same reading as the big arc.
+  const arc = shape === 'grid' ? null : arcLayout(total, shape);
+  const arcParty = (i: number): 'rep' | 'toss' | 'dem' => {
+    if (!arc) return 'toss';
+    const rank = arcRank[i];
+    return rank < dem ? 'dem' : rank < dem + toss ? 'toss' : 'rep';
+  };
+  const arcRank: number[] = [];
+  if (arc) {
+    // Rank by bearing (x across the box), ties by row.
+    const order = arc.pts.map((_, i) => i).sort((a, b) => arc.pts[a][0] - arc.pts[b][0] || arc.pts[a][2] - arc.pts[b][2]);
+    order.forEach((i, rank) => {
+      arcRank[i] = rank;
+    });
+  }
+
   return (
     <section className="dots" aria-label={`${body} forecast`}>
       {/* Keyed on the headline so a race switch crossfades the copy, the way
@@ -463,13 +550,14 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
       {/* The grid is one image to assistive tech — 435 list items would be
           noise. The sentence is the seat bar's, unchanged. */}
       <div
-        className="dots-grid"
+        className={`dots-grid${arc ? ' dots-grid--arc' : ''}`}
         style={
           {
             '--dot-cols': grid.cols,
             '--dot-gap': `${grid.gap}px`,
             '--dot-cols-m': grid.colsM,
             '--dot-gap-m': `${grid.gapM}px`,
+            ...(arc ? { aspectRatio: String(arc.aspect) } : {}),
           } as React.CSSProperties
         }
         role="img"
@@ -486,7 +574,27 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
             page's entrance (520ms, from INTRO_AT.dots); a re-deal on a race
             change runs the same wave short and flat (300ms), so it reads as
             the grid re-forming, not as the page opening again. */}
-        {seats.map((party, i) => {
+        {arc
+          ? arc.pts.map(([x, y, row], i) => {
+              const jitter = ((i * 2654435761) % 1000) / 1000;
+              const delay = firstDeal ? INTRO_AT.dots + row * 30 + x * 40 + jitter * 26 : row * 12 + jitter * 90;
+              return (
+                <span
+                  key={i}
+                  className={`dot dot--${arcParty(i)}${firstDeal ? '' : ' dot--redeal'}`}
+                  style={
+                    {
+                      '--i': i,
+                      '--dot-delay': `${Math.round(delay)}ms`,
+                      left: `${((x - arc.size / 2) * 100).toFixed(3)}%`,
+                      top: `${((y - (arc.size * arc.aspect) / 2) * 100).toFixed(3)}%`,
+                      width: `${(arc.size * 100).toFixed(3)}%`,
+                    } as React.CSSProperties
+                  }
+                />
+              );
+            })
+          : seats.map((party, i) => {
           const row = Math.floor(i / grid.cols);
           const col = i % grid.cols;
           const jitter = ((i * 2654435761) % 1000) / 1000;

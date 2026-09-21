@@ -13,7 +13,16 @@ import { HouseColors } from './components/HouseColors';
 import { NationSpeaks } from './components/NationSpeaks';
 import { ChapterRail } from './components/ChapterRail';
 import { OptionSwitcher } from './components/OptionSwitcher';
-import { IS_CREATIVE, IS_OPTION3, readExtras, storeExtras, type Extras } from './data/edition';
+import {
+  IS_CREATIVE,
+  IS_OPTION3,
+  readDotsShape,
+  readExtras,
+  storeDotsShape,
+  storeExtras,
+  type DotsShape,
+  type Extras,
+} from './data/edition';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -49,6 +58,12 @@ export default function App() {
     storeExtras(next);
   };
   const isOption2 = IS_CREATIVE && !IS_OPTION3;
+  /* Option 1's dots shape (grid, arc, semi-arc), from the same switch. */
+  const [shape, setShape] = useState<DotsShape>(readDotsShape);
+  const onShape = (next: DotsShape) => {
+    setShape(next);
+    storeDotsShape(next);
+  };
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
@@ -221,6 +236,7 @@ export default function App() {
               paints it. */}
           <section className="map-section" aria-label="Election map" ref={mapSectionRef}>
           <RaceHeader
+            dotsShape={shape}
             chamber={state.chamber}
             forecast={forecast}
             resultsMode={anyResults}
@@ -324,7 +340,7 @@ export default function App() {
             onToggle={setDevOpen}
           />
         )}
-        <OptionSwitcher extras={extras} onExtras={onExtras} />
+        <OptionSwitcher extras={extras} onExtras={onExtras} shape={shape} onShape={onShape} />
         <ThemeToggle />
       </div>
 

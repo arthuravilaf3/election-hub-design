@@ -5130,9 +5130,32 @@ body {
   background: var(--surface-2);
 }
 
-/* Option 1: the clock is the copy's last line, under the seats. */
+/* Option 1: the clock is the copy's last line, under a hairline after the
+   seats, without the caption. */
 [data-option='1'] .dots-copy .countdown--compact {
-  padding-top: 4px;
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ink-subtlest);
+}
+
+[data-option='1'] .countdown-caption {
+  display: none;
+}
+
+/* Option 1's arcs: the dots placed by hand in a box of the arc's own aspect. */
+.dots-grid--arc {
+  display: block;
+  position: relative;
+}
+
+.dots-grid--arc .dot {
+  position: absolute;
+}
+
+.layout-switch-option--word {
+  width: auto;
+  padding: 0 10px;
+  font-size: 12px;
 }
 
 /* Option 2: no '26 mark, the name at 40px, the arc mark twice the size. */
@@ -5145,25 +5168,25 @@ body {
 }
 
 [data-option='2'] .hub-rightplace {
-  width: 600px;
-  height: 294px;
+  width: 450px;
+  height: 220px;
 }
 
-/* Option 3: the clock leaves the way the controls do — a fade, and the row
-   easing up into its place. */
+/* Option 3: the clock leaves exactly the way the controls do — the same
+   fade, in place; its slot stays, so the row never moves. */
 .map-clock {
-  transition:
-    grid-template-rows 480ms cubic-bezier(0.22, 1, 0.36, 1),
-    padding-bottom 480ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 260ms ease-out;
+  display: block;
+  padding-bottom: 16px;
+  transition: opacity 200ms ease-out;
 }
 
 .map-clock-in {
-  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: visible;
 }
 
-.map-selectors--creative.is-scrolled .map-clock-in {
-  transform: translateY(10px);
+.map-selectors--creative.is-scrolled .map-clock {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* The extras row of the option switch: two toggles, only on option 2. */

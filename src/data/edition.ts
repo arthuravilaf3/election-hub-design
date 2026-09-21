@@ -100,3 +100,26 @@ export function storeExtras(extras: Extras): void {
     // Private mode: the in-session choice still works.
   }
 }
+
+/* OPTION 1's dots shape (Sep 21 2026): the seats as the comp's grid, as a
+   full arc, or as a shallower arch — switched from the option switch and
+   stored. */
+export type DotsShape = 'grid' | 'arc' | 'semi';
+const SHAPE_KEY = 'dw-dots-shape';
+
+export function readDotsShape(): DotsShape {
+  try {
+    const v = localStorage.getItem(SHAPE_KEY);
+    return v === 'arc' || v === 'semi' ? v : 'grid';
+  } catch {
+    return 'grid';
+  }
+}
+
+export function storeDotsShape(shape: DotsShape): void {
+  try {
+    localStorage.setItem(SHAPE_KEY, shape);
+  } catch {
+    // Private mode: the in-session choice still works.
+  }
+}
