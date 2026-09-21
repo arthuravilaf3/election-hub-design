@@ -4156,7 +4156,7 @@ button,
   }
 }
 
-/* ---------- IDEA 1: the chapter rail ---------- */
+/* ---------- The chapter rail ---------- */
 
 /* Left edge, vertically centred — opposite the layout switch, clear of the
    Race/Source pills at the bottom. */
@@ -4219,7 +4219,7 @@ button,
   }
 }
 
-/* ---------- IDEA 2: the feed's call under the map ---------- */
+/* ---------- The feed's call under the map ---------- */
 
 .teaser {
   margin-top: 56px;
@@ -4295,60 +4295,6 @@ button,
   .teaser-items {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
-  }
-}
-
-/* ---------- IDEA 5: chapter and feed side by side ---------- */
-
-/* Only where there is room for two real columns; below that the page keeps
-   its stacked order. */
-.dual {
-  display: block;
-}
-
-@media (min-width: 1500px) {
-  .dual {
-    display: grid;
-    grid-template-columns: minmax(0, 44%) minmax(0, 56%);
-    gap: 48px;
-    align-items: start;
-  }
-
-  .dual-left {
-    position: sticky;
-    top: 88px;
-  }
-
-  .dual-left .r3-stage,
-  .dual-left .house-colors {
-    width: 100%;
-    margin-inline: 0;
-  }
-
-  .dual-left .r3-sticky {
-    position: relative;
-    top: 0;
-    height: min(62vh, 520px);
-  }
-
-  .dual-left .nation-speaks {
-    margin-top: 32px;
-  }
-
-  .dual-right .plan-banner {
-    margin-top: 0;
-  }
-
-  /* The feed runs in one column here: its own ad rails need a page's width
-     and there isn't one beside the chapter. */
-  .dual-right .feed-section {
-    grid-template-columns: minmax(0, 1fr);
-    margin-top: 40px;
-    padding-inline: 0;
-  }
-
-  .dual-right .feed-ad-rail {
-    display: none;
   }
 }
 

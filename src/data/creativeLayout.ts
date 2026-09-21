@@ -50,17 +50,18 @@ export const CREATIVE_LAYOUTS: Array<{ id: CreativeLayout; name: string; hint: s
   { id: 3, name: 'Full', hint: 'Map, Capitol strip, arc and The Nation Speaks' },
 ];
 
-/* The five ways of getting the reader from the map to the feed (Sep 21
-   2026), each built into the page itself so they can be reviewed in the
-   real thing. They apply to layout 3, where the creative chapter sits
-   between the two. 0 is the page as it stands. */
-export type FeedIdea = 0 | 1 | 2 | 3 | 4 | 5;
+/* The two ways to the feed that survived review (Sep 21 2026): the chapter
+   rail and the feed's own call under the map. They are independent, so the
+   switch carries both and their combination — which is how the page ships
+   by default, since they answer different halves of the problem: one says
+   there is coverage ahead, the other already hands over a piece of it. */
+export type FeedIdea = 0 | 1 | 2 | 3;
 
 const IDEA_KEY = 'dw-feed-idea';
 
 function parseIdea(v: string | null): FeedIdea | null {
   const n = Number(v);
-  return v !== null && v !== '' && Number.isInteger(n) && n >= 0 && n <= 5 ? (n as FeedIdea) : null;
+  return v !== null && v !== '' && Number.isInteger(n) && n >= 0 && n <= 3 ? (n as FeedIdea) : null;
 }
 
 export function initialFeedIdea(): FeedIdea {
@@ -72,9 +73,9 @@ export function initialFeedIdea(): FeedIdea {
   }
   if (fromUrl !== null) return fromUrl;
   try {
-    return parseIdea(localStorage.getItem(IDEA_KEY)) ?? 0;
+    return parseIdea(localStorage.getItem(IDEA_KEY)) ?? 3;
   } catch {
-    return 0;
+    return 3;
   }
 }
 
@@ -86,11 +87,9 @@ export function storeFeedIdea(idea: FeedIdea): void {
   }
 }
 
-export const FEED_IDEAS: Array<{ id: FeedIdea; name: string; hint: string }> = [
-  { id: 0, name: 'Como está', hint: 'O capítulo criativo inteiro entre o mapa e o feed' },
-  { id: 1, name: 'Trilho', hint: 'Índice fixo: mapa, previsão, cobertura' },
-  { id: 2, name: 'Chamada', hint: 'Três manchetes logo abaixo do mapa' },
-  { id: 3, name: 'Sem scroll', hint: 'O capítulo toca sozinho, sem prender a rolagem' },
-  { id: 4, name: 'Encolhe', hint: 'Curto na segunda visita (recarregue para ver)' },
-  { id: 5, name: 'Duas colunas', hint: 'Capítulo à esquerda, feed rolando à direita' },
+export const FEED_IDEAS: Array<{ id: FeedIdea; label: string; name: string; hint: string }> = [
+  { id: 0, label: '—', name: 'Nenhuma', hint: 'O capítulo criativo inteiro entre o mapa e o feed' },
+  { id: 1, label: '1', name: 'Trilho', hint: 'Índice fixo: mapa, previsão, cobertura' },
+  { id: 2, label: '2', name: 'Chamada', hint: 'Três manchetes logo abaixo do mapa' },
+  { id: 3, label: '1+2', name: 'As duas', hint: 'Trilho e chamada juntos' },
 ];

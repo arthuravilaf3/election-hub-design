@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DWNav } from './components/DWNav';
 import { RaceHeader } from './components/RaceHeader';
 import { MapCard } from './components/MapCard';
@@ -56,24 +56,8 @@ export default function App() {
   /* Which way to the feed is on (layout 3 only). 0 = the page as it stands;
      1 rail, 2 teaser, 3 no pin, 4 short on a second visit, 5 two columns. */
   const [idea, setIdea] = useState<FeedIdea>(initialFeedIdea);
-  const on = (n: FeedIdea) => creative(3) && idea === n;
-  /* Idea 4 remembers, for the session, that the chapter has played: the
-     next load stands on the finished arc instead of building it again. */
-  const [chapterSeen, setChapterSeen] = useState(() => {
-    try {
-      return sessionStorage.getItem('dw-chapter-seen') === '1';
-    } catch {
-      return false;
-    }
-  });
-  const markChapterSeen = useCallback(() => {
-    setChapterSeen(true);
-    try {
-      sessionStorage.setItem('dw-chapter-seen', '1');
-    } catch {
-      // Private mode: the flag lasts as long as the page does.
-    }
-  }, []);
+  const railOn = creative(3) && (idea === 1 || idea === 3);
+  const teaserOn = creative(3) && (idea === 2 || idea === 3);
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
@@ -301,57 +285,31 @@ export default function App() {
             }
           />
 
-          {/* IDEA 2: the feed's own call, half a screen under the map. */}
-          {on(2) && <FeedTeaser />}
+          {/* THE FEED'S OWN CALL: three recent headlines a fraction of a
+              screen under the map, with a way to the whole list. */}
+          {teaserOn && <FeedTeaser />}
 
-          {/* LAYOUT 3: the Capitol strip and the arc after the map. Idea 5
-              moves the pair out of this section and beside the feed; idea 3
-              takes the arc off the page's scroll; idea 4 stands on the
-              finished arc once the chapter has played this session. */}
-          {creative(3) && !on(5) && <HouseColors forecast={forecast} />}
-          {creative(3) && !on(5) && (
-            <Hemicycle
-              forecast={forecast}
-              chamber={state.chamber}
-              compact
-              drive={on(3) ? 'time' : 'scroll'}
-              finished={on(4) && chapterSeen}
-              onDone={on(4) ? markChapterSeen : undefined}
-            />
-          )}
+          {/* LAYOUT 3: the Capitol strip right after the map, then the arc
+              on a shorter pin. The Race/Source pills stay pinned through
+              both (the gate watches the section). */}
+          {creative(3) && <HouseColors forecast={forecast} />}
+          {creative(3) && <Hemicycle forecast={forecast} chamber={state.chamber} compact />}
           </section>
 
           {/* LAYOUT 3: the Cosmos Waveform and "The Nation Speaks", after
-              the arc and before the feed (idea 5 moves it too). */}
-          {creative(3) && !on(5) && <NationSpeaks />}
-          {creative(3) && !on(1) && !on(5) && <CreativeSkip />}
-          {/* IDEA 1: the chapter rail replaces the skip link. */}
-          {on(1) && <ChapterRail />}
+              the arc and before the feed. */}
+          {creative(3) && <NationSpeaks />}
 
-          {/* IDEA 5: on a wide screen the chapter takes a sticky column and
-              the feed runs beside it, so coverage starts level with the map.
-              Narrower than that, the page keeps its stacked order. */}
-          {on(5) ? (
-            <div className="dual">
-              <div className="dual-left">
-                <HouseColors forecast={forecast} />
-                <Hemicycle forecast={forecast} chamber={state.chamber} drive="time" />
-                <NationSpeaks />
-              </div>
-              <div className="dual-right">
-                <PlanBanner />
-                <CoverageFeed />
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* The boundary between map and feed is editorial, not
-                  chromatic: the plan banner sits where the surface-step
-                  used to be. */}
-              <PlanBanner />
-              <CoverageFeed />
-            </>
-          )}
+          {/* THE CHAPTER RAIL, and the skip link only when the rail is off —
+              two answers to the same question, never both on screen. */}
+          {railOn && <ChapterRail />}
+          {creative(3) && !railOn && <CreativeSkip />}
+
+          {/* The boundary between map and feed is editorial, not chromatic:
+              the plan banner sits where the surface-step used to be. */}
+          <PlanBanner />
+
+          <CoverageFeed />
 
           {/* Race calls, cutover notices and control changes are announced politely. */}
           <div aria-live="polite" className="visually-hidden">

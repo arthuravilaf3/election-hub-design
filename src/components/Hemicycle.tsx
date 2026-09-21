@@ -246,28 +246,9 @@ interface HemicycleProps {
   /** A shorter pin (Sep 21 2026): the same choreography over less scroll,
       so the feed sits closer to the map. */
   compact?: boolean;
-  /** 'time' plays the choreography on a clock once the stage comes into
-      view, and the stage takes one screen instead of pinning the page —
-      the feed-reach idea that costs the page no scroll at all. */
-  drive?: 'scroll' | 'time';
-  /** Skip the choreography and stand on the finished arc (the "already
-      seen" second visit). */
-  finished?: boolean;
-  /** Called once, when the choreography has run to the end. */
-  onDone?: () => void;
 }
 
-/** How long a timed run takes, start to finish. */
-const PLAY_MS = 7000;
-
-export function Hemicycle({
-  forecast,
-  chamber,
-  compact = false,
-  drive = 'scroll',
-  finished = false,
-  onDone,
-}: HemicycleProps) {
+export function Hemicycle({ forecast, chamber, compact = false }: HemicycleProps) {
   // Identical to the dots under the header, so the two never disagree.
   const total = forecast.dem + forecast.rep;
   const gap = forecast.tossupShare;
@@ -317,20 +298,12 @@ export function Hemicycle({
       wave.current = { from: seats.map((s) => s.party), start: 0 };
     }
     let raf = 0;
-    let done = false;
     let shown = -1; // smoothed progress; -1 = not painted yet
     // How far past the pin's end the page has scrolled, 0 → 1 over the
     // first CLOSE_PX: the curtain that closes the chapter before the feed.
     let over = 0;
-    // A TIMED run (drive='time'): 0 → 1 over PLAY_MS once the stage comes
-    // into view, holding at the end and rewinding once it has left.
-    let playStart = 0;
-    let playing = false;
     const target = () => {
-      if (reduced || finished) return 1;
-      if (drive === 'time') {
-        return playing ? clamp01((performance.now() - playStart) / PLAY_MS) : 0;
-      }
+      if (reduced) return 1;
       const stTop = st.getBoundingClientRect().top + window.scrollY;
       // The pin holds while the stage's bottom is below the sticky's bottom
       // (its top offset included) — past that the frame is pushed up and
@@ -509,15 +482,10 @@ export function Hemicycle({
       if (sb) sb.style.filter = close > 0 ? `brightness(${(1 - 0.15 * close).toFixed(3)})` : '';
       // Keep painting while the scroll is still settling, or while loose
       // seats are drifting in view.
-      if (p >= 0.995 && !done) {
-        done = true;
-        onDone?.();
-      }
       const drifting = !reduced && p < BEAT.gather[1] && onScreen();
       if (wv.start && waveP >= 1) wave.current = { from: seats.map((x) => x.party), start: 0 };
       const waving = wave.current.start > 0;
-      const running = drive === 'time' && playing && want < 1;
-      if ((p !== want || drifting || lensMoving || waving || running) && !raf) {
+      if ((p !== want || drifting || lensMoving || waving) && !raf) {
         raf = window.requestAnimationFrame(paint);
       }
     };
@@ -540,31 +508,12 @@ export function Hemicycle({
       lens.current.py = -1e9;
       onScroll();
     };
-    // The timed run starts when the stage is a third on screen.
-    let io: IntersectionObserver | null = null;
-    if (drive === 'time' && !finished && !reduced) {
-      io = new IntersectionObserver(
-        ([e]) => {
-          if (e.intersectionRatio >= 0.35 && !playing) {
-            playing = true;
-            playStart = performance.now();
-          } else if (!e.isIntersecting && playing) {
-            playing = false;
-            done = false;
-          }
-          onScroll();
-        },
-        { threshold: [0, 0.35] }
-      );
-      io.observe(st);
-    }
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
     sb?.addEventListener('pointermove', onPointerMove);
     sb?.addEventListener('pointerleave', onPointerLeave);
     return () => {
-      io?.disconnect();
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
       sb?.removeEventListener('pointermove', onPointerMove);
@@ -573,15 +522,10 @@ export function Hemicycle({
       // Whatever the seats wore last is where the next wave starts from.
       wave.current = { from: seats.map((x) => x.party), start: 0 };
     };
-  }, [seats, reduced, drive, finished, onDone]);
+  }, [seats, reduced]);
 
   return (
-    <div
-      className={`r3-stage${compact ? ' r3-stage--compact' : ''}${
-        drive === 'time' || finished ? ' r3-stage--noscroll' : ''
-      }`}
-      ref={stage}
-    >
+    <div className={`r3-stage${compact ? ' r3-stage--compact' : ''}`} ref={stage}>
       <div className="r3-sticky" ref={sticky}>
         <div
           className="r3-seats"

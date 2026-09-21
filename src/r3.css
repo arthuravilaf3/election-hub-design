@@ -11,18 +11,6 @@
   height: 300vh;
 }
 
-/* No pin at all: the stage is one screen tall and the choreography runs on
-   a clock (or is already finished). The page scrolls straight past it. */
-.r3-stage.r3-stage--noscroll {
-  height: auto;
-}
-
-.r3-stage--noscroll .r3-sticky {
-  position: relative;
-  top: 0;
-  height: min(78vh, 620px);
-}
-
 /* The skip link: prototype chrome, bottom-left, opposite the layout switch.
    It shows only while the creative chapter is on screen. */
 .chapter-skip {

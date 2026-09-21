@@ -14,13 +14,13 @@
   initial-value: 50%;
 }
 
-/* How opaque the red print is across the overlap. 1 while the prints slide
-   in (so nothing half-transparent ever hangs over the bare page), then it
-   melts to 0.5 once they have met, and the blue shows through. */
+/* The overlap band's own layer: absent while the prints slide in (so no
+   half-image ever hangs over the bare page), then it melts in once they
+   have met and blends with the blue underneath. */
 @property --overlap-a {
   syntax: '<number>';
   inherits: true;
-  initial-value: 1;
+  initial-value: 0;
 }
 
 /* ---------- House Colors (Figma 10222:111601) ---------- */
@@ -34,7 +34,7 @@
   aspect-ratio: 1440 / 220;
   overflow: hidden;
   isolation: isolate;
-  --overlap-a: 1;
+  --overlap-a: 0;
   transition:
     --band-start 600ms cubic-bezier(0.22, 1, 0.36, 1),
     --band-end 600ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -43,7 +43,7 @@
 
 /* Arrived: the overlap melts in after the slide has landed (1100ms). */
 .house-colors.is-in {
-  --overlap-a: 0.5;
+  --overlap-a: 1;
   transition:
     --band-start 600ms cubic-bezier(0.22, 1, 0.36, 1),
     --band-end 600ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -72,23 +72,24 @@
   transform: translateX(-100%);
 }
 
+/* The plain red: everything past the band. */
 .house-colors-print--rep {
-  --overlap: rgb(0 0 0 / var(--overlap-a));
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent var(--band-start),
-    var(--overlap) var(--band-start),
-    var(--overlap) var(--band-end),
-    #000 var(--band-end)
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent var(--band-start),
-    var(--overlap) var(--band-start),
-    var(--overlap) var(--band-end),
-    #000 var(--band-end)
-  );
+  clip-path: inset(0 0 0 var(--band-end));
   transform: translateX(100%);
+}
+
+/* The band: the same red print clipped to the overlap, blending with the
+   blue under it. DARKEN on the dark theme, LIGHTEN on the light one — each
+   pushes the fused band away from the page's ground rather than into it. */
+.house-colors-print--band {
+  clip-path: inset(0 calc(100% - var(--band-end)) 0 var(--band-start));
+  mix-blend-mode: darken;
+  opacity: var(--overlap-a);
+  transform: translateX(100%);
+}
+
+:root[data-theme='light'] .house-colors-print--band {
+  mix-blend-mode: lighten;
 }
 
 .house-colors.is-in .house-colors-print {
@@ -117,7 +118,7 @@
 @media (prefers-reduced-motion: reduce) {
   .house-colors,
   .house-colors.is-in {
-    --overlap-a: 0.5;
+    --overlap-a: 1;
     transition: none;
   }
 

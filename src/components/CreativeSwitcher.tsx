@@ -76,10 +76,10 @@ export function CreativeSwitcher({ layout, onChange, idea, onIdea }: CreativeSwi
               role="radio"
               aria-checked={o.id === idea}
               className={`layout-switch-option${o.id === idea ? ' is-selected' : ''}`}
-              title={`${o.id === 0 ? '—' : o.id} · ${o.name} — ${o.hint}`}
+              title={`${o.label} · ${o.name} — ${o.hint}`}
               onClick={() => pickIdea(o.id)}
             >
-              {o.id === 0 ? '—' : o.id}
+              {o.label}
               <span className="visually-hidden">
                 {' '}
                 — {o.name}: {o.hint}
