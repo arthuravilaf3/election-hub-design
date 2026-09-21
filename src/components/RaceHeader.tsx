@@ -248,7 +248,8 @@ interface DotsProps {
  */
 /* Columns per chamber, so the grid always spans the comp's 808px and a
    smaller body gets bigger dots: 435 seats at 29 across (24px), 100 at 15
-   across (48px, per the Senate comp), governorships at 12 across. The mobile
+   across (48px, per the Senate comp), governorships at 10 across (74px, five
+   rows — the most the frame holds without growing, Sep 21 2026). The mobile
    pair keeps the same idea on a 358px card. */
 /** Set once the grid has dealt for the first time this page load. */
 let dotsDealt = false;
@@ -256,7 +257,7 @@ let dotsDealt = false;
 const DOT_GRID: Record<Chamber, { cols: number; gap: number; colsM: number; gapM: number }> = {
   house: { cols: 29, gap: 4, colsM: 20, gapM: 3 },
   senate: { cols: 15, gap: 6, colsM: 10, gapM: 4 },
-  governor: { cols: 12, gap: 8, colsM: 9, gapM: 4 },
+  governor: { cols: 10, gap: 8, colsM: 10, gapM: 4 },
 };
 
 /**
