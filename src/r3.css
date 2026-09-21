@@ -5,20 +5,14 @@
 
 /* ~3 screens of travel; the sticky frame is one screen under the nav and
    above the ticker. */
-/* CHAPTER MODE: one pin for the arc, the Capitol strip and the line —
-   300vh instead of the arc's own 500vh plus the two blocks' height. */
-.r3-stage.r3-stage--chapter {
+/* The compact pin (layout 3): 300vh instead of 500vh — the same beats over
+   less scroll, which is most of what puts the feed within reach. */
+.r3-stage.r3-stage--compact {
   height: 300vh;
 }
 
-/* In chapter mode the curtain is a hand-over, not a dimming: the arc and
-   its counts clear the frame so the next scene has it to itself. */
-.r3-sticky--chapter .r3-seats,
-.r3-sticky--chapter .r3-number {
-  opacity: calc(1 - var(--r3-close, 0));
-}
-
-/* The skip link: prototype chrome, bottom-left, opposite the layout switch. */
+/* The skip link: prototype chrome, bottom-left, opposite the layout switch.
+   It shows only while the creative chapter is on screen. */
 .chapter-skip {
   position: fixed;
   left: 24px;
@@ -43,6 +37,13 @@
 
 .chapter-skip:hover {
   background: var(--surface-2);
+}
+
+@media (max-width: 700px) {
+  .chapter-skip {
+    left: 16px;
+    bottom: 96px;
+  }
 }
 
 .r3-stage {

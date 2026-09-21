@@ -9,7 +9,9 @@ import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
-import { CreativeChapter } from './components/CreativeChapter';
+import { HouseColors } from './components/HouseColors';
+import { NationSpeaks } from './components/NationSpeaks';
+import { CreativeSkip } from './components/CreativeSkip';
 import { CreativeSwitcher } from './components/CreativeSwitcher';
 import { IS_CREATIVE } from './data/edition';
 import { initialCreativeLayout, type CreativeLayout } from './data/creativeLayout';
@@ -270,12 +272,17 @@ export default function App() {
             }
           />
 
-          {/* LAYOUT 3 only: the creative chapter — the arc, the Capitol
-              strip and "The Nation Speaks" in one pinned stage, right after
-              the map. The Race/Source pills stay pinned through it (the
-              gate watches the section). */}
-          {creative(3) && <CreativeChapter forecast={forecast} chamber={state.chamber} />}
+          {/* LAYOUT 3 only: the Capitol strip right after the map, then the
+              arc on a shorter pin. The Race/Source pills stay pinned through
+              both (the gate watches the section). */}
+          {creative(3) && <HouseColors forecast={forecast} />}
+          {creative(3) && <Hemicycle forecast={forecast} chamber={state.chamber} compact />}
           </section>
+
+          {/* LAYOUT 3 only: the Cosmos Waveform and "The Nation Speaks",
+              after the arc and before the feed. */}
+          {creative(3) && <NationSpeaks />}
+          {creative(3) && <CreativeSkip />}
 
           {/* The boundary between map and feed is now editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
