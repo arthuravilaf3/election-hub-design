@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react';
 import { track } from '../data/analytics';
 
 const MARKS = [
-  { id: 'forecast', label: 'Forecast', sel: '.dots--creative' },
-  { id: 'map', label: 'Map', sel: '.map-card' },
+  { id: 'map', label: 'Map', sel: '.dots--creative' },
+  { id: 'forecast', label: 'Forecast', sel: '.map-card' },
   { id: 'coverage', label: 'Coverage', sel: '.feed-section' },
 ];
 

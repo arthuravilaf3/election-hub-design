@@ -10,9 +10,8 @@ import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
 import { ChapterRail } from './components/ChapterRail';
-import { CreativeSwitcher } from './components/CreativeSwitcher';
 import { IS_CREATIVE } from './data/edition';
-import { initialCreativeLayout, type CreativeLayout } from './data/creativeLayout';
+import { type CreativeLayout } from './data/creativeLayout';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -42,7 +41,8 @@ export default function App() {
   const [phase] = useState<Phase>(initialPhase);
   /* Which cut of the creative edition is on screen (1 plain, 2 still arc,
      3 big arc) — the switch is prototype chrome, see data/creativeLayout. */
-  const [layout, setLayout] = useState<CreativeLayout>(initialCreativeLayout);
+  // OPTION 3 build (Sep 21 2026, Figma 11589:227618): the still-arc cut, fixed.
+  const layout: CreativeLayout = 2;
   const creative = (n: CreativeLayout) => IS_CREATIVE && layout === n;
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
@@ -220,7 +220,6 @@ export default function App() {
             ref={mapSectionRef}
           >
           <RaceHeader
-            layout={IS_CREATIVE ? layout : 1}
             chamber={state.chamber}
             forecast={forecast}
             resultsMode={anyResults}
@@ -289,7 +288,7 @@ export default function App() {
 
           {/* Layout 3 carries the chapter rail down the left edge (it left
               layout 2 on Sep 21 2026). */}
-          {creative(3) && <ChapterRail />}
+          {creative(2) && <ChapterRail />}
 
           {/* The boundary between map and feed is editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
@@ -312,9 +311,6 @@ export default function App() {
             open={devOpen}
             onToggle={setDevOpen}
           />
-        )}
-        {IS_CREATIVE && (
-          <CreativeSwitcher layout={layout} onChange={setLayout} />
         )}
         <ThemeToggle />
       </div>

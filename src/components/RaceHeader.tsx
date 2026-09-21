@@ -30,12 +30,6 @@ export const PAGE_TITLE = '2026 Midterms';
 
 
 interface RaceHeaderProps {
-  /* Which cut of the header (Sep 21 2026, Arthur's three options). All
-     three keep the typeset name with its '26 mark and the sponsor line on
-     the left; on the right, 1 and 3 carry the campaign mark (the arc) and 2
-     its lettering alone — "The right place to be." under five red dots.
-     The base build is cut 1 with the mark. */
-  layout: 1 | 2 | 3;
   chamber: Chamber;
   forecast: ForecastData;
   resultsMode: boolean;
@@ -46,7 +40,6 @@ interface RaceHeaderProps {
 }
 
 export function RaceHeader({
-  layout,
   chamber,
   forecast,
   resultsMode,
@@ -102,12 +95,6 @@ export function RaceHeader({
             theme files sit stacked inside it and a theme switch only flips
             which one is visible — so it recolours in place instead of
             replaying. */}
-        {layout === 2 ? (
-          <span className="hub-tagline intro-rise" style={introDelay(INTRO_AT.statement)}>
-            <span className="hub-tagline-dots" aria-hidden="true" />
-            The <b>right</b> place to be.
-          </span>
-        ) : (
         <span className="hub-rightplace intro-rise" style={introDelay(INTRO_AT.statement)}>
           <img
             className="hub-rightplace-art hub-rightplace-art--dark"
@@ -124,7 +111,6 @@ export function RaceHeader({
             height={187}
           />
         </span>
-        )}
       </header>
 
       {!IS_CREATIVE && <Countdown compact />}

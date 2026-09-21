@@ -1205,6 +1205,7 @@ button,
   align-items: center;
   gap: 32px;
   width: 100%;
+  max-width: 1100px;
   margin: 40px auto 0;
 }
 
