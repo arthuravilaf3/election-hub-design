@@ -18,6 +18,7 @@ import { useEffect, useRef } from 'react';
 import { INTRO_AT, Letters, introDelay } from './Intro';
 
 import { Countdown } from './Countdown';
+import { GameCallout } from './GameCallout';
 import { asset } from '../data/assets';
 import { IS_CREATIVE, IS_OPTION3, type DotsShape } from '../data/edition';
 import { CURRENT_SEATS } from '../data/summary';
@@ -515,6 +516,7 @@ function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsP
 
   return (
     <section className="dots" aria-label={`${body} forecast`}>
+      <div className="dots-left">
       {/* Keyed on the headline so a race switch crossfades the copy, the way
           the old statement did. */}
       <div className="dots-copy" key={headline}>
@@ -545,6 +547,10 @@ function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsP
         {/* The Election Day clock as the copy's last line (Sep 21 2026):
             with the headline and the seats, not adrift above them. */}
         <Countdown compact />
+      </div>
+      {/* The game's call, pushed to the foot of the column so it lines up
+          with the bottom of the dots. */}
+      <GameCallout />
       </div>
 
       {/* The grid is one image to assistive tech — 435 list items would be

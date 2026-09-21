@@ -5135,7 +5135,7 @@ body {
 [data-option='1'] .dots-copy .countdown--compact {
   margin-top: 4px;
   padding-top: 18px;
-  border-top: 1px solid var(--ink-subtlest);
+  border-top: 1px solid color-mix(in srgb, var(--ink-subtlest) 40%, transparent);
 }
 
 [data-option='1'] .countdown-caption {
@@ -5256,5 +5256,87 @@ body {
   [data-option='2'] .hub-rightplace {
     width: 300px;
     height: 147px;
+  }
+}
+
+/* ---------- Option 1: the left column and the game's call ---------- */
+
+/* The copy column stretches to the dots' height so the call can sit on
+   their baseline. */
+.dots {
+  align-items: stretch;
+}
+
+.dots-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.game-callout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: auto;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: linear-gradient(
+    120deg,
+    var(--brand-pressed) 0%,
+    color-mix(in srgb, var(--brand-pressed) 72%, var(--surface-dim)) 100%
+  );
+  color: #fff;
+}
+
+/* Never closer than this to the clock, however short the copy runs. */
+.dots-left .dots-copy {
+  margin-bottom: 24px;
+}
+
+.game-callout-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+}
+
+.game-callout-copy {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.game-callout-copy b {
+  color: #fff;
+}
+
+.game-callout-btn {
+  flex: none;
+  height: 38px;
+  padding: 0 14px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Option 1's race segments beside the source pill: same height. */
+.map-selectors > .race-seg {
+  flex: none;
+}
+
+@media (max-width: 700px) {
+  .game-callout {
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* The segments take the row; the source pill goes under them. */
+  [data-option='1'] .map-card .map-selectors {
+    grid-template-columns: 1fr;
+  }
+
+  [data-option='1'] .map-card .map-selectors .race-seg {
+    width: 100%;
   }
 }

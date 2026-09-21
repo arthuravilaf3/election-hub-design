@@ -16,7 +16,7 @@
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import { Countdown } from './Countdown';
-import { IS_OPTION3 } from '../data/edition';
+import { IS_OPTION3, RACE_SEGMENTS } from '../data/edition';
 import { SOURCES, sourceKind, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 import type { Chamber } from '../data/types';
@@ -300,12 +300,17 @@ export function MapSelectors({
 
   return (
     <div className={`map-selectors${offscreen ? ' is-offscreen' : ''}`} ref={ref}>
-      <PillSelect
-        label="Race"
-        value={chamber}
-        options={CHAMBERS.map((c) => ({ id: c, label: CHAMBER_LABEL[c] }))}
-        onChange={(id) => onChamber(id as Chamber)}
-      />
+      {/* Option 1 (Sep 21 2026): the race as segments, the source still a pill. */}
+      {RACE_SEGMENTS ? (
+        <RaceSegments chamber={chamber} onChamber={onChamber} />
+      ) : (
+        <PillSelect
+          label="Race"
+          value={chamber}
+          options={CHAMBERS.map((c) => ({ id: c, label: CHAMBER_LABEL[c] }))}
+          onChange={(id) => onChamber(id as Chamber)}
+        />
+      )}
 
       {resultsMode ? (
         /* No choice on election night: one certified feed, named. */

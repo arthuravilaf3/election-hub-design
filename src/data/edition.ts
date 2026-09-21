@@ -54,6 +54,21 @@ function readOption(): Option {
 
 export const OPTION: Option = OPTIONS_BUILD ? readOption() : built === 'base' ? 1 : 2;
 
+/* The options build proper — or dev with ?option= in the URL. The pieces
+   that change the BASE hub's own controls (option 1's race segments) hang
+   on this, not on OPTIONS_BUILD, so the base build and the lock/harness
+   runs (dev, ?edition=base, no ?option=) keep the pills. */
+function hasOptionParam(): boolean {
+  try {
+    return new URLSearchParams(window.location.search).has('option');
+  } catch {
+    return false;
+  }
+}
+export const OPTIONS_STRICT = built === 'options' || (import.meta.env.DEV && hasOptionParam());
+/** Option 1 in the options build: the race as segments beside the source pill. */
+export const RACE_SEGMENTS = OPTIONS_STRICT && OPTION === 1;
+
 export function selectOption(next: Option): void {
   try {
     localStorage.setItem(OPTION_KEY, String(next));
