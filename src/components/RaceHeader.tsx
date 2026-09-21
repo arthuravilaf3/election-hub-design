@@ -30,6 +30,11 @@ export const PAGE_TITLE = '2026 Midterms';
 
 
 interface RaceHeaderProps {
+  /* Which cut of the header (Sep 21 2026). 1 keeps the typeset name with
+     its '26 mark and the campaign mark small beside it — the base build's
+     header too. 2 and 3 drop the name entirely: the campaign mark alone,
+     centred, and the sponsor line moves under the headline. */
+  layout: 1 | 2 | 3;
   chamber: Chamber;
   forecast: ForecastData;
   resultsMode: boolean;
@@ -40,6 +45,7 @@ interface RaceHeaderProps {
 }
 
 export function RaceHeader({
+  layout,
   chamber,
   forecast,
   resultsMode,
@@ -51,39 +57,55 @@ export function RaceHeader({
      source stays named where it lives: the SOURCE pill and the panel. */
   const headline = resultsMode ? `${called} of ${raceCount} races called` : forecast.headline;
   const updatedLine = resultsMode ? 'Updating live' : `Updated ${forecast.updated}`;
+  /* Cuts 2 and 3: the campaign mark carries the masthead on its own. */
+  const markOnly = layout !== 1;
+  const byline = (
+    <p
+      className={`hub-byline intro-rise${markOnly ? ' hub-byline--hero' : ''}`}
+      style={introDelay(INTRO_AT.presented)}
+    >
+      <span className="hub-presented">
+        <em>Presented by</em>
+        <img className="hub-logo" src={polymarketLogo} alt="Polymarket" />
+      </span>
+      {/* Freshness of the read rides with the sponsor (decided Sep 2026
+          over three other placements). */}
+      {(forecast.updated || resultsMode) && (
+        <>
+          <span className="hub-dot" aria-hidden="true">
+            •
+          </span>
+          <span className="hub-updated">{updatedLine}</span>
+        </>
+      )}
+    </p>
+  );
 
   return (
     <>
-      <header className="hub-header">
-        <div className="hub-brand">
-          {/* The '26 mark was dropped from the name on Sep 21 2026 — the
-              campaign mark on the right carries the year's identity now. */}
-          <h1 className="hub-title">
-            {/* Entrance: the letters resolve one by one out of a blur. */}
-            <Letters text="The Midterms" base={INTRO_AT.title} step={26} className="hub-title-text" />
-          </h1>
-          <p className="hub-byline intro-rise" style={introDelay(INTRO_AT.presented)}>
-            <span className="hub-presented">
-              <em>Presented by</em>
-              <img className="hub-logo" src={polymarketLogo} alt="Polymarket" />
-            </span>
-            {/* Freshness of the read lives here, after the sponsor (decided
-                Sep 2026 over three other placements). */}
-            {(forecast.updated || resultsMode) && (
-              <>
-                <span className="hub-dot" aria-hidden="true">
-                  •
-                </span>
-                <span className="hub-updated">{updatedLine}</span>
-              </>
-            )}
-          </p>
-        </div>
+      <header className={`hub-header${markOnly ? ' hub-header--mark' : ''}`}>
+        {!markOnly && (
+          <div className="hub-brand">
+            <h1 className="hub-title">
+              {/* Entrance: the letters resolve one by one out of a blur. */}
+              <Letters text="The Midterms" base={INTRO_AT.title} step={26} className="hub-title-text" />
+              {/* The '26 mark completes the name — it is part of the heading,
+                  so its alt is the year the type is not spelling out. */}
+              <img
+                className="hub-mark intro-rise"
+                style={introDelay(INTRO_AT.mark)}
+                src={asset('logos/midterms-26.svg')}
+                alt="'26"
+              />
+            </h1>
+            {byline}
+          </div>
+        )}
         {/* The campaign mark (creative, Sep 2026): the "Right Place to Be"
-            hemicycle, in place of the typeset tagline. The entrance runs on
-            the wrapper, once; the two theme files sit stacked inside it and
-            a theme switch only flips which one is visible — so it recolours
-            in place instead of replaying the entrance. */}
+            hemicycle. In cuts 2 and 3 it IS the masthead, centred and on its
+            own. The entrance runs on the wrapper, once; the two theme files
+            sit stacked inside it and a theme switch only flips which one is
+            visible — so it recolours in place instead of replaying. */}
         <span className="hub-rightplace intro-rise" style={introDelay(INTRO_AT.statement)}>
           <img
             className="hub-rightplace-art hub-rightplace-art--dark"
@@ -117,6 +139,9 @@ export function RaceHeader({
             <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
               {headline}
             </h2>
+            {/* Cuts 2 and 3: the sponsor and the freshness sit under the
+                headline, where the masthead no longer carries them. */}
+            {markOnly && byline}
           </div>
           <SeatLine forecast={forecast} chamber={chamber} />
         </section>

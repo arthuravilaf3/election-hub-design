@@ -218,6 +218,7 @@ export default function App() {
               paints it. */}
           <section className="map-section" aria-label="Election map" ref={mapSectionRef}>
           <RaceHeader
+            layout={IS_CREATIVE ? layout : 1}
             chamber={state.chamber}
             forecast={forecast}
             resultsMode={anyResults}

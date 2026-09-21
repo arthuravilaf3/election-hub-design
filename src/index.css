@@ -941,15 +941,16 @@ button,
 }
 
 /* The comp sets this in Neue Haas Grotesk Display, which is not in the DS;
-   Libre Franklin at a medium-heavy weight is the sanctioned stand-in. The
-   name stands alone since Sep 21 2026 (no '26 mark) and sets smaller, with
-   the campaign mark on the right taking the weight. */
+   Libre Franklin at the same size and a medium-heavy weight is the
+   sanctioned stand-in. The '26 mark rides the cap height, its foot on the
+   type's baseline (an <img> contributes its bottom edge). Cut 1 only —
+   cuts 2 and 3 have no typeset name at all. */
 .hub-title {
   display: flex;
   align-items: baseline;
   gap: 16px;
   margin: 0;
-  font-size: 40px;
+  font-size: 52px;
   line-height: 1;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -993,6 +994,29 @@ button,
 }
 
 /* Right side: the campaign mark (297×114 from the Figma). */
+.hub-mark {
+  flex: none;
+  width: 73px;
+  height: 63px;
+}
+
+/* Cuts 2 and 3: the campaign mark alone, centred, and bigger — it is the
+   masthead, not a companion to a wordmark. */
+.hub-header--mark {
+  justify-content: center;
+}
+
+.hub-header--mark .hub-rightplace {
+  width: 380px;
+  height: 187px;
+}
+
+/* The sponsor line under the headline, where cuts 2 and 3 put it. */
+.hub-byline--hero {
+  justify-content: center;
+  margin-top: 2px;
+}
+
 /* The campaign mark, 928 × 456 in the Figma (10695:110493) — width follows
    that ratio so the arc never squashes. One file per theme (its lettering is
    ink, not a fixed cream), both stacked in one grid cell. The theme flips
@@ -1003,8 +1027,8 @@ button,
 .hub-rightplace {
   flex: none;
   display: grid;
-  width: 380px;
-  height: 187px;
+  width: 300px;
+  height: 147px;
 }
 
 .hub-rightplace-art {
@@ -1212,12 +1236,10 @@ button,
   font-weight: 600;
 }
 
-.seatline-end--dem .seatline-label {
-  color: var(--rating-safe-dem);
-}
-
-.seatline-end--rep .seatline-label {
-  color: var(--rating-safe-rep);
+/* Both party names in ink (Sep 21 2026): the bar under them already says
+   which side is which, and two coloured words competed with it. */
+.seatline-label {
+  color: var(--ink);
 }
 
 /* The majority, marked where it falls on the bar. */
@@ -3798,7 +3820,13 @@ button,
   }
 
   .hub-title {
-    font-size: 32px;
+    font-size: 40px;
+  }
+
+  .hub-mark {
+    width: 56px;
+    height: 48px;
+    margin-top: -2px;
   }
 
   /* The header stacks on a phone, and the campaign mark centres under the
