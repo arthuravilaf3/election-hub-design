@@ -9,10 +9,9 @@ import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
-import { ChapterRail } from './components/ChapterRail';
-import { CreativeSwitcher } from './components/CreativeSwitcher';
+import { HouseColors } from './components/HouseColors';
+import { NationSpeaks } from './components/NationSpeaks';
 import { IS_CREATIVE } from './data/edition';
-import { initialCreativeLayout, type CreativeLayout } from './data/creativeLayout';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -40,10 +39,6 @@ export default function App() {
   /* Which delivery phase the prototype is showing. One map decides what a
      phase contains (data/phases.ts); every gate below reads off it. */
   const [phase] = useState<Phase>(initialPhase);
-  /* Which cut of the creative edition is on screen (1 plain, 2 still arc,
-     3 big arc) — the switch is prototype chrome, see data/creativeLayout. */
-  const [layout, setLayout] = useState<CreativeLayout>(initialCreativeLayout);
-  const creative = (n: CreativeLayout) => IS_CREATIVE && layout === n;
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
@@ -214,24 +209,14 @@ export default function App() {
           {/* THE MAP SECTION: tabs, the headline they drive and the seat
               bar, then the card — which owns the map and the source that
               paints it. */}
-          <section
-            className={`map-section${IS_CREATIVE ? ` map-section--c${layout}` : ''}`}
-            aria-label="Election map"
-            ref={mapSectionRef}
-          >
+          <section className="map-section" aria-label="Election map" ref={mapSectionRef}>
           <RaceHeader
-            layout={IS_CREATIVE ? layout : 1}
             chamber={state.chamber}
             forecast={forecast}
             resultsMode={anyResults}
             called={called}
             raceCount={Object.keys(races).length}
           />
-
-          {/* LAYOUT 2: the still arc between the seat line and the map —
-              the chamber's seats, coloured by the same projection, answering
-              the pointer the way the dots did, on no scroll. */}
-          {creative(2) && <Hemicycle forecast={forecast} chamber={state.chamber} still />}
 
           <MapCard
             races={races}
@@ -277,23 +262,25 @@ export default function App() {
             }
           />
 
-          {/* CREATIVE: the banner belongs to the section, so the pinned
-              timer and controls stay through it — and, in layout 3, through
-              the big arc that follows it (the gate watches the section). */}
-          {IS_CREATIVE && <PlanBanner />}
+          {/* CREATIVE EDITION: House Colors, the Capitol in the chamber's
+              split, right after the map (moved Sep 18 2026). */}
+          {IS_CREATIVE && <HouseColors forecast={forecast} />}
 
-          {/* LAYOUT 3: the scroll-driven arc after the banner, before the
-              feed, on the shorter pin. */}
-          {creative(3) && <Hemicycle forecast={forecast} chamber={state.chamber} compact />}
+          {/* R3 + R53: every seat of the chamber in a hemicycle, and the
+              projected Republican count, under the map. The Race/Source
+              pills stay pinned through here (the gate watches the section). */}
+          {IS_CREATIVE && (
+            <Hemicycle forecast={forecast} chamber={state.chamber} />
+          )}
           </section>
 
-          {/* Layout 3 carries the chapter rail down the left edge (it left
-              layout 2 on Sep 21 2026). */}
-          {creative(3) && <ChapterRail />}
+          {/* CREATIVE EDITION: the Cosmos Waveform and "The Nation Speaks",
+              after the arc and before the feed (Sep 18 2026). */}
+          {IS_CREATIVE && <NationSpeaks />}
 
-          {/* The boundary between map and feed is editorial, not chromatic:
+          {/* The boundary between map and feed is now editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
-          {!IS_CREATIVE && <PlanBanner />}
+          <PlanBanner />
 
           <CoverageFeed />
 
@@ -312,9 +299,6 @@ export default function App() {
             open={devOpen}
             onToggle={setDevOpen}
           />
-        )}
-        {IS_CREATIVE && (
-          <CreativeSwitcher layout={layout} onChange={setLayout} />
         )}
         <ThemeToggle />
       </div>

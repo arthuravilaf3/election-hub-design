@@ -89,12 +89,9 @@ interface CountdownProps {
   now?: number;
   /** The small form (Sep 17 2026): one line of figures, a caption after. */
   compact?: boolean;
-  /** The pill (Sep 21 2026): the four figures in one capsule, no caption,
-      pinned with the map's controls. */
-  pill?: boolean;
 }
 
-export function Countdown({ now, compact = false, pill = false }: CountdownProps) {
+export function Countdown({ now, compact = false }: CountdownProps) {
   const [tick, setTick] = useState(() => now ?? Date.now());
   useEffect(() => {
     if (now !== undefined) return;
@@ -114,7 +111,7 @@ export function Countdown({ now, compact = false, pill = false }: CountdownProps
     /* role=timer, no aria-live: announcing every second would be noise. The
        label reads the whole figure once, on focus or on demand. */
     <div
-      className={`countdown${compact ? ' countdown--compact' : ''}${pill ? ' countdown--pill' : ''}`}
+      className={`countdown${compact ? ' countdown--compact' : ''}`}
       role="timer"
       aria-label={
         t.over

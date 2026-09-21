@@ -941,12 +941,12 @@ button,
 }
 
 /* The comp sets this in Neue Haas Grotesk Display, which is not in the DS;
-   Libre Franklin at the same size and a medium-heavy weight is the
-   sanctioned stand-in. The '26 mark rides the cap height, its foot on the
-   type's baseline (an <img> contributes its bottom edge). Cut 1 only —
-   cuts 2 and 3 have no typeset name at all. */
+   Libre Franklin at the same size and a medium-heavy weight is the sanctioned
+   stand-in. The '26 mark rides the cap height, top-aligned with the type. */
 .hub-title {
   display: flex;
+  /* baseline: an <img> contributes its bottom edge, so the mark's foot sits
+     exactly on the type's baseline, as in the comp. */
   align-items: baseline;
   gap: 16px;
   margin: 0;
@@ -957,7 +957,11 @@ button,
   color: var(--ink);
 }
 
-
+.hub-mark {
+  flex: none;
+  width: 73px;
+  height: 63px;
+}
 
 .hub-byline {
   display: flex;
@@ -994,54 +998,6 @@ button,
 }
 
 /* Right side: the campaign mark (297×114 from the Figma). */
-.hub-mark {
-  flex: none;
-  width: 73px;
-  height: 63px;
-}
-
-/* The creative masthead (Sep 21 2026, Arthur's three options): the name at
-   40px with its '26 mark, the arc mark 251 × 97 on the right. */
-.hub-header--creative .hub-title {
-  font-size: 40px;
-}
-
-.hub-header--creative .hub-mark {
-  width: 56px;
-  height: 48px;
-}
-
-.hub-header--creative .hub-rightplace {
-  width: 251px;
-  height: 97px;
-}
-
-/* Cut 2: the line in type instead of the mark — "right" in the party red,
-   five red dots over it (Figma 11589:229846). */
-.hub-tagline {
-  position: relative;
-  flex: none;
-  padding-top: 14px;
-  font-size: 20px;
-  line-height: 1.2;
-  color: var(--ink-subtle);
-  white-space: nowrap;
-}
-
-.hub-tagline b {
-  font-weight: 700;
-  color: var(--bar-rep);
-}
-
-.hub-tagline-dots {
-  position: absolute;
-  top: 0;
-  left: 42px;
-  width: 47px;
-  height: 7px;
-  background: radial-gradient(circle, var(--bar-rep) 3.4px, transparent 3.6px) 0 0 / 10px 7px repeat-x;
-}
-
 /* The campaign mark, 928 × 456 in the Figma (10695:110493) — width follows
    that ratio so the arc never squashes. One file per theme (its lettering is
    ink, not a fixed cream), both stacked in one grid cell. The theme flips
@@ -1198,35 +1154,32 @@ button,
 }
 
 /* ---------- Seat line (creative): headline → seats → map ---------- */
-/* The hero runs the rail's full width, like the map under it. */
 .dots.dots--creative {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
-  width: 100%;
-  margin: 40px auto 0;
+  gap: 36px;
+  margin-top: 40px;
+}
+
+.dots--creative .countdown--compact {
+  margin-bottom: -22px; /* closer to the headline than the headline is to the bar */
 }
 
 .dots--creative .dots-copy {
   align-items: center;
   text-align: center;
-  gap: 8px;
+  gap: 14px;
 }
 
-/* Regular, not semibold (Figma 11613:230321): 52px, 120% leading. */
 .dots--creative .dots-title {
   white-space: nowrap;
   font-size: clamp(32px, 3.6vw, 52px);
-  line-height: 1.2;
-  font-weight: 400;
 }
 
-.dots-updated {
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--ink-subtlest);
+.dots--creative .countdown--compact {
+  justify-content: center;
+  padding: 0;
 }
 
 /* Edge to edge with the map card below it. */
@@ -1245,32 +1198,31 @@ button,
 .seatline-end {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 12px;
 }
 
-/* "203 D": the figure and the party's letter in one weight and size (Figma
-   11613:230321 — Regular 24, −0.68px), both in ink. */
+/* Same rule as the dots line: the figure stays in ink, only the party name
+   carries the colour — and it reads in sentence case, not caps. */
 .seatline-big {
-  font-size: 24px;
-  line-height: 34px;
-  font-weight: 400;
-  letter-spacing: -0.68px;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
 
 .seatline-label {
-  font-size: 24px;
-  line-height: 34px;
-  font-weight: 400;
-  letter-spacing: -0.68px;
-  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
 }
 
-/* Both party names in ink (Sep 21 2026): the bar under them already says
-   which side is which, and two coloured words competed with it. */
-.seatline-label {
-  color: var(--ink);
+.seatline-end--dem .seatline-label {
+  color: var(--rating-safe-dem);
+}
+
+.seatline-end--rep .seatline-label {
+  color: var(--rating-safe-rep);
 }
 
 /* The majority, marked where it falls on the bar. */
@@ -1297,14 +1249,14 @@ button,
 
 .seatline-bar {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   height: 12px;
 }
 
 .seatline-run {
   display: block;
   height: 100%;
-  border-radius: 200px;
+  border-radius: 3px;
   transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1315,16 +1267,11 @@ button,
 .seatline-run--keep-rep { background: var(--rating-likely-rep); }
 
 .seatline-current {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  margin-top: 8px;
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--ink-subtle);
-}
-
-.seatline-current > :last-child {
-  text-align: right;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--ink-subtlest);
 }
 
 /* ---------- Dots (the forecast beside every seat) ---------- */
@@ -3849,58 +3796,6 @@ button,
     pointer-events: auto;
   }
 
-  /* The creative block: the clock over the row, the row filling the width. */
-  .map-card .map-selectors--creative {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  /* (.map-card prefixed: the desktop rules come later in the file.) */
-  .map-card .map-controls-row {
-    gap: 6px;
-  }
-
-  .map-card .race-seg {
-    flex: 1;
-    min-width: 0;
-    gap: 4px;
-  }
-
-  .map-card .race-seg-option {
-    flex: 1;
-    padding: 10px 4px;
-    font-size: 13px;
-    line-height: 14px;
-  }
-
-  .map-card .map-selectors--creative .pill--chip {
-    gap: 4px;
-    padding: 8px 10px 8px 14px;
-  }
-
-  .map-card .pill--chip .pill-value {
-    font-size: 14px;
-  }
-
-  .map-card .countdown--pill {
-    justify-content: center;
-    gap: 12px;
-    padding: 10px 16px;
-  }
-
-  .map-card .countdown--pill .countdown-num {
-    font-size: 18px;
-    line-height: 18px;
-  }
-
-  /* The headline wraps on a phone; the comps' one line is a desktop fact. */
-  .dots.dots--creative .dots-title {
-    white-space: normal;
-    text-wrap: balance;
-  }
-
   .hub-header {
     flex-direction: column;
     align-items: flex-start;
@@ -4244,137 +4139,6 @@ button,
   }
 }
 
-/* ---------- The chapter rail ---------- */
-
-/* Left edge, vertically centred — opposite the layout switch, clear of the
-   Race/Source pills at the bottom. */
-/* Figma 11589:229687 "Frame 1618875677": a 1px dash and a word per chapter,
-   32px in from the page's left edge, no box around it. The chapter on
-   screen — and the one under the pointer — has the dash grown to the right
-   and lit, with the word. */
-.chapter-rail {
-  position: fixed;
-  left: 32px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 620;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.chapter-rail-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink-subtlest);
-  font: inherit;
-  font-size: 14px;
-  line-height: 20px;
-  cursor: pointer;
-  transition: color 160ms ease-out;
-}
-
-.chapter-rail-dash {
-  width: 14px;
-  height: 1px;
-  background: var(--border);
-  transition: width 160ms ease-out, background 160ms ease-out;
-}
-
-.chapter-rail-item:hover,
-.chapter-rail-item:focus-visible,
-.chapter-rail-item.is-at {
-  color: var(--ink);
-}
-
-.chapter-rail-item:hover .chapter-rail-dash,
-.chapter-rail-item:focus-visible .chapter-rail-dash,
-.chapter-rail-item.is-at .chapter-rail-dash {
-  width: 18px;
-  background: var(--ink);
-}
-
-.chapter-rail-item:focus-visible {
-  outline: none;
-  text-decoration: underline;
-}
-
-/* Under 1200px the rail would sit on the content; the page reads without it. */
-@media (max-width: 1200px) {
-  .chapter-rail {
-    display: none;
-  }
-}
-
-/* ---------- Creative layout switch (dev chrome) ---------- */
-
-/* Sits with the other floating controls, above the theme toggle. */
-.switch-stack {
-  position: fixed;
-  right: 24px;
-  bottom: 180px;
-  z-index: 640;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.layout-switch {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 44px;
-  padding: 0 6px 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
-  backdrop-filter: blur(8px);
-}
-
-.layout-switch-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-subtlest);
-}
-
-.layout-switch-option {
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink-soft);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 140ms ease-out, color 140ms ease-out;
-}
-
-.layout-switch-option:hover {
-  background: var(--surface-2);
-  color: var(--ink);
-}
-
-.layout-switch-option.is-selected {
-  background: var(--ink);
-  color: var(--surface-dim);
-}
-
-@media (max-width: 700px) {
-  .switch-stack {
-    display: none;
-  }
-}
-
 /* ---------- Map selectors (RACE + SOURCE pills, over the map) ---------- */
 
 /*
@@ -4534,166 +4298,6 @@ button,
 .pill-option-hint {
   font-size: 12px;
   color: var(--pill-ink-soft);
-}
-
-/* ---------- The creative controls block (Sep 21 2026, Figma 11613:230736) ----------
-   The Election Day clock in a capsule, and under it the race as a segmented
-   control beside the source chip — pinned together where the pills were.
-   Same ground as the page, at 80% over a blur, hairline in gray/600. */
-.map-selectors--creative {
-  flex-direction: column;
-  gap: 0;
-}
-
-/* The clock's slot: open at the top of the page, collapsed after the first
-   scroll — the controls slide up into its place. */
-.map-clock {
-  display: grid;
-  grid-template-rows: 1fr;
-  padding-bottom: 16px;
-  transition: grid-template-rows 240ms ease-out, opacity 200ms ease-out, padding-bottom 240ms ease-out;
-}
-
-.map-clock-in {
-  min-height: 0;
-  overflow: hidden;
-}
-
-.map-selectors--creative.is-scrolled .map-clock {
-  grid-template-rows: 0fr;
-  padding-bottom: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.map-controls-row {
-  display: flex;
-  align-items: stretch;
-  gap: 16px;
-}
-
-.countdown--pill {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 16px;
-  padding: 16px 24px;
-  border: 1px solid var(--border);
-  border-radius: 9999px;
-  background: color-mix(in srgb, var(--surface-dim) 80%, transparent);
-  backdrop-filter: blur(10px);
-}
-
-.countdown--pill .countdown-unit {
-  flex-direction: row;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.countdown--pill .countdown-num {
-  font-size: 22px;
-  line-height: 22px;
-  letter-spacing: 0;
-}
-
-.countdown--pill .countdown-label {
-  font-size: 13px;
-  line-height: 1;
-  color: var(--ink-subtlest);
-}
-
-.race-seg {
-  display: flex;
-  gap: 8px;
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-dim) 80%, transparent);
-  backdrop-filter: blur(10px);
-}
-
-.race-seg-option {
-  padding: 18px 24px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink-subtlest);
-  font: inherit;
-  font-size: 16px;
-  line-height: 16px;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background 140ms ease-out, color 140ms ease-out;
-}
-
-.race-seg-option:hover {
-  color: var(--ink);
-}
-
-.race-seg-option.is-selected {
-  background: var(--surface-2);
-  color: var(--ink);
-  font-weight: 500;
-}
-
-.race-seg-option:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: -2px;
-}
-
-/* The source chip and its menu share the block's ground, not the pills'
-   inverted one. */
-.map-selectors--creative .pill-wrap {
-  --pill-bg: color-mix(in srgb, var(--surface-dim) 80%, transparent);
-  --pill-ink: var(--ink);
-  --pill-ink-soft: var(--ink-subtlest);
-}
-
-.pill--chip {
-  gap: 8px;
-  padding: 20px 24px 20px 32px;
-  border-color: var(--border);
-  backdrop-filter: blur(10px);
-}
-
-.pill--chip:hover,
-.pill--chip.is-open {
-  background: color-mix(in srgb, var(--surface-2) 80%, transparent);
-  border-color: var(--border);
-}
-
-.pill--chip .pill-value {
-  font-weight: 400;
-}
-
-.pill--chip .pill-chevron {
-  padding: 6px 3px;
-}
-
-.map-selectors--creative .pill-menu {
-  border-color: var(--border);
-  background: var(--surface);
-  backdrop-filter: blur(10px);
-}
-
-.map-selectors--creative .pill-option:hover,
-.map-selectors--creative .pill-option:focus-visible {
-  background: var(--surface-2);
-}
-
-/* The cuts' widths: the map and the seat line run to the rail's edges in
-   all three (Arthur, Sep 21 2026 — wider than the comps' 1100); the banner
-   stays 1100; a 16px card corner. */
-.map-section .plan-banner {
-  width: 100%;
-  max-width: 1100px;
-  margin-inline: auto;
-}
-
-.map-section--c1 .map-card,
-.map-section--c2 .map-card,
-.map-section--c3 .map-card {
-  border-radius: 16px;
 }
 
 /* Results mode: no choice, just the attribution, in the pills' slot. */

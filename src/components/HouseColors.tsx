@@ -4,14 +4,11 @@
 // scale (1052 of 1440 wide), the blue one flush left, the red one flush
 // right: the seat line's order (red is always the right-hand side).
 //
-// The two prints OVERLAP across a band centred on the toss-ups, and the
-// band moves with the active source. Revised Sep 21 2026: the overlap is a
-// BLEND again, and which one depends on the theme — lighten on the light
-// one, darken on the dark one, so the fused band always moves away from the
-// page's own ground instead of sinking into it. The band is its own layer
-// (the red print, clipped to the band) so the blend touches nothing else.
-// The strip runs to the viewport's edges, with no background of its own, so
-// the prints arrive from the page edges onto the page itself.
+// Revised Sep 18 2026: no blend mode. The two prints OVERLAP across a band
+// centred on the toss-ups — the red half transparent over the blue, so both
+// Capitols show through each other — and the band moves with the active
+// source. The strip runs to the viewport's edges, with no background of its
+// own, so the prints arrive from the page edges onto the page itself.
 //
 // Motion, in order:
 //   1. SLIDE IN — when the strip comes into view the blue print slides in
@@ -39,15 +36,12 @@ const OVERLAP_PAD = 14;
 export function HouseColors({ forecast }: { forecast: ForecastData }) {
   const frame = useRef<HTMLDivElement>(null);
   const red = useRef<HTMLImageElement>(null);
-  const redBand = useRef<HTMLImageElement>(null);
   const blue = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const el = frame.current;
-    const prints = [red.current, redBand.current, blue.current].filter(
-      (x): x is HTMLImageElement => !!x
-    );
-    if (!el || prints.length < 3) return;
+    const prints = [red.current, blue.current].filter((x): x is HTMLImageElement => !!x);
+    if (!el || prints.length < 2) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     // 1. The slide: in once a third of the strip shows; reset only once it
@@ -106,17 +100,12 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
       aria-label={`The Capitol, coloured by the projected split: Democrats ${Math.round(dem)}%, toss-ups ${Math.round(gap)}%, Republicans ${Math.round(rep)}%.`}
       style={{ '--band-start': `${bandStart}%`, '--band-end': `${bandEnd}%` } as React.CSSProperties}
     >
-      {/* Blue on the left, red on the right — the seat line's order. The
-          red comes in two layers: the plain one from the band's end on, and
-          the band itself, which blends with the blue underneath. */}
+      {/* Blue on the left, red on the right — the seat line's order. */}
       <span className="house-colors-print house-colors-print--dem">
         <img className="house-colors-photo house-colors-photo--dem" src={asset('house_blue.png')} alt="" ref={blue} />
       </span>
       <span className="house-colors-print house-colors-print--rep">
         <img className="house-colors-photo house-colors-photo--rep" src={asset('house_red.png')} alt="" ref={red} />
-      </span>
-      <span className="house-colors-print house-colors-print--band">
-        <img className="house-colors-photo house-colors-photo--rep" src={asset('house_red.png')} alt="" ref={redBand} />
       </span>
     </div>
   );

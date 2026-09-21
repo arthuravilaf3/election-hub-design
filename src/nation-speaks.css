@@ -15,7 +15,7 @@
    columns, centred on the circles (which span 290–1590). */
 .nation-speaks-wave {
   display: block;
-  width: min(320px, 100%);
+  width: min(440px, 100%);
   aspect-ratio: 1380 / 1080;
   object-fit: cover;
   object-position: center;
