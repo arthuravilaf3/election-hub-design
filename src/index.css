@@ -5138,7 +5138,8 @@ body {
   border-top: 1px solid color-mix(in srgb, var(--ink-subtlest) 40%, transparent);
 }
 
-[data-option='1'] .countdown-caption {
+[data-option='1'] .countdown-caption,
+[data-option='2'] .countdown-caption {
   display: none;
 }
 

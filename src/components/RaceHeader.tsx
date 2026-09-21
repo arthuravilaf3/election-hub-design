@@ -367,9 +367,13 @@ function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsP
       L.x[i] = L.x[i] ?? 0;
       L.y[i] = L.y[i] ?? 0;
     });
+    // The pitch is the distance between two neighbours — as a distance, not
+    // a horizontal difference: on the arcs the first two seats sit almost
+    // one above the other, and a horizontal read gave a pitch of nothing,
+    // a lens with no reach (fixed Sep 21 2026).
     const a = L.dots[0]?.getBoundingClientRect();
     const b = L.dots[1]?.getBoundingClientRect();
-    L.pitch = a && b ? Math.max(8, b.left - a.left) : 28;
+    L.pitch = a && b ? Math.max(8, Math.hypot(b.left - a.left, b.top - a.top)) : 28;
     L.measured = true;
   };
   const tick = () => {
