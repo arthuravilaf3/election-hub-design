@@ -19,7 +19,7 @@ import { INTRO_AT, Letters, introDelay } from './Intro';
 
 import { Countdown } from './Countdown';
 import { asset } from '../data/assets';
-import { IS_CREATIVE } from '../data/edition';
+import { IS_CREATIVE, IS_OPTION3 } from '../data/edition';
 import { CURRENT_SEATS } from '../data/summary';
 import polymarketLogo from '../images/polymarketlogo.png';
 import type { ForecastData } from '../data/hero';
@@ -54,7 +54,7 @@ export function RaceHeader({
 
   return (
     <>
-      <header className="hub-header">
+      <header className={`hub-header${IS_OPTION3 ? ' hub-header--o3' : ''}`}>
         <div className="hub-brand">
           <h1 className="hub-title">
             {/* Entrance: the letters resolve one by one out of a blur. */}
@@ -74,8 +74,9 @@ export function RaceHeader({
               <img className="hub-logo" src={polymarketLogo} alt="Polymarket" />
             </span>
             {/* Freshness of the read lives here, after the sponsor (decided
-                Sep 2026 over three other placements). */}
-            {(forecast.updated || resultsMode) && (
+                Sep 2026 over three other placements). Option 3 moves it
+                under the headline (the comp's hero). */}
+            {!IS_OPTION3 && (forecast.updated || resultsMode) && (
               <>
                 <span className="hub-dot" aria-hidden="true">
                   •
@@ -117,12 +118,18 @@ export function RaceHeader({
       {IS_CREATIVE ? (
         <section className="dots dots--creative" aria-label={`${CHAMBER_BODY[chamber]} forecast`}>
           {/* The countdown sits above the headline and OUTSIDE the keyed
-              block, so a race or source switch leaves it where it is. */}
-          <Countdown compact />
+              block, so a race or source switch leaves it where it is. In
+              option 3 it lives with the map's controls instead. */}
+          {!IS_OPTION3 && <Countdown compact />}
           <div className="dots-copy" key={headline}>
             <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
               {headline}
             </h2>
+            {IS_OPTION3 && (forecast.updated || resultsMode) && (
+              <p className="dots-updated intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
+                {updatedLine}
+              </p>
+            )}
           </div>
           <SeatLine forecast={forecast} chamber={chamber} />
         </section>
@@ -174,14 +181,31 @@ function SeatLine({ forecast, chamber }: { forecast: ForecastData; chamber: Cham
       <div className="seatline-ends">
         <span className="seatline-end seatline-end--dem">
           <b className="seatline-big">{pd}</b>
-          <span className="seatline-label">Democrats</span>
+          {IS_OPTION3 ? (
+            <abbr className="seatline-label" title="Democrats">
+              D
+            </abbr>
+          ) : (
+            <span className="seatline-label">Democrats</span>
+          )}
         </span>
         <span className="seatline-win" style={{ left: pct(majority) }}>
           {majority} to win
         </span>
         <span className="seatline-end seatline-end--rep">
-          <span className="seatline-label">Republicans</span>
-          <b className="seatline-big">{pr}</b>
+          {IS_OPTION3 ? (
+            <>
+              <b className="seatline-big">{pr}</b>
+              <abbr className="seatline-label" title="Republicans">
+                R
+              </abbr>
+            </>
+          ) : (
+            <>
+              <span className="seatline-label">Republicans</span>
+              <b className="seatline-big">{pr}</b>
+            </>
+          )}
         </span>
       </div>
       <div
@@ -195,6 +219,7 @@ function SeatLine({ forecast, chamber }: { forecast: ForecastData; chamber: Cham
       </div>
       <div className="seatline-current">
         <span>{cur.dem} current</span>
+        {IS_OPTION3 && <span className="seatline-toss">Toss Ups: {toss}</span>}
         <span>{cur.rep} current</span>
       </div>
     </div>

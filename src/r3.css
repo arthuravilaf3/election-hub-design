@@ -5,6 +5,41 @@
 
 /* ~3 screens of travel; the sticky frame is one screen under the nav and
    above the ticker. */
+/* The compact pin (layout 3): 300vh instead of 500vh — the same beats over
+   less scroll, which is most of what puts the feed within reach. */
+.r3-stage.r3-stage--compact {
+  height: 300vh;
+}
+
+/* THE STILL ARC (layout 2, Figma 11589:229705): the finished drawing in the
+   page's flow, on the hero's 1100px rail, between the seat line and the
+   map. No pin, no camera — the frame is the drawing's own aspect. */
+.r3-still {
+  width: 100%;
+  max-width: 1100px;
+  margin: 8px auto 0;
+}
+
+.r3-still-frame {
+  position: relative; /* the aspect is inline: the drawing plus its headroom */
+}
+
+.r3-still .r3-seats {
+  overflow: visible;
+}
+
+.r3-still .r3-seats svg {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: visible;
+}
+
+.r3-still-frame.is-settled .r3-seat--toss {
+  animation: r3-breathe 2.4s ease-in-out infinite;
+}
+
+
 .r3-stage {
   /* Edge to edge (Sep 2026): the seats run out to the viewport, not the
      rail — the same escape the feed used to make. */

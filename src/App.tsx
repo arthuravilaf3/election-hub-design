@@ -11,7 +11,9 @@ import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
 import { HouseColors } from './components/HouseColors';
 import { NationSpeaks } from './components/NationSpeaks';
-import { IS_CREATIVE } from './data/edition';
+import { ChapterRail } from './components/ChapterRail';
+import { OptionSwitcher } from './components/OptionSwitcher';
+import { IS_CREATIVE, IS_OPTION3 } from './data/edition';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -218,6 +220,11 @@ export default function App() {
             raceCount={Object.keys(races).length}
           />
 
+          {/* OPTION 3: the still arc between the seat line and the map —
+              the chamber's seats, coloured by the same projection, answering
+              the pointer the way the dots did, on no scroll. */}
+          {IS_OPTION3 && <Hemicycle forecast={forecast} chamber={state.chamber} still />}
+
           <MapCard
             races={races}
             chamber={state.chamber}
@@ -262,25 +269,33 @@ export default function App() {
             }
           />
 
-          {/* CREATIVE EDITION: House Colors, the Capitol in the chamber's
-              split, right after the map (moved Sep 18 2026). */}
-          {IS_CREATIVE && <HouseColors forecast={forecast} />}
+          {/* CREATIVE EDITION (option 2): House Colors, the Capitol in the
+              chamber's split, right after the map (moved Sep 18 2026). */}
+          {IS_CREATIVE && !IS_OPTION3 && <HouseColors forecast={forecast} />}
 
           {/* R3 + R53: every seat of the chamber in a hemicycle, and the
               projected Republican count, under the map. The Race/Source
               pills stay pinned through here (the gate watches the section). */}
-          {IS_CREATIVE && (
+          {IS_CREATIVE && !IS_OPTION3 && (
             <Hemicycle forecast={forecast} chamber={state.chamber} />
           )}
+
+          {/* OPTION 3: the banner belongs to the section, so the pinned
+              timer and controls stay through it (the gate watches the
+              section). */}
+          {IS_OPTION3 && <PlanBanner />}
           </section>
 
-          {/* CREATIVE EDITION: the Cosmos Waveform and "The Nation Speaks",
-              after the arc and before the feed (Sep 18 2026). */}
-          {IS_CREATIVE && <NationSpeaks />}
+          {/* CREATIVE EDITION (option 2): the Cosmos Waveform and "The
+              Nation Speaks", after the arc and before the feed (Sep 18 2026). */}
+          {IS_CREATIVE && !IS_OPTION3 && <NationSpeaks />}
+
+          {/* OPTION 3: the chapter rail down the left edge. */}
+          {IS_OPTION3 && <ChapterRail />}
 
           {/* The boundary between map and feed is now editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
-          <PlanBanner />
+          {!IS_OPTION3 && <PlanBanner />}
 
           <CoverageFeed />
 
@@ -300,6 +315,7 @@ export default function App() {
             onToggle={setDevOpen}
           />
         )}
+        <OptionSwitcher />
         <ThemeToggle />
       </div>
 
