@@ -941,27 +941,22 @@ button,
 }
 
 /* The comp sets this in Neue Haas Grotesk Display, which is not in the DS;
-   Libre Franklin at the same size and a medium-heavy weight is the sanctioned
-   stand-in. The '26 mark rides the cap height, top-aligned with the type. */
+   Libre Franklin at a medium-heavy weight is the sanctioned stand-in. The
+   name stands alone since Sep 21 2026 (no '26 mark) and sets smaller, with
+   the campaign mark on the right taking the weight. */
 .hub-title {
   display: flex;
-  /* baseline: an <img> contributes its bottom edge, so the mark's foot sits
-     exactly on the type's baseline, as in the comp. */
   align-items: baseline;
   gap: 16px;
   margin: 0;
-  font-size: 52px;
+  font-size: 40px;
   line-height: 1;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--ink);
 }
 
-.hub-mark {
-  flex: none;
-  width: 73px;
-  height: 63px;
-}
+
 
 .hub-byline {
   display: flex;
@@ -1008,8 +1003,8 @@ button,
 .hub-rightplace {
   flex: none;
   display: grid;
-  width: 300px;
-  height: 147px;
+  width: 380px;
+  height: 187px;
 }
 
 .hub-rightplace-art {
@@ -3803,13 +3798,7 @@ button,
   }
 
   .hub-title {
-    font-size: 40px;
-  }
-
-  .hub-mark {
-    width: 56px;
-    height: 48px;
-    margin-top: -2px;
+    font-size: 32px;
   }
 
   /* The header stacks on a phone, and the campaign mark centres under the

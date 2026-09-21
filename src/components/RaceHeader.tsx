@@ -56,17 +56,11 @@ export function RaceHeader({
     <>
       <header className="hub-header">
         <div className="hub-brand">
+          {/* The '26 mark was dropped from the name on Sep 21 2026 — the
+              campaign mark on the right carries the year's identity now. */}
           <h1 className="hub-title">
             {/* Entrance: the letters resolve one by one out of a blur. */}
             <Letters text="The Midterms" base={INTRO_AT.title} step={26} className="hub-title-text" />
-            {/* The '26 mark completes the name — it is part of the heading,
-                so its alt is the year the type is not spelling out. */}
-            <img
-              className="hub-mark intro-rise"
-              style={introDelay(INTRO_AT.mark)}
-              src={asset('logos/midterms-26.svg')}
-              alt="'26"
-            />
           </h1>
           <p className="hub-byline intro-rise" style={introDelay(INTRO_AT.presented)}>
             <span className="hub-presented">
@@ -95,15 +89,15 @@ export function RaceHeader({
             className="hub-rightplace-art hub-rightplace-art--dark"
             src={asset('logos/the-right-place.svg')}
             alt="The Right Place to Be"
-            width={300}
-            height={147}
+            width={380}
+            height={187}
           />
           <img
             className="hub-rightplace-art hub-rightplace-art--light"
             src={asset('logos/the-right-place-light.svg')}
             alt="The Right Place to Be"
-            width={300}
-            height={147}
+            width={380}
+            height={187}
           />
         </span>
       </header>
