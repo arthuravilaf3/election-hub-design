@@ -22,6 +22,7 @@ import '../house-colors.css';
 import { useEffect, useRef } from 'react';
 import { asset } from '../data/assets';
 import type { ForecastData } from '../data/hero';
+import { sceneOpacity, sceneProgress, type Scene } from '../data/stageSignal';
 
 /* How far the prints travel across the strip's time on screen, as a share
    of the photo's height — about 120px at 1440 wide. Capped by the slack the
@@ -33,15 +34,39 @@ const TRAVEL = 0.26;
    centred on the toss-ups, and still grows and shrinks with them. */
 const OVERLAP_PAD = 14;
 
-export function HouseColors({ forecast }: { forecast: ForecastData }) {
+export function HouseColors({ forecast, scene }: { forecast: ForecastData; scene?: Scene }) {
   const frame = useRef<HTMLDivElement>(null);
   const red = useRef<HTMLImageElement>(null);
   const blue = useRef<HTMLImageElement>(null);
 
+  /* SCENE MODE (Sep 21 2026): inside the creative chapter's pinned frame the
+     strip costs the page no height of its own, and the chapter's progress —
+     not the page's scroll — drives the slide and the parallax. */
   useEffect(() => {
     const el = frame.current;
     const prints = [red.current, blue.current].filter((x): x is HTMLImageElement => !!x);
-    if (!el || prints.length < 2) return;
+    if (!el || prints.length < 2 || !scene) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.classList.add('is-in');
+      return;
+    }
+    return scene.signal.subscribe((p) => {
+      const local = sceneProgress(scene, p);
+      el.style.opacity = sceneOpacity(local).toFixed(3);
+      el.classList.toggle('is-in', local > 0.04);
+      const photoH = prints[0].offsetHeight;
+      const travel = Math.min(Math.max(0, photoH - el.clientHeight), photoH * TRAVEL);
+      const y = `translateY(${(-travel * local).toFixed(1)}px)`;
+      prints.forEach((img) => {
+        img.style.transform = y;
+      });
+    });
+  }, [scene]);
+
+  useEffect(() => {
+    const el = frame.current;
+    const prints = [red.current, blue.current].filter((x): x is HTMLImageElement => !!x);
+    if (!el || prints.length < 2 || scene) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     // 1. The slide: in once a third of the strip shows; reset only once it
@@ -82,7 +107,7 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
       window.removeEventListener('resize', onScroll);
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [scene]);
 
   // Same carve-out as the seat line: the toss-up gap sits between the two
   // blocs, and the overlap is centred on it.
@@ -94,7 +119,7 @@ export function HouseColors({ forecast }: { forecast: ForecastData }) {
 
   return (
     <div
-      className="house-colors"
+      className={`house-colors${scene ? ' house-colors--scene' : ''}`}
       ref={frame}
       role="img"
       aria-label={`The Capitol, coloured by the projected split: Democrats ${Math.round(dem)}%, toss-ups ${Math.round(gap)}%, Republicans ${Math.round(rep)}%.`}

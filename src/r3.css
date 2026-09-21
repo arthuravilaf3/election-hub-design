@@ -5,6 +5,46 @@
 
 /* ~3 screens of travel; the sticky frame is one screen under the nav and
    above the ticker. */
+/* CHAPTER MODE: one pin for the arc, the Capitol strip and the line —
+   300vh instead of the arc's own 500vh plus the two blocks' height. */
+.r3-stage.r3-stage--chapter {
+  height: 300vh;
+}
+
+/* In chapter mode the curtain is a hand-over, not a dimming: the arc and
+   its counts clear the frame so the next scene has it to itself. */
+.r3-sticky--chapter .r3-seats,
+.r3-sticky--chapter .r3-number {
+  opacity: calc(1 - var(--r3-close, 0));
+}
+
+/* The skip link: prototype chrome, bottom-left, opposite the layout switch. */
+.chapter-skip {
+  position: fixed;
+  left: 24px;
+  bottom: 40px;
+  z-index: 640;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.chapter-skip:hover {
+  background: var(--surface-2);
+}
+
 .r3-stage {
   /* Edge to edge (Sep 2026): the seats run out to the viewport, not the
      rail — the same escape the feed used to make. */

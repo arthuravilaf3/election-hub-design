@@ -20,12 +20,13 @@
 // then the pin releases and the page goes on to the feed. Reduced motion:
 // the finished arc, static, with both counts.
 import '../r3.css';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type React from 'react';
 import type { ForecastData } from '../data/hero';
 import type { Chamber } from '../data/types';
 import { R3_SEATS } from '../data/r3Layout';
 import { asset } from '../data/assets';
+import type { StageSignal } from '../data/stageSignal';
 
 const W = 1925;
 const H = 904;
@@ -240,12 +241,25 @@ const WAVE_MS = 900;
 
 const CHAMBER_BODY: Record<Chamber, string> = { house: 'House', senate: 'Senate', governor: 'governors' };
 
+/* CHAPTER MODE (Sep 21 2026): the stage hosts the whole creative chapter —
+   the arc first, then the Capitol strip and "The Nation Speaks" as scenes
+   inside the same pin. The arc's own choreography is squeezed into this
+   share of the pinned scroll; the rest belongs to the scenes, which cost
+   the page no height of their own. */
+const ARC_SHARE = 0.72;
+
 interface HemicycleProps {
   forecast: ForecastData;
   chamber: Chamber;
+  /** Host the scenes below: a shorter pin, and the arc bows out at the end. */
+  chapter?: boolean;
+  /** Where the pinned scroll is, for the scenes to read. */
+  signal?: StageSignal;
+  /** The scenes, drawn inside the pinned frame after the arc. */
+  children?: ReactNode;
 }
 
-export function Hemicycle({ forecast, chamber }: HemicycleProps) {
+export function Hemicycle({ forecast, chamber, chapter = false, signal, children }: HemicycleProps) {
   // Identical to the dots under the header, so the two never disagree.
   const total = forecast.dem + forecast.rep;
   const gap = forecast.tossupShare;
@@ -321,9 +335,13 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       shown = shown < 0 || reduced ? want : shown + (want - shown) * FOLLOW;
       if (Math.abs(want - shown) < 0.0005) shown = want;
       const p = shown;
-      const pG = ease(span(p, ...BEAT.gather)); // loose seats gather into the tip
-      const pF = span(p, ...BEAT.fill); // the front travels the sweep
-      const pB = easeSine(span(p, ...BEAT.pullBack)); // camera pulls back, follows the front
+      signal?.set(p);
+      // In chapter mode the arc plays inside its share of the pin; past it
+      // the scenes take over and the arc bows out (the curtain, below).
+      const pc = chapter ? clamp01(p / ARC_SHARE) : p;
+      const pG = ease(span(pc, ...BEAT.gather)); // loose seats gather into the tip
+      const pF = span(pc, ...BEAT.fill); // the front travels the sweep
+      const pB = easeSine(span(pc, ...BEAT.pullBack)); // camera pulls back, follows the front
 
       // A + B: each seat is either loose (gathering) or on the front (landing).
       const front = GATHER_T + (1 - GATHER_T + FRONT_W) * pF;
@@ -344,7 +362,7 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
         });
       }
       // The seats only answer the pointer once the arc is complete.
-      const settled = reduced || p >= BEAT.fill[1];
+      const settled = reduced || pc >= BEAT.fill[1];
       const hotParty = settled && hot >= 0 && hotD2 < LENS_R * LENS_R * 4 ? seats[hot].party : null;
       // The recolour wave: seats left of its front already wear the new
       // colour, seats right of it still the old one.
@@ -464,22 +482,24 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
           el.classList.add('is-out');
         }
       };
-      cue(numRep.current, reduced || p >= BEAT.countR[0]);
-      cue(numDem.current, reduced || p >= BEAT.countD[0]);
+      cue(numRep.current, reduced || pc >= BEAT.countR[0]);
+      cue(numDem.current, reduced || pc >= BEAT.countD[0]);
       // The invitation shows on the empty frame and goes with the first
       // pixel of scroll.
-      hint.current?.classList.toggle('is-hidden', reduced || p > 0.02);
+      hint.current?.classList.toggle('is-hidden', reduced || pc > 0.02);
       // With the arc complete the toss-up seats breathe (CSS, see .is-settled).
       sk.classList.toggle('is-settled', !reduced && settled);
       // The curtain: as the stage scrolls away, the counts shrink and fade a
       // little and the arc dims, so the chapter closes instead of just
       // leaving. Only CSS vars; the rules are in index.css.
-      const close = ease(over);
+      // The curtain: past the pin in the normal stage; at the hand-over to
+      // the first scene in chapter mode.
+      const close = chapter ? ease(span(p, ARC_SHARE - 0.04, ARC_SHARE + 0.06)) : ease(over);
       sk.style.setProperty('--r3-close', close.toFixed(3));
       if (sb) sb.style.filter = close > 0 ? `brightness(${(1 - 0.15 * close).toFixed(3)})` : '';
       // Keep painting while the scroll is still settling, or while loose
       // seats are drifting in view.
-      const drifting = !reduced && p < BEAT.gather[1] && onScreen();
+      const drifting = !reduced && pc < BEAT.gather[1] && onScreen();
       if (wv.start && waveP >= 1) wave.current = { from: seats.map((x) => x.party), start: 0 };
       const waving = wave.current.start > 0;
       if ((p !== want || drifting || lensMoving || waving) && !raf) raf = window.requestAnimationFrame(paint);
@@ -517,11 +537,11 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
       // Whatever the seats wore last is where the next wave starts from.
       wave.current = { from: seats.map((x) => x.party), start: 0 };
     };
-  }, [seats, reduced]);
+  }, [seats, reduced, chapter, signal]);
 
   return (
-    <div className="r3-stage" ref={stage}>
-      <div className="r3-sticky" ref={sticky}>
+    <div className={`r3-stage${chapter ? ' r3-stage--chapter' : ''}`} ref={stage}>
+      <div className={`r3-sticky${chapter ? ' r3-sticky--chapter' : ''}`} ref={sticky}>
         <div
           className="r3-seats"
           ref={seatsBox}
@@ -576,6 +596,8 @@ export function Hemicycle({ forecast, chamber }: HemicycleProps) {
             />
           </span>
         </div>
+        {/* The chapter's later scenes, drawn inside this same pinned frame. */}
+        {children}
       </div>
     </div>
   );

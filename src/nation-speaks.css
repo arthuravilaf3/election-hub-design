@@ -8,6 +8,15 @@
   text-align: center;
 }
 
+/* SCENE MODE: a layer inside the creative chapter's pinned frame. */
+.nation-speaks--scene {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+  margin: 0;
+  opacity: 0;
+}
+
 /* The asset is an ANIMATED webp (75 frames, 3s loop): at rest the circles
    are a thin row, at its peaks the bars reach 1058 of the canvas's 1080px.
    So the frame keeps the full height — any vertical crop cuts the bars

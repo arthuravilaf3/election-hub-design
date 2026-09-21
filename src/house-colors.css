@@ -50,6 +50,18 @@
     --overlap-a 700ms ease-out 900ms;
 }
 
+/* SCENE MODE: inside the creative chapter's pinned frame the strip is a
+   layer, centred, with no height of its own on the page. */
+.house-colors--scene {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
 /* Two prints of the same photo, one blue and one red, at the photo's own
    scale (73% of the strip), the blue flush with the page's left edge and the
    red with its right — the seat line's order. They OVERLAP across a band
