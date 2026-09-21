@@ -13,7 +13,7 @@ import { HouseColors } from './components/HouseColors';
 import { NationSpeaks } from './components/NationSpeaks';
 import { ChapterRail } from './components/ChapterRail';
 import { OptionSwitcher } from './components/OptionSwitcher';
-import { IS_CREATIVE, IS_OPTION3 } from './data/edition';
+import { IS_CREATIVE, IS_OPTION3, readExtras, storeExtras, type Extras } from './data/edition';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -41,6 +41,14 @@ export default function App() {
   /* Which delivery phase the prototype is showing. One map decides what a
      phase contains (data/phases.ts); every gate below reads off it. */
   const [phase] = useState<Phase>(initialPhase);
+  /* Option 2's extras: the Capitol strip and The Nation Speaks, off unless
+     switched on (see OptionSwitcher). */
+  const [extras, setExtras] = useState<Extras>(readExtras);
+  const onExtras = (next: Extras) => {
+    setExtras(next);
+    storeExtras(next);
+  };
+  const isOption2 = IS_CREATIVE && !IS_OPTION3;
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
@@ -271,7 +279,7 @@ export default function App() {
 
           {/* CREATIVE EDITION (option 2): House Colors, the Capitol in the
               chamber's split, right after the map (moved Sep 18 2026). */}
-          {IS_CREATIVE && !IS_OPTION3 && <HouseColors forecast={forecast} />}
+          {isOption2 && extras.capitol && <HouseColors forecast={forecast} />}
 
           {/* R3 + R53: every seat of the chamber in a hemicycle, and the
               projected Republican count, under the map. The Race/Source
@@ -288,10 +296,11 @@ export default function App() {
 
           {/* CREATIVE EDITION (option 2): the Cosmos Waveform and "The
               Nation Speaks", after the arc and before the feed (Sep 18 2026). */}
-          {IS_CREATIVE && !IS_OPTION3 && <NationSpeaks />}
+          {isOption2 && extras.nation && <NationSpeaks />}
 
-          {/* OPTION 3: the chapter rail down the left edge. */}
-          {IS_OPTION3 && <ChapterRail />}
+          {/* OPTIONS 2 and 3: the chapter rail down the left edge. */}
+          {IS_OPTION3 && <ChapterRail option={3} />}
+          {isOption2 && <ChapterRail option={2} />}
 
           {/* The boundary between map and feed is now editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
@@ -315,7 +324,7 @@ export default function App() {
             onToggle={setDevOpen}
           />
         )}
-        <OptionSwitcher />
+        <OptionSwitcher extras={extras} onExtras={onExtras} />
         <ThemeToggle />
       </div>
 

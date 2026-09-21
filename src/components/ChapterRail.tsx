@@ -7,13 +7,23 @@
 import { useEffect, useState } from 'react';
 import { track } from '../data/analytics';
 
-const MARKS = [
-  { id: 'map', label: 'Map', sel: '.dots--creative' },
-  { id: 'forecast', label: 'Forecast', sel: '.map-card' },
-  { id: 'coverage', label: 'Coverage', sel: '.feed-section' },
-];
+/* Option 3 follows the comp's order and targets (Map is the hero, Forecast
+   the card); option 2 sends Forecast to the arc on scroll. */
+const MARKS_BY_OPTION: Record<2 | 3, Array<{ id: string; label: string; sel: string }>> = {
+  3: [
+    { id: 'map', label: 'Map', sel: '.dots--creative' },
+    { id: 'forecast', label: 'Forecast', sel: '.map-card' },
+    { id: 'coverage', label: 'Coverage', sel: '.feed-section' },
+  ],
+  2: [
+    { id: 'map', label: 'Map', sel: '.map-card' },
+    { id: 'forecast', label: 'Forecast', sel: '.r3-stage' },
+    { id: 'coverage', label: 'Coverage', sel: '.feed-section' },
+  ],
+};
 
-export function ChapterRail() {
+export function ChapterRail({ option = 3 }: { option?: 2 | 3 }) {
+  const MARKS = MARKS_BY_OPTION[option];
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -33,7 +43,7 @@ export function ChapterRail() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, []);
+  }, [MARKS]);
 
   const go = (i: number) => {
     const el = document.querySelector(MARKS[i].sel);

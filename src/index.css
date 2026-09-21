@@ -5092,3 +5092,146 @@ body {
     display: none;
   }
 }
+
+/* ==================== OPTIONS 1 AND 2 (Sep 21 2026, second round) ==================== */
+
+/* Both: the headline in Regular. */
+[data-option='1'] .dots-title,
+[data-option='2'] .dots-title {
+  font-weight: 400;
+}
+
+/* Option 1: the pills back on the page's ground (dark on dark, hairline),
+   the way option 3's controls sit — not inverted. */
+[data-option='1'] .pill-wrap {
+  --pill-bg: color-mix(in srgb, var(--surface-dim) 80%, transparent);
+  --pill-ink: var(--ink);
+  --pill-ink-soft: var(--ink-subtlest);
+}
+
+[data-option='1'] .pill {
+  border-color: var(--border);
+  backdrop-filter: blur(10px);
+}
+
+[data-option='1'] .pill:hover,
+[data-option='1'] .pill.is-open {
+  background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+  border-color: var(--border);
+}
+
+[data-option='1'] .pill-menu {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+[data-option='1'] .pill-option:hover,
+[data-option='1'] .pill-option:focus-visible {
+  background: var(--surface-2);
+}
+
+/* Option 1: the clock is the copy's last line, under the seats. */
+[data-option='1'] .dots-copy .countdown--compact {
+  padding-top: 4px;
+}
+
+/* Option 2: no '26 mark, the name at 40px, the arc mark twice the size. */
+[data-option='2'] .hub-mark {
+  display: none;
+}
+
+[data-option='2'] .hub-title {
+  font-size: 40px;
+}
+
+[data-option='2'] .hub-rightplace {
+  width: 600px;
+  height: 294px;
+}
+
+/* Option 3: the clock leaves the way the controls do — a fade, and the row
+   easing up into its place. */
+.map-clock {
+  transition:
+    grid-template-rows 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding-bottom 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 260ms ease-out;
+}
+
+.map-clock-in {
+  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.map-selectors--creative.is-scrolled .map-clock-in {
+  transform: translateY(10px);
+}
+
+/* The extras row of the option switch: two toggles, only on option 2. */
+.layout-switch--extras {
+  gap: 10px;
+  padding: 0 14px;
+}
+
+.extra-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 140ms ease-out;
+}
+
+.extra-toggle.is-on {
+  color: var(--ink);
+}
+
+.extra-toggle-knob {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  transition: background 160ms ease-out;
+}
+
+.extra-toggle-knob::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--ink-soft);
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background 160ms ease-out;
+}
+
+.extra-toggle.is-on .extra-toggle-knob {
+  background: var(--ink);
+}
+
+.extra-toggle.is-on .extra-toggle-knob::after {
+  background: var(--surface-dim);
+  transform: translateX(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-clock,
+  .map-clock-in {
+    transition: none;
+  }
+}
+
+@media (max-width: 700px) {
+  [data-option='2'] .hub-rightplace {
+    width: 300px;
+    height: 147px;
+  }
+}

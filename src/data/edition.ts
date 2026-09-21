@@ -74,3 +74,29 @@ export const IS_OPTION3 = IS_CREATIVE && OPTION === 3;
 if (typeof document !== 'undefined') {
   document.documentElement.dataset.option = IS_OPTION3 ? '3' : IS_CREATIVE ? '2' : '1';
 }
+
+/* OPTION 2's extras (Sep 21 2026): the Capitol strip and The Nation Speaks
+   are OFF by default and switched on from the option switch — stored, so
+   the preview frame and the next visit keep them. */
+export interface Extras {
+  capitol: boolean;
+  nation: boolean;
+}
+const EXTRAS_KEY = 'dw-extras';
+
+export function readExtras(): Extras {
+  try {
+    const v = JSON.parse(localStorage.getItem(EXTRAS_KEY) ?? '{}') as Partial<Extras>;
+    return { capitol: !!v.capitol, nation: !!v.nation };
+  } catch {
+    return { capitol: false, nation: false };
+  }
+}
+
+export function storeExtras(extras: Extras): void {
+  try {
+    localStorage.setItem(EXTRAS_KEY, JSON.stringify(extras));
+  } catch {
+    // Private mode: the in-session choice still works.
+  }
+}

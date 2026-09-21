@@ -109,7 +109,6 @@ export function RaceHeader({
         </span>
       </header>
 
-      {!IS_CREATIVE && <Countdown compact />}
 
       {/* CREATIVE (Sep 17 2026, after the Kalshi hub): the headline with
           its percentage, the countdown as its caption, then one line with
@@ -456,6 +455,9 @@ function Dots({ forecast, chamber, headline, resultsMode, called }: DotsProps) {
           </span>
           <span>{tail}</span>
         </p>
+        {/* The Election Day clock as the copy's last line (Sep 21 2026):
+            with the headline and the seats, not adrift above them. */}
+        <Countdown compact />
       </div>
 
       {/* The grid is one image to assistive tech — 435 list items would be
