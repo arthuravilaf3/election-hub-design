@@ -4156,14 +4156,217 @@ button,
   }
 }
 
+/* ---------- IDEA 1: the chapter rail ---------- */
+
+/* Left edge, vertically centred — opposite the layout switch, clear of the
+   Race/Source pills at the bottom. */
+.chapter-rail {
+  position: fixed;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 620;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-dim) 82%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.chapter-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-subtlest);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 140ms ease-out;
+}
+
+.chapter-rail-item:hover {
+  color: var(--ink);
+}
+
+.chapter-rail-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 30%, transparent);
+  transition: background 140ms ease-out, transform 140ms ease-out;
+}
+
+.chapter-rail-item.is-at {
+  color: var(--ink);
+}
+
+.chapter-rail-item.is-at .chapter-rail-dot {
+  background: var(--bar-rep);
+  transform: scale(1.4);
+}
+
+@media (max-width: 900px) {
+  .chapter-rail {
+    display: none;
+  }
+}
+
+/* ---------- IDEA 2: the feed's call under the map ---------- */
+
+.teaser {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.teaser-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.teaser-head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
+}
+
+.teaser-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.teaser-all:hover {
+  color: var(--bar-rep);
+}
+
+.teaser-items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.teaser-items li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.teaser-meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-subtlest);
+}
+
+.teaser-headline {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+@media (max-width: 700px) {
+  .teaser-items {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+}
+
+/* ---------- IDEA 5: chapter and feed side by side ---------- */
+
+/* Only where there is room for two real columns; below that the page keeps
+   its stacked order. */
+.dual {
+  display: block;
+}
+
+@media (min-width: 1500px) {
+  .dual {
+    display: grid;
+    grid-template-columns: minmax(0, 44%) minmax(0, 56%);
+    gap: 48px;
+    align-items: start;
+  }
+
+  .dual-left {
+    position: sticky;
+    top: 88px;
+  }
+
+  .dual-left .r3-stage,
+  .dual-left .house-colors {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .dual-left .r3-sticky {
+    position: relative;
+    top: 0;
+    height: min(62vh, 520px);
+  }
+
+  .dual-left .nation-speaks {
+    margin-top: 32px;
+  }
+
+  .dual-right .plan-banner {
+    margin-top: 0;
+  }
+
+  /* The feed runs in one column here: its own ad rails need a page's width
+     and there isn't one beside the chapter. */
+  .dual-right .feed-section {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 40px;
+    padding-inline: 0;
+  }
+
+  .dual-right .feed-ad-rail {
+    display: none;
+  }
+}
+
 /* ---------- Creative layout switch (dev chrome) ---------- */
 
 /* Sits with the other floating controls, above the theme toggle. */
-.layout-switch {
+.switch-stack {
   position: fixed;
   right: 24px;
   bottom: 180px;
   z-index: 640;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.layout-switch {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -4208,7 +4411,7 @@ button,
 }
 
 @media (max-width: 700px) {
-  .layout-switch {
+  .switch-stack {
     display: none;
   }
 }
