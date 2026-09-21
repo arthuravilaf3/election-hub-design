@@ -9,19 +9,10 @@ import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
-import { HouseColors } from './components/HouseColors';
-import { NationSpeaks } from './components/NationSpeaks';
-import { CreativeSkip } from './components/CreativeSkip';
 import { ChapterRail } from './components/ChapterRail';
-import { FeedTeaser } from './components/FeedTeaser';
 import { CreativeSwitcher } from './components/CreativeSwitcher';
 import { IS_CREATIVE } from './data/edition';
-import {
-  initialCreativeLayout,
-  initialFeedIdea,
-  type CreativeLayout,
-  type FeedIdea,
-} from './data/creativeLayout';
+import { initialCreativeLayout, type CreativeLayout } from './data/creativeLayout';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -49,15 +40,10 @@ export default function App() {
   /* Which delivery phase the prototype is showing. One map decides what a
      phase contains (data/phases.ts); every gate below reads off it. */
   const [phase] = useState<Phase>(initialPhase);
-  /* Which cut of the creative edition is on screen (1 plain, 2 arc first,
-     3 everything) — the switch is prototype chrome, see data/creativeLayout. */
+  /* Which cut of the creative edition is on screen (1 plain, 2 still arc,
+     3 big arc) — the switch is prototype chrome, see data/creativeLayout. */
   const [layout, setLayout] = useState<CreativeLayout>(initialCreativeLayout);
   const creative = (n: CreativeLayout) => IS_CREATIVE && layout === n;
-  /* Which way to the feed is on (layout 3 only). 0 = the page as it stands;
-     1 rail, 2 teaser, 3 no pin, 4 short on a second visit, 5 two columns. */
-  const [idea, setIdea] = useState<FeedIdea>(initialFeedIdea);
-  const railOn = creative(3) && (idea === 1 || idea === 3);
-  const teaserOn = creative(3) && (idea === 2 || idea === 3);
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
@@ -228,7 +214,11 @@ export default function App() {
           {/* THE MAP SECTION: tabs, the headline they drive and the seat
               bar, then the card — which owns the map and the source that
               paints it. */}
-          <section className="map-section" aria-label="Election map" ref={mapSectionRef}>
+          <section
+            className={`map-section${IS_CREATIVE ? ` map-section--c${layout}` : ''}`}
+            aria-label="Election map"
+            ref={mapSectionRef}
+          >
           <RaceHeader
             layout={IS_CREATIVE ? layout : 1}
             chamber={state.chamber}
@@ -238,8 +228,10 @@ export default function App() {
             raceCount={Object.keys(races).length}
           />
 
-          {/* LAYOUT 2: the arc sits between the seat line and the map. */}
-          {creative(2) && <Hemicycle forecast={forecast} chamber={state.chamber} />}
+          {/* LAYOUT 2: the still arc between the seat line and the map —
+              the chamber's seats, coloured by the same projection, answering
+              the pointer the way the dots did, on no scroll. */}
+          {creative(2) && <Hemicycle forecast={forecast} chamber={state.chamber} still />}
 
           <MapCard
             races={races}
@@ -285,29 +277,22 @@ export default function App() {
             }
           />
 
-          {/* THE FEED'S OWN CALL: three recent headlines a fraction of a
-              screen under the map, with a way to the whole list. */}
-          {teaserOn && <FeedTeaser />}
+          {/* CREATIVE: the banner belongs to the section, so the pinned
+              timer and controls stay through it — and, in layout 3, through
+              the big arc that follows it (the gate watches the section). */}
+          {IS_CREATIVE && <PlanBanner />}
 
-          {/* LAYOUT 3: the Capitol strip right after the map, then the arc
-              on a shorter pin. The Race/Source pills stay pinned through
-              both (the gate watches the section). */}
-          {creative(3) && <HouseColors forecast={forecast} />}
+          {/* LAYOUT 3: the scroll-driven arc after the banner, before the
+              feed, on the shorter pin. */}
           {creative(3) && <Hemicycle forecast={forecast} chamber={state.chamber} compact />}
           </section>
 
-          {/* LAYOUT 3: the Cosmos Waveform and "The Nation Speaks", after
-              the arc and before the feed. */}
-          {creative(3) && <NationSpeaks />}
-
-          {/* THE CHAPTER RAIL, and the skip link only when the rail is off —
-              two answers to the same question, never both on screen. */}
-          {railOn && <ChapterRail />}
-          {creative(3) && !railOn && <CreativeSkip />}
+          {/* Layouts 2 and 3 carry the chapter rail down the left edge. */}
+          {(creative(2) || creative(3)) && <ChapterRail />}
 
           {/* The boundary between map and feed is editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
-          <PlanBanner />
+          {!IS_CREATIVE && <PlanBanner />}
 
           <CoverageFeed />
 
@@ -328,7 +313,7 @@ export default function App() {
           />
         )}
         {IS_CREATIVE && (
-          <CreativeSwitcher layout={layout} onChange={setLayout} idea={idea} onIdea={setIdea} />
+          <CreativeSwitcher layout={layout} onChange={setLayout} />
         )}
         <ThemeToggle />
       </div>

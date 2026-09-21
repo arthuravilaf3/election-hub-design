@@ -246,9 +246,13 @@ interface HemicycleProps {
   /** A shorter pin (Sep 21 2026): the same choreography over less scroll,
       so the feed sits closer to the map. */
   compact?: boolean;
+  /** STILL (Sep 21 2026, Figma "Option 2"): the finished arc in the page's
+      flow, no pin, no choreography, no counts — the seats and the pointer
+      only, the way the dots grid worked. */
+  still?: boolean;
 }
 
-export function Hemicycle({ forecast, chamber, compact = false }: HemicycleProps) {
+export function Hemicycle({ forecast, chamber, compact = false, still = false }: HemicycleProps) {
   // Identical to the dots under the header, so the two never disagree.
   const total = forecast.dem + forecast.rep;
   const gap = forecast.tossupShare;
@@ -303,7 +307,7 @@ export function Hemicycle({ forecast, chamber, compact = false }: HemicycleProps
     // first CLOSE_PX: the curtain that closes the chapter before the feed.
     let over = 0;
     const target = () => {
-      if (reduced) return 1;
+      if (reduced || still) return 1;
       const stTop = st.getBoundingClientRect().top + window.scrollY;
       // The pin holds while the stage's bottom is below the sticky's bottom
       // (its top offset included) — past that the frame is pushed up and
@@ -446,10 +450,14 @@ export function Hemicycle({ forecast, chamber, compact = false }: HemicycleProps
       const camTx = landX - zoom * focusX;
       const camTy = landY - zoom * focusY;
       const cam = camera.current;
-      if (cam) {
-        cam.setAttribute('transform', `translate(${camTx.toFixed(2)} ${camTy.toFixed(2)}) scale(${zoom.toFixed(4)})`);
+      if (still) {
+        // No camera: the drawing fills its own frame, edge to edge.
+        cam?.removeAttribute('transform');
+        view.current = { scale: W / drawnW, ox: (box.width - drawnW) / 2, tx: 0, ty: 0, zoom: 1 };
+      } else {
+        cam?.setAttribute('transform', `translate(${camTx.toFixed(2)} ${camTy.toFixed(2)}) scale(${zoom.toFixed(4)})`);
+        view.current = { scale: W / drawnW, ox: (box.width - drawnW) / 2, tx: camTx, ty: camTy, zoom };
       }
-      view.current = { scale: W / drawnW, ox: (box.width - drawnW) / 2, tx: camTx, ty: camTy, zoom };
       // The counts land the way the countdown's digits do — each digit
       // dropping in on its own delay — once their side of the arc is
       // complete, and they STAY. Scrolling back above the cue resets them.
@@ -471,7 +479,7 @@ export function Hemicycle({ forecast, chamber, compact = false }: HemicycleProps
       cue(numDem.current, reduced || p >= BEAT.countD[0]);
       // The invitation shows on the empty frame and goes with the first
       // pixel of scroll.
-      hint.current?.classList.toggle('is-hidden', reduced || p > 0.02);
+      hint.current?.classList.toggle('is-hidden', reduced || still || p > 0.02);
       // With the arc complete the toss-up seats breathe (CSS, see .is-settled).
       sk.classList.toggle('is-settled', !reduced && settled);
       // The curtain: as the stage scrolls away, the counts shrink and fade a
@@ -522,34 +530,50 @@ export function Hemicycle({ forecast, chamber, compact = false }: HemicycleProps
       // Whatever the seats wore last is where the next wave starts from.
       wave.current = { from: seats.map((x) => x.party), start: 0 };
     };
-  }, [seats, reduced]);
+  }, [seats, reduced, still]);
+
+  const drawing = (
+    <div
+      className="r3-seats"
+      ref={seatsBox}
+      role="img"
+      aria-label={`${total} ${CHAMBER_BODY[chamber]} seats: Republicans ${rep}, toss-ups ${toss}, Democrats ${dem}.`}
+    >
+      <svg ref={svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMin meet" aria-hidden="true">
+        <g ref={camera} className="r3-cam">
+          {seats.map((s, i) => (
+            <circle
+              key={i}
+              className={`r3-seat r3-seat--${s.party}`}
+              cx={s.ax}
+              cy={s.ay}
+              r={s.r}
+              ref={(c) => {
+                circles.current[i] = c;
+              }}
+            />
+          ))}
+        </g>
+      </svg>
+    </div>
+  );
+
+  if (still) {
+    // The same drawing, the same lens and recolour wave, in a frame that
+    // sits in the page like the dots grid did.
+    return (
+      <div className="r3-still" ref={stage}>
+        <div className="r3-still-frame" ref={sticky}>
+          {drawing}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`r3-stage${compact ? ' r3-stage--compact' : ''}`} ref={stage}>
       <div className="r3-sticky" ref={sticky}>
-        <div
-          className="r3-seats"
-          ref={seatsBox}
-          role="img"
-          aria-label={`${total} ${CHAMBER_BODY[chamber]} seats: Republicans ${rep}, toss-ups ${toss}, Democrats ${dem}.`}
-        >
-          <svg ref={svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMin meet" aria-hidden="true">
-            <g ref={camera} className="r3-cam">
-              {seats.map((s, i) => (
-                <circle
-                  key={i}
-                  className={`r3-seat r3-seat--${s.party}`}
-                  cx={s.ax}
-                  cy={s.ay}
-                  r={s.r}
-                  ref={(c) => {
-                    circles.current[i] = c;
-                  }}
-                />
-              ))}
-            </g>
-          </svg>
-        </div>
+        {drawing}
         {/* The frame is empty before the scroll (the loose seats start at 0%),
             so it says what to do — the same voice as "Tap on a state". */}
         <p className="r3-hint" ref={hint} aria-hidden="true">

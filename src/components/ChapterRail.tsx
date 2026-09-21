@@ -1,13 +1,15 @@
-// IDEA 1 — the chapter rail (Sep 21 2026): a small permanent index of the
-// page's three chapters, marking where the reader is and taking them to any
-// of the others in one click. It does not shorten the page; it makes the
-// coverage visible from the top.
+// The chapter rail (Sep 21 2026, Figma "Option 2/3" frames): a small index
+// of the page's three chapters down the left edge — a dash and a word each.
+// The chapter on screen wears a longer white dash; hovering another one
+// grows its dash to the right and lights it the same way; a click goes
+// there. It does not shorten the page; it makes the coverage reachable from
+// the top.
 import { useEffect, useState } from 'react';
 import { track } from '../data/analytics';
 
 const MARKS = [
+  { id: 'forecast', label: 'Forecast', sel: '.dots--creative' },
   { id: 'map', label: 'Map', sel: '.map-card' },
-  { id: 'forecast', label: 'Forecast', sel: '.r3-stage' },
   { id: 'coverage', label: 'Coverage', sel: '.feed-section' },
 ];
 
@@ -51,7 +53,7 @@ export function ChapterRail() {
           aria-current={i === active ? 'true' : undefined}
           onClick={() => go(i)}
         >
-          <span className="chapter-rail-dot" aria-hidden="true" />
+          <span className="chapter-rail-dash" aria-hidden="true" />
           {m.label}
         </button>
       ))}

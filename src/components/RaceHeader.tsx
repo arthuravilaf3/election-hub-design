@@ -30,10 +30,11 @@ export const PAGE_TITLE = '2026 Midterms';
 
 
 interface RaceHeaderProps {
-  /* Which cut of the header (Sep 21 2026). 1 keeps the typeset name with
-     its '26 mark and the campaign mark small beside it — the base build's
-     header too. 2 and 3 drop the name entirely: the campaign mark alone,
-     centred, and the sponsor line moves under the headline. */
+  /* Which cut of the header (Sep 21 2026, Arthur's three options). All
+     three keep the typeset name with its '26 mark and the sponsor line on
+     the left; on the right, 1 and 3 carry the campaign mark (the arc) and 2
+     its lettering alone — "The right place to be." under five red dots.
+     The base build is cut 1 with the mark. */
   layout: 1 | 2 | 3;
   chamber: Chamber;
   forecast: ForecastData;
@@ -57,20 +58,16 @@ export function RaceHeader({
      source stays named where it lives: the SOURCE pill and the panel. */
   const headline = resultsMode ? `${called} of ${raceCount} races called` : forecast.headline;
   const updatedLine = resultsMode ? 'Updating live' : `Updated ${forecast.updated}`;
-  /* Cuts 2 and 3: the campaign mark carries the masthead on its own. */
-  const markOnly = layout !== 1;
   const byline = (
-    <p
-      className={`hub-byline intro-rise${markOnly ? ' hub-byline--hero' : ''}`}
-      style={introDelay(INTRO_AT.presented)}
-    >
+    <p className="hub-byline intro-rise" style={introDelay(INTRO_AT.presented)}>
       <span className="hub-presented">
         <em>Presented by</em>
         <img className="hub-logo" src={polymarketLogo} alt="Polymarket" />
       </span>
       {/* Freshness of the read rides with the sponsor (decided Sep 2026
-          over three other placements). */}
-      {(forecast.updated || resultsMode) && (
+          over three other placements). In the creative edition it moves
+          under the headline instead (the comps' hero). */}
+      {!IS_CREATIVE && (forecast.updated || resultsMode) && (
         <>
           <span className="hub-dot" aria-hidden="true">
             •
@@ -83,9 +80,8 @@ export function RaceHeader({
 
   return (
     <>
-      <header className={`hub-header${markOnly ? ' hub-header--mark' : ''}`}>
-        {!markOnly && (
-          <div className="hub-brand">
+      <header className={`hub-header${IS_CREATIVE ? ' hub-header--creative' : ''}`}>
+        <div className="hub-brand">
             <h1 className="hub-title">
               {/* Entrance: the letters resolve one by one out of a blur. */}
               <Letters text="The Midterms" base={INTRO_AT.title} step={26} className="hub-title-text" />
@@ -98,14 +94,20 @@ export function RaceHeader({
                 alt="'26"
               />
             </h1>
-            {byline}
-          </div>
-        )}
+          {byline}
+        </div>
         {/* The campaign mark (creative, Sep 2026): the "Right Place to Be"
-            hemicycle. In cuts 2 and 3 it IS the masthead, centred and on its
-            own. The entrance runs on the wrapper, once; the two theme files
-            sit stacked inside it and a theme switch only flips which one is
-            visible — so it recolours in place instead of replaying. */}
+            hemicycle, or in cut 2 its line set in type with the five dots
+            over the word. The entrance runs on the wrapper, once; the two
+            theme files sit stacked inside it and a theme switch only flips
+            which one is visible — so it recolours in place instead of
+            replaying. */}
+        {layout === 2 ? (
+          <span className="hub-tagline intro-rise" style={introDelay(INTRO_AT.statement)}>
+            <span className="hub-tagline-dots" aria-hidden="true" />
+            The <b>right</b> place to be.
+          </span>
+        ) : (
         <span className="hub-rightplace intro-rise" style={introDelay(INTRO_AT.statement)}>
           <img
             className="hub-rightplace-art hub-rightplace-art--dark"
@@ -122,26 +124,27 @@ export function RaceHeader({
             height={187}
           />
         </span>
+        )}
       </header>
 
       {!IS_CREATIVE && <Countdown compact />}
 
-      {/* CREATIVE (Sep 17 2026, after the Kalshi hub): the headline with
-          its percentage, the countdown as its caption, then one line with
-          the seats — projected counts at the ends, the bar between them
-          with the majority marked — and straight on to the map. */}
+      {/* CREATIVE (Sep 21 2026, the three options): the headline with its
+          percentage and the freshness under it, then one line with the
+          seats — projected counts at the ends, the bar between them with
+          the majority marked, the toss-ups named under it — and on to the
+          map. The countdown lives with the map's controls, pinned. */}
       {IS_CREATIVE ? (
         <section className="dots dots--creative" aria-label={`${CHAMBER_BODY[chamber]} forecast`}>
-          {/* The countdown sits above the headline and OUTSIDE the keyed
-              block, so a race or source switch leaves it where it is. */}
-          <Countdown compact />
           <div className="dots-copy" key={headline}>
             <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
               {headline}
             </h2>
-            {/* Cuts 2 and 3: the sponsor and the freshness sit under the
-                headline, where the masthead no longer carries them. */}
-            {markOnly && byline}
+            {(forecast.updated || resultsMode) && (
+              <p className="dots-updated intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
+                {updatedLine}
+              </p>
+            )}
           </div>
           <SeatLine forecast={forecast} chamber={chamber} />
         </section>
@@ -193,14 +196,18 @@ function SeatLine({ forecast, chamber }: { forecast: ForecastData; chamber: Cham
       <div className="seatline-ends">
         <span className="seatline-end seatline-end--dem">
           <b className="seatline-big">{pd}</b>
-          <span className="seatline-label">Democrats</span>
+          <abbr className="seatline-label" title="Democrats">
+            D
+          </abbr>
         </span>
         <span className="seatline-win" style={{ left: pct(majority) }}>
           {majority} to win
         </span>
         <span className="seatline-end seatline-end--rep">
-          <span className="seatline-label">Republicans</span>
           <b className="seatline-big">{pr}</b>
+          <abbr className="seatline-label" title="Republicans">
+            R
+          </abbr>
         </span>
       </div>
       <div
@@ -214,6 +221,7 @@ function SeatLine({ forecast, chamber }: { forecast: ForecastData; chamber: Cham
       </div>
       <div className="seatline-current">
         <span>{cur.dem} current</span>
+        <span className="seatline-toss">Toss Ups: {toss}</span>
         <span>{cur.rep} current</span>
       </div>
     </div>

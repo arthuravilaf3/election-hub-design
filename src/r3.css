@@ -11,40 +11,35 @@
   height: 300vh;
 }
 
-/* The skip link: prototype chrome, bottom-left, opposite the layout switch.
-   It shows only while the creative chapter is on screen. */
-.chapter-skip {
-  position: fixed;
-  left: 24px;
-  bottom: 40px;
-  z-index: 640;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 18px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
-  backdrop-filter: blur(8px);
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 140ms ease-out;
+/* THE STILL ARC (layout 2, Figma 11589:229705): the finished drawing in the
+   page's flow, on the hero's 1100px rail, between the seat line and the
+   map. No pin, no camera — the frame is the drawing's own aspect. */
+.r3-still {
+  width: 100%;
+  max-width: 1100px;
+  margin: 8px auto 0;
 }
 
-.chapter-skip:hover {
-  background: var(--surface-2);
+.r3-still-frame {
+  position: relative;
+  aspect-ratio: 1925 / 904;
 }
 
-@media (max-width: 700px) {
-  .chapter-skip {
-    left: 16px;
-    bottom: 96px;
-  }
+.r3-still .r3-seats {
+  overflow: visible;
 }
+
+.r3-still .r3-seats svg {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: visible;
+}
+
+.r3-still-frame.is-settled .r3-seat--toss {
+  animation: r3-breathe 2.4s ease-in-out infinite;
+}
+
 
 .r3-stage {
   /* Edge to edge (Sep 2026): the seats run out to the viewport, not the

@@ -15,6 +15,8 @@
  * commits, Escape closes and hands focus back.
  */
 import { useEffect, useId, useRef, useState } from 'react';
+import { Countdown } from './Countdown';
+import { IS_CREATIVE } from '../data/edition';
 import { SOURCES, sourceKind, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 import type { Chamber } from '../data/types';
@@ -31,6 +33,9 @@ interface PillSelectProps {
   value: string;
   options: PillOption[];
   onChange: (id: string) => void;
+  /** The chip form (Sep 21 2026): the value and a chevron, the label only
+      for assistive tech — the creative edition's source control. */
+  chip?: boolean;
 }
 
 function Chevron() {
@@ -41,7 +46,7 @@ function Chevron() {
   );
 }
 
-function PillSelect({ label, value, options, onChange }: PillSelectProps) {
+function PillSelect({ label, value, options, onChange, chip = false }: PillSelectProps) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -109,7 +114,7 @@ function PillSelect({ label, value, options, onChange }: PillSelectProps) {
       <button
         ref={btnRef}
         type="button"
-        className={`pill${open ? ' is-open' : ''}`}
+        className={`pill${chip ? ' pill--chip' : ''}${open ? ' is-open' : ''}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-labelledby={`${id}-label ${id}-value`}
@@ -122,7 +127,7 @@ function PillSelect({ label, value, options, onChange }: PillSelectProps) {
         }}
       >
         <span className="pill-text">
-          <span className="pill-label" id={`${id}-label`}>
+          <span className={`pill-label${chip ? ' visually-hidden' : ''}`} id={`${id}-label`}>
             {label}
           </span>
           <span className="pill-value" id={`${id}-value`}>
@@ -161,6 +166,46 @@ function PillSelect({ label, value, options, onChange }: PillSelectProps) {
 }
 
 const CHAMBERS: Chamber[] = ['house', 'senate', 'governor'];
+
+/**
+ * The race as a segmented control (creative, Sep 21 2026, Figma "Option
+ * 1"): the three chambers side by side, one click each — the visible
+ * alternative to the RACE pill's menu. A radio group to the keyboard:
+ * arrows move the choice, and the choice is the value.
+ */
+function RaceSegments({ chamber, onChamber }: { chamber: Chamber; onChamber: (c: Chamber) => void }) {
+  const onKey = (e: React.KeyboardEvent) => {
+    const i = CHAMBERS.indexOf(chamber);
+    let next = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % CHAMBERS.length;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i - 1 + CHAMBERS.length) % CHAMBERS.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = CHAMBERS.length - 1;
+    if (next < 0) return;
+    e.preventDefault();
+    onChamber(CHAMBERS[next]);
+    const group = e.currentTarget.parentElement;
+    (group?.children[next] as HTMLElement | undefined)?.focus({ preventScroll: true });
+  };
+  return (
+    <div className="race-seg" role="radiogroup" aria-label="Race">
+      {CHAMBERS.map((c) => (
+        <button
+          key={c}
+          type="button"
+          role="radio"
+          aria-checked={c === chamber}
+          tabIndex={c === chamber ? 0 : -1}
+          className={`race-seg-option${c === chamber ? ' is-selected' : ''}`}
+          onClick={() => onChamber(c)}
+          onKeyDown={onKey}
+        >
+          {CHAMBER_LABEL[c]}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 interface MapSelectorsProps {
   chamber: Chamber;
@@ -203,6 +248,36 @@ export function MapSelectors({
     io.observe(card);
     return () => io.disconnect();
   }, []);
+
+  if (IS_CREATIVE) {
+    /* CREATIVE (Sep 21 2026, Arthur's three options): the Election Day
+       clock in a capsule above the controls, the three pinned together —
+       the race as a segmented control, the source as a chip that opens
+       its menu. The clock keeps ticking wherever the page is. */
+    return (
+      <div className={`map-selectors map-selectors--creative${offscreen ? ' is-offscreen' : ''}`} ref={ref}>
+        <Countdown pill />
+        <div className="map-controls-row">
+          <RaceSegments chamber={chamber} onChamber={onChamber} />
+          {resultsMode ? (
+            <p className="source-byline seg-results">Results by {resultsSource ?? 'the certified feed'}</p>
+          ) : (
+            <PillSelect
+              chip
+              label="Source"
+              value={sourceId}
+              options={SOURCES.filter((s) => s.listed !== false).map((s) => ({
+                id: s.id,
+                label: sourceLabel(s.id),
+                hint: sourceKind(s.id),
+              }))}
+              onChange={onSource}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`map-selectors${offscreen ? ' is-offscreen' : ''}`} ref={ref}>
