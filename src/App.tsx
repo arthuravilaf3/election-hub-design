@@ -11,7 +11,9 @@ import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
 import { HouseColors } from './components/HouseColors';
 import { NationSpeaks } from './components/NationSpeaks';
+import { CreativeSwitcher } from './components/CreativeSwitcher';
 import { IS_CREATIVE } from './data/edition';
+import { initialCreativeLayout, type CreativeLayout } from './data/creativeLayout';
 import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
@@ -39,6 +41,10 @@ export default function App() {
   /* Which delivery phase the prototype is showing. One map decides what a
      phase contains (data/phases.ts); every gate below reads off it. */
   const [phase] = useState<Phase>(initialPhase);
+  /* Which cut of the creative edition is on screen (1 plain, 2 arc first,
+     3 everything) — the switch is prototype chrome, see data/creativeLayout. */
+  const [layout, setLayout] = useState<CreativeLayout>(initialCreativeLayout);
+  const creative = (n: CreativeLayout) => IS_CREATIVE && layout === n;
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
@@ -218,6 +224,9 @@ export default function App() {
             raceCount={Object.keys(races).length}
           />
 
+          {/* LAYOUT 2: the arc sits between the seat line and the map. */}
+          {creative(2) && <Hemicycle forecast={forecast} chamber={state.chamber} />}
+
           <MapCard
             races={races}
             chamber={state.chamber}
@@ -262,21 +271,17 @@ export default function App() {
             }
           />
 
-          {/* CREATIVE EDITION: House Colors, the Capitol in the chamber's
-              split, right after the map (moved Sep 18 2026). */}
-          {IS_CREATIVE && <HouseColors forecast={forecast} />}
-
-          {/* R3 + R53: every seat of the chamber in a hemicycle, and the
-              projected Republican count, under the map. The Race/Source
-              pills stay pinned through here (the gate watches the section). */}
-          {IS_CREATIVE && (
-            <Hemicycle forecast={forecast} chamber={state.chamber} />
-          )}
+          {/* LAYOUT 3 only: the Capitol in the chamber's split, right after
+              the map, then the arc — R3 + R53, every seat of the chamber and
+              the projected counts. The Race/Source pills stay pinned through
+              both (the gate watches the section). */}
+          {creative(3) && <HouseColors forecast={forecast} />}
+          {creative(3) && <Hemicycle forecast={forecast} chamber={state.chamber} />}
           </section>
 
-          {/* CREATIVE EDITION: the Cosmos Waveform and "The Nation Speaks",
-              after the arc and before the feed (Sep 18 2026). */}
-          {IS_CREATIVE && <NationSpeaks />}
+          {/* LAYOUT 3 only: the Cosmos Waveform and "The Nation Speaks",
+              after the arc and before the feed. */}
+          {creative(3) && <NationSpeaks />}
 
           {/* The boundary between map and feed is now editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
@@ -300,6 +305,7 @@ export default function App() {
             onToggle={setDevOpen}
           />
         )}
+        {IS_CREATIVE && <CreativeSwitcher layout={layout} onChange={setLayout} />}
         <ThemeToggle />
       </div>
 

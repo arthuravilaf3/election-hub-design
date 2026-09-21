@@ -4139,6 +4139,63 @@ button,
   }
 }
 
+/* ---------- Creative layout switch (dev chrome) ---------- */
+
+/* Sits with the other floating controls, above the theme toggle. */
+.layout-switch {
+  position: fixed;
+  right: 24px;
+  bottom: 180px;
+  z-index: 640;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+  padding: 0 6px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.layout-switch-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
+}
+
+.layout-switch-option {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease-out, color 140ms ease-out;
+}
+
+.layout-switch-option:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.layout-switch-option.is-selected {
+  background: var(--ink);
+  color: var(--surface-dim);
+}
+
+@media (max-width: 700px) {
+  .layout-switch {
+    display: none;
+  }
+}
+
 /* ---------- Map selectors (RACE + SOURCE pills, over the map) ---------- */
 
 /*
