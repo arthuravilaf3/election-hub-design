@@ -5340,3 +5340,53 @@ body {
     width: 100%;
   }
 }
+
+/* ---------- The option switch's tooltips ---------- */
+
+/* Above the control, right-aligned (the stack lives in the bottom-right
+   corner), on hover or keyboard focus. Inverted like the pills' menu. */
+.tip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.tip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 5;
+  width: 260px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--surface-dim);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 400;
+  text-align: left;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+}
+
+.tip-where {
+  display: block;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid color-mix(in srgb, var(--surface-dim) 18%, transparent);
+  color: color-mix(in srgb, var(--surface-dim) 70%, var(--ink));
+}
+
+.tip-wrap:hover .tip,
+.tip-wrap:focus-within .tip {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip {
+    transition: none;
+  }
+}
