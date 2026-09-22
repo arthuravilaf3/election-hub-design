@@ -16,9 +16,7 @@ import { OptionSwitcher } from './components/OptionSwitcher';
 import {
   IS_CREATIVE,
   IS_STILL_ARC,
-  readDotsShape,
   readExtras,
-  storeDotsShape,
   type DotsShape,
   type Extras,
 } from './data/edition';
@@ -60,12 +58,9 @@ export default function App() {
      switched on (see OptionSwitcher). */
   const [extras] = useState<Extras>(readExtras);
   const isCreativeFull = IS_CREATIVE && !IS_STILL_ARC;
-  /* Option 1's dots shape (grid, arc, semi-arc), from the same switch. */
-  const [shape, setShape] = useState<DotsShape>(readDotsShape);
-  const onShape = (next: DotsShape) => {
-    setShape(next);
-    storeDotsShape(next);
-  };
+  /* Option 1's seats are the arc (Arthur, Sep 22 2026 — the grid and the
+     semi-arc left the switch; their layouts stay in RaceHeader). */
+  const shape: DotsShape = 'arc';
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
@@ -379,7 +374,7 @@ export default function App() {
             onToggle={setDevOpen}
           />
         )}
-        <OptionSwitcher shape={shape} onShape={onShape} />
+        <OptionSwitcher />
         {features.results && <NightClock night={state.night} dispatch={dispatch} />}
         <ThemeToggle />
       </div>

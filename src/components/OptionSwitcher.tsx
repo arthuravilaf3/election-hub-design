@@ -7,7 +7,6 @@ import {
   OPTION,
   OPTIONS_BUILD,
   selectOption,
-  type DotsShape,
   type Option,
 } from '../data/edition';
 import { IS_PREVIEW_FRAME } from './MobilePreview';
@@ -17,19 +16,7 @@ const OPTIONS: Array<{ id: Option; name: string }> = [
   { id: 2, name: 'Still arc' },
 ];
 
-const SHAPES: Array<{ id: DotsShape; label: string }> = [
-  { id: 'grid', label: 'Grid' },
-  { id: 'arc', label: 'Arc' },
-  { id: 'semi', label: 'Semi' },
-];
-
-interface OptionSwitcherProps {
-  /** Option 1's dots shape and its setter — its second row. */
-  shape: DotsShape;
-  onShape: (next: DotsShape) => void;
-}
-
-export function OptionSwitcher({ shape, onShape }: OptionSwitcherProps) {
+export function OptionSwitcher() {
   if (!OPTIONS_BUILD || IS_PREVIEW_FRAME) return null;
   return (
     /* A landmark of its own (axe "region"): prototype chrome outside the
@@ -55,26 +42,6 @@ export function OptionSwitcher({ shape, onShape }: OptionSwitcherProps) {
           </button>
         ))}
       </div>
-      {/* Option 1 only: the shape the seats take. */}
-      {OPTION === 1 && (
-        <div className="layout-switch" role="radiogroup" aria-label="Dots shape">
-          <span className="layout-switch-label" aria-hidden="true">
-            Dots
-          </span>
-          {SHAPES.map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              role="radio"
-              aria-checked={o.id === shape}
-              className={`layout-switch-option layout-switch-option--word${o.id === shape ? ' is-selected' : ''}`}
-              onClick={() => onShape(o.id)}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
     </aside>
   );
 }
