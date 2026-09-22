@@ -268,3 +268,69 @@ describe('zoom', () => {
     expect(s.zoomedId).toBeNull();
   });
 });
+
+describe('the night clock', () => {
+  const at = (iso: string) => new Date(iso).getTime();
+  const nightState = (iso: string) =>
+    electionReducer(
+      electionReducer(initialElectionState(), { type: 'SET_CHAMBER', chamber: 'senate' }),
+      { type: 'NIGHT_TICK', at: at(iso) }
+    );
+
+  it('a tick forward publishes the calls of the interval: flash, log and a polite announcement', () => {
+    let s = nightState('2026-11-03T19:00:00-05:00');
+    expect(s.night.at).toBe(at('2026-11-03T19:00:00-05:00'));
+    expect(s.ballot.senate.GA.mode).toBe('results');
+    expect(s.ballot.senate.OR.mode).toBe('prediction');
+    const before = s.night.calls.length;
+    s = electionReducer(s, { type: 'NIGHT_TICK', at: at('2026-11-03T21:30:00-05:00') });
+    expect(s.night.calls.length).toBeGreaterThan(before);
+    expect(s.flash).not.toBeNull();
+    expect(s.announcement).toMatch(/called/);
+    expect(s.night.feedAsOf).toBe(new Date(at('2026-11-03T21:30:00-05:00')).toISOString());
+  });
+
+  it('scrubbing back reopens the polls and trims the log', () => {
+    let s = nightState('2026-11-03T23:30:00-05:00');
+    expect(s.ballot.senate.OR.mode).toBe('results');
+    const late = s.night.calls.length;
+    s = electionReducer(s, { type: 'NIGHT_TICK', at: at('2026-11-03T19:30:00-05:00') });
+    expect(s.ballot.senate.OR.mode).toBe('prediction');
+    expect(s.ballot.senate.OR.results).toBeUndefined();
+    expect(s.night.calls.length).toBeLessThan(late);
+    expect(s.night.calls.every((c) => c.at <= at('2026-11-03T19:30:00-05:00'))).toBe(true);
+  });
+
+  it('marks the provider outage on the feed', () => {
+    const s = nightState('2026-11-03T22:20:00-05:00');
+    expect(s.night.delayed).toBe(true);
+    expect(s.night.feedAsOf).toBe(new Date(at('2026-11-03T22:10:00-05:00')).toISOString());
+  });
+
+  it('ignores the manual simulator while the clock is engaged', () => {
+    const s = nightState('2026-11-03T21:00:00-05:00');
+    expect(electionReducer(s, { type: 'CALL_RACE', stateId: 'OR' })).toBe(s);
+    expect(electionReducer(s, { type: 'SET_GLOBAL_MODE', mode: 'prediction' })).toBe(s);
+    expect(electionReducer(s, { type: 'CUTOVER_STATE', stateId: 'OR' })).toBe(s);
+  });
+
+  it('leaving the night puts every race back to prediction and clears the clock', () => {
+    let s = nightState('2026-11-03T23:30:00-05:00');
+    s = electionReducer(s, { type: 'NIGHT_STOP' });
+    expect(s.night.at).toBeNull();
+    expect(s.night.calls).toHaveLength(0);
+    for (const chamber of ['senate', 'house', 'governor'] as const) {
+      expect(Object.values(s.ballot[chamber]).every((r) => r.mode === 'prediction' && !r.results)).toBe(true);
+    }
+    // And the manual simulator is back in charge.
+    expect(electionReducer(s, { type: 'CUTOVER_STATE', stateId: 'GA' }).ballot.senate.GA.mode).toBe('results');
+  });
+
+  it('play from off starts at 6 PM; reset clears the night', () => {
+    let s = electionReducer(initialElectionState(), { type: 'NIGHT_PLAY' });
+    expect(s.night.playing).toBe(true);
+    expect(s.night.at).toBe(at('2026-11-03T18:00:00-05:00'));
+    s = electionReducer(s, { type: 'RESET' });
+    expect(s.night.at).toBeNull();
+  });
+});

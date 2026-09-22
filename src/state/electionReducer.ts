@@ -1,6 +1,14 @@
 import type { Ballot, Chamber, Mode, Party, RaceStatus, StateRace } from '../data/types';
 import { PARTY_LABEL, readFor } from '../data/encoding';
-import { trueLeaderOf } from '../data/night';
+import {
+  NIGHT_END_MS,
+  NIGHT_START_MS,
+  feedAt,
+  nightEvents,
+  snapshotAt,
+  trueLeaderOf,
+  type Call,
+} from '../data/night';
 import { buildBallot } from '../data/mockRaces';
 import { DEFAULT_RESULTS_PROVIDER, DEFAULT_SOURCE_ID, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
@@ -32,7 +40,31 @@ export interface ElectionState {
    * never mixed into any aggregate (see summarize()).
    */
   trust: TrustPicks;
+  /**
+   * ELECTION NIGHT (Sep 2026): the simulated clock. `at` is the moment of
+   * the night the map shows (null = the clock is off and the map is
+   * pre-election); the ballot is always the night's snapshot at `at`.
+   * While the clock is engaged the manual simulator actions are ignored —
+   * the night is one function of the clock, not a mix of the two.
+   */
+  night: NightState;
 }
+
+export type NightSpeed = 1 | 5 | 20;
+
+export interface NightState {
+  at: number | null;
+  playing: boolean;
+  speed: NightSpeed;
+  /** The provider's last published batch, ISO; null before the night. */
+  feedAsOf: string | null;
+  /** True inside the provider's outage: nothing new is landing. */
+  delayed: boolean;
+  /** Every call published so far, oldest first. */
+  calls: Call[];
+}
+
+export const NIGHT_OFF: NightState = { at: null, playing: false, speed: 5, feedAsOf: null, delayed: false, calls: [] };
 
 export type ElectionAction =
   | { type: 'SELECT'; stateId: string | null }
@@ -51,6 +83,11 @@ export type ElectionAction =
   | { type: 'STAGGER_DONE' }
   | { type: 'SET_TRUST'; stateId: string; sourceId: string }
   | { type: 'CLEAR_TRUST'; stateId: string }
+  | { type: 'NIGHT_TICK'; at: number }
+  | { type: 'NIGHT_PLAY' }
+  | { type: 'NIGHT_PAUSE' }
+  | { type: 'NIGHT_SPEED'; speed: NightSpeed }
+  | { type: 'NIGHT_STOP' }
   | { type: 'RESET' };
 
 export const CUTOVER_BANNER = 'Live results have replaced predictions.';
@@ -69,8 +106,18 @@ export function initialElectionState(): ElectionState {
     flash: null,
     staggering: false,
     trust: loadTrust(),
+    night: NIGHT_OFF,
   };
 }
+
+/** The simulator's manual actions have no say while the clock runs the night. */
+const MANUAL: ReadonlySet<ElectionAction['type']> = new Set([
+  'SET_GLOBAL_MODE',
+  'CUTOVER_STATE',
+  'SET_STATUS',
+  'SET_REPORTING',
+  'CALL_RACE',
+]);
 
 const STATE_NAMES: Record<string, string> = Object.fromEntries(
   STATE_SHAPES.map((s) => [s.id, s.name])
@@ -143,7 +190,77 @@ function mapEveryRace(ballot: Ballot, fn: (race: StateRace) => StateRace): Ballo
 }
 
 export function electionReducer(state: ElectionState, action: ElectionAction): ElectionState {
+  if (state.night.at !== null && MANUAL.has(action.type)) return state;
   switch (action.type) {
+    case 'NIGHT_TICK': {
+      const at = Math.max(NIGHT_START_MS, Math.min(NIGHT_END_MS, action.at));
+      const prev = state.night.at ?? NIGHT_START_MS;
+      if (state.night.at !== null && at === prev) return state;
+      const ballot = snapshotAt(state.ballot, at);
+      const feed = feedAt(at);
+      let calls = state.night.calls;
+      let announcement = state.announcement;
+      let banner = state.banner;
+      let staggering = state.staggering;
+      let flash = state.flash;
+      if (at > prev) {
+        const events = nightEvents(state.ballot, prev, at);
+        if (events.calls.length) {
+          calls = [...calls, ...events.calls];
+          const last = [...events.calls].reverse().find((c) => c.chamber === state.chamber);
+          if (last) flash = { stateId: last.stateId, nonce: (state.flash?.nonce ?? 0) + 1 };
+          const said = events.calls
+            .slice(-3)
+            .map((c) => `${nameOf(c.stateId)} ${CHAMBER_LABEL[c.chamber]} for ${PARTY_LABEL[c.leader]}`)
+            .join(', ');
+          announcement = `${events.calls.length === 1 ? 'Race called' : `${events.calls.length} races called`}: ${said}.`;
+        } else if (events.cutovers.length) {
+          announcement = `${events.cutovers.map(nameOf).join(', ')}: polls closed, live results replacing predictions.`;
+        }
+        if (events.cutovers.length) {
+          const firstCutover = CHAMBERS.every((c) =>
+            Object.values(state.ballot[c]).every((r) => r.mode === 'prediction')
+          );
+          if (firstCutover) banner = CUTOVER_BANNER;
+          // A wave of closings recolours the map as one sweep, not a scatter.
+          if (events.cutovers.length >= 4) staggering = true;
+        }
+      } else {
+        // Scrubbing back: the log is the night up to here, nothing more.
+        calls = calls.filter((c) => c.at <= at);
+      }
+      return {
+        ...state,
+        ballot,
+        flash,
+        banner,
+        staggering,
+        announcement,
+        night: { ...state.night, at, feedAsOf: feed.asOf, delayed: feed.delayed, calls },
+      };
+    }
+
+    case 'NIGHT_PLAY':
+      if (state.night.at === null) return electionReducer({ ...state, night: { ...state.night, playing: true } }, { type: 'NIGHT_TICK', at: NIGHT_START_MS });
+      return state.night.playing ? state : { ...state, night: { ...state.night, playing: true } };
+
+    case 'NIGHT_PAUSE':
+      return state.night.playing ? { ...state, night: { ...state.night, playing: false } } : state;
+
+    case 'NIGHT_SPEED':
+      return { ...state, night: { ...state.night, speed: action.speed } };
+
+    case 'NIGHT_STOP':
+      if (state.night.at === null) return state;
+      return {
+        ...state,
+        ballot: snapshotAt(state.ballot, NIGHT_START_MS - 1),
+        banner: null,
+        staggering: true,
+        announcement: 'Showing pre-election predictions.',
+        night: { ...NIGHT_OFF, speed: state.night.speed },
+      };
+
     case 'SELECT':
       return { ...state, selectedId: action.stateId };
 

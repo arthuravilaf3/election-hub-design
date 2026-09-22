@@ -23,6 +23,9 @@ export function DevToolbar({ state, dispatch, onRunPollClosings, open, onToggle 
   const globalMode = Object.values(races).some((r) => r.mode === 'results')
     ? 'results'
     : 'prediction';
+  // The clock runs the night: the manual controls stand down (the reducer
+  // ignores them too), so the two never fight over a race.
+  const clockOn = state.night.at !== null;
 
   const callRandomRace = () => {
     const candidates = Object.values(races).filter(
@@ -50,12 +53,16 @@ export function DevToolbar({ state, dispatch, onRunPollClosings, open, onToggle 
 
   return (
     <section className="dev-toolbar" aria-label="Developer toolbar: simulate election night">
+      {clockOn && (
+        <p className="dev-clock-note">Clock engaged — the night control runs the map. Leave the night to use these.</p>
+      )}
       <div className="dev-group">
         <span className="dev-group-label">Mode</span>
         <div className="dev-row">
           <button
             type="button"
             aria-pressed={globalMode === 'prediction'}
+            disabled={clockOn}
             onClick={() => dispatch({ type: 'SET_GLOBAL_MODE', mode: 'prediction' })}
           >
             Prediction
@@ -63,6 +70,7 @@ export function DevToolbar({ state, dispatch, onRunPollClosings, open, onToggle 
           <button
             type="button"
             aria-pressed={globalMode === 'results'}
+            disabled={clockOn}
             onClick={() => dispatch({ type: 'SET_GLOBAL_MODE', mode: 'results' })}
           >
             Results
@@ -87,14 +95,14 @@ export function DevToolbar({ state, dispatch, onRunPollClosings, open, onToggle 
             ))}
           </select>
           {targetId && target?.mode === 'prediction' ? (
-            <button type="button" onClick={() => dispatch({ type: 'CUTOVER_STATE', stateId: targetId })}>
+            <button type="button" disabled={clockOn} onClick={() => dispatch({ type: 'CUTOVER_STATE', stateId: targetId })}>
               Cut over (close polls)
             </button>
           ) : (
             <>
               <button
                 type="button"
-                disabled={!targetId || results?.status !== 'uncalled'}
+                disabled={clockOn || !targetId || results?.status !== 'uncalled'}
                 onClick={() =>
                   targetId && dispatch({ type: 'SET_STATUS', stateId: targetId, status: 'counting' })
                 }
@@ -103,7 +111,7 @@ export function DevToolbar({ state, dispatch, onRunPollClosings, open, onToggle 
               </button>
               <button
                 type="button"
-                disabled={!targetId || results?.status === 'called'}
+                disabled={clockOn || !targetId || results?.status === 'called'}
                 onClick={() => targetId && dispatch({ type: 'CALL_RACE', stateId: targetId })}
               >
                 Call race
@@ -123,7 +131,7 @@ export function DevToolbar({ state, dispatch, onRunPollClosings, open, onToggle 
           min={0}
           max={100}
           value={results?.reporting ?? 0}
-          disabled={!targetId || !results || results.status === 'called'}
+          disabled={clockOn || !targetId || !results || results.status === 'called'}
           onChange={(e) =>
             targetId &&
             dispatch({ type: 'SET_REPORTING', stateId: targetId, reporting: Number(e.target.value) })
@@ -134,10 +142,10 @@ export function DevToolbar({ state, dispatch, onRunPollClosings, open, onToggle 
       <div className="dev-group">
         <span className="dev-group-label">Night</span>
         <div className="dev-row">
-          <button type="button" onClick={callRandomRace}>
+          <button type="button" disabled={clockOn} onClick={callRandomRace}>
             Call random race
           </button>
-          <button type="button" onClick={onRunPollClosings}>
+          <button type="button" disabled={clockOn} onClick={onRunPollClosings}>
             Run poll closings
           </button>
           {/* Exercises the "must not silently go stale" disclosure. */}

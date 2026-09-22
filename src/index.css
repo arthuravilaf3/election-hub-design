@@ -5342,3 +5342,217 @@ body {
   }
 }
 
+
+/* ==================== THE NIGHT CLOCK (election night, Sep 2026) ==================== */
+
+/* Bottom-left, above the ticker, opposite the option switch: the same
+   glass as the other floating chrome. */
+.night-clock {
+  position: fixed;
+  left: 24px;
+  bottom: calc(var(--ticker-h) + 40px);
+  z-index: 640;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 360px;
+  padding: 12px 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.night-clock--off {
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.night-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-dim) 85%, transparent);
+  backdrop-filter: blur(10px);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease-out;
+}
+
+.night-start:hover {
+  background: var(--surface-2);
+}
+
+.night-start-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--live);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+.night-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.night-play {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--surface-dim);
+  cursor: pointer;
+}
+
+.night-time {
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.night-delayed {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--warning);
+  white-space: nowrap;
+}
+
+.night-speed {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.night-speed-option {
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-subtlest);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.night-speed-option:hover {
+  color: var(--ink);
+}
+
+.night-speed-option.is-selected {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.night-leave {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-subtlest);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.night-leave:hover {
+  color: var(--ink);
+}
+
+/* The scrubber: a thin track with the provider's outage marked in warning
+   hatch between --delay-from and --delay-to. */
+.night-range {
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.night-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent var(--delay-from),
+      color-mix(in srgb, var(--warning) 70%, transparent) var(--delay-from),
+      color-mix(in srgb, var(--warning) 70%, transparent) var(--delay-to),
+      transparent var(--delay-to)
+    ),
+    var(--border);
+}
+
+.night-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 999px;
+  background: var(--ink);
+  border: 2px solid var(--surface-dim);
+}
+
+.night-range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.night-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  border: 2px solid var(--surface-dim);
+}
+
+.night-range:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.dev-clock-note {
+  width: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--warning);
+}
+
+@media (max-width: 700px) {
+  .night-clock {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: calc(var(--ticker-h) + 150px);
+  }
+
+  .night-leave {
+    display: none;
+  }
+}

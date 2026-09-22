@@ -27,6 +27,8 @@ import { SiteFooter } from './components/SiteFooter';
 import { PolymarketTicker } from './components/PolymarketTicker';
 import { RacePanel } from './components/RacePanel';
 import { useElectionData } from './state/useElectionData';
+import { useNightClock } from './state/useNightClock';
+import { NightClock } from './components/NightClock';
 import { activeRaces } from './state/electionReducer';
 import { emitMapEvent, useMessageApi } from './hooks/useMessageApi';
 import { isLive } from './data/encoding';
@@ -68,6 +70,8 @@ export default function App() {
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
+  // Election night runs on the clock, in the phases that have results.
+  useNightClock(state, dispatch, features.results);
 
   const races = activeRaces(state);
   const anyLive = Object.values(races).some(isLive);
@@ -343,6 +347,7 @@ export default function App() {
           />
         )}
         <OptionSwitcher extras={extras} onExtras={onExtras} shape={shape} onShape={onShape} />
+        {features.results && <NightClock night={state.night} dispatch={dispatch} />}
         <ThemeToggle />
       </div>
 

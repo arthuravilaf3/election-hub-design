@@ -343,3 +343,25 @@ export function nightEvents(ballot: Ballot, prevMs: number, tMs: number): { call
   calls.sort((a, b) => a.at - b.at);
   return { calls, cutovers: [...cutovers] };
 }
+
+/** Minutes into the night (0 = 6 PM) <-> ms, for the scrubber. */
+export const NIGHT_MINUTES = (NIGHT_END_MS - NIGHT_START_MS) / MINUTE;
+export const minuteOf = (ms: number) => Math.round((ms - NIGHT_START_MS) / MINUTE);
+export const msOfMinute = (m: number) => NIGHT_START_MS + Math.max(0, Math.min(NIGHT_MINUTES, m)) * MINUTE;
+
+/**
+ * `?night=21:40` pins the clock (for a shared link, for the lock harness).
+ * Hours before 6 are the small hours of the 4th. Null when absent or off.
+ */
+export function parseNightParam(value: string | null): number | null {
+  if (!value) return null;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return null;
+  const day = h < 6 ? '04' : '03';
+  const ms = new Date(`2026-11-${day}T${String(h).padStart(2, '0')}:${m[2]}:00-05:00`).getTime();
+  if (ms < NIGHT_START_MS || ms > NIGHT_END_MS) return null;
+  return ms;
+}

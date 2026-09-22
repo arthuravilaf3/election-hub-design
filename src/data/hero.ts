@@ -12,6 +12,7 @@
  */
 import { leanOf, readFor } from './encoding';
 import { CURRENT_SEATS } from './summary';
+import { formatDateET } from './time';
 import type { Chamber, StateRace } from './types';
 
 const CHAMBER_PHRASE: Record<Chamber, string> = {
@@ -85,23 +86,8 @@ export function forecastFor(
   const current = CURRENT_SEATS[chamber];
   const demHeldUp = Math.round((seatsUp * current.dem) / current.total);
   const projectedDem = Math.max(0, Math.min(current.total, current.dem - demHeldUp + demLeans + tossups / 2));
-  /* Date AND time, in the comp's form: "Sep 1, 2026 9:00 AM ET". Pinned to
-     Eastern — the election clock everyone quotes — and labelled as such, so
-     a reader elsewhere is not left guessing whose 9:00 that is. */
-  const updated = newest
-    ? new Date(newest)
-        .toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          timeZone: 'America/New_York',
-        })
-        // "Sep 1, 2026, 9:00 AM" -> "Sep 1, 2026 9:00 AM": only the comma
-        // before the time goes.
-        .replace(/, (\d{1,2}:)/, ' $1') + ' ET'
-    : '';
+  // Date and time in the comp's form, pinned to Eastern (data/time.ts).
+  const updated = newest ? formatDateET(newest) : '';
 
   return {
     title,
