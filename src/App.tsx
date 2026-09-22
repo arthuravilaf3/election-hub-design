@@ -15,11 +15,10 @@ import { ChapterRail } from './components/ChapterRail';
 import { OptionSwitcher } from './components/OptionSwitcher';
 import {
   IS_CREATIVE,
-  IS_OPTION3,
+  IS_STILL_ARC,
   readDotsShape,
   readExtras,
   storeDotsShape,
-  storeExtras,
   type DotsShape,
   type Extras,
 } from './data/edition';
@@ -59,12 +58,8 @@ export default function App() {
   const [phase] = useState<Phase>(initialPhase);
   /* Option 2's extras: the Capitol strip and The Nation Speaks, off unless
      switched on (see OptionSwitcher). */
-  const [extras, setExtras] = useState<Extras>(readExtras);
-  const onExtras = (next: Extras) => {
-    setExtras(next);
-    storeExtras(next);
-  };
-  const isOption2 = IS_CREATIVE && !IS_OPTION3;
+  const [extras] = useState<Extras>(readExtras);
+  const isCreativeFull = IS_CREATIVE && !IS_STILL_ARC;
   /* Option 1's dots shape (grid, arc, semi-arc), from the same switch. */
   const [shape, setShape] = useState<DotsShape>(readDotsShape);
   const onShape = (next: DotsShape) => {
@@ -291,7 +286,7 @@ export default function App() {
           {/* OPTION 3: the still arc between the seat line and the map —
               the chamber's seats, coloured by the same projection, answering
               the pointer the way the dots did, on no scroll. */}
-          {IS_OPTION3 && <Hemicycle forecast={painted} chamber={state.chamber} still />}
+          {IS_STILL_ARC && <Hemicycle forecast={painted} chamber={state.chamber} still />}
 
           <MapCard
             races={races}
@@ -339,32 +334,32 @@ export default function App() {
 
           {/* CREATIVE EDITION (option 2): House Colors, the Capitol in the
               chamber's split, right after the map (moved Sep 18 2026). */}
-          {isOption2 && extras.capitol && <HouseColors forecast={painted} />}
+          {isCreativeFull && extras.capitol && <HouseColors forecast={painted} />}
 
           {/* R3 + R53: every seat of the chamber in a hemicycle, and the
               projected Republican count, under the map. The Race/Source
               pills stay pinned through here (the gate watches the section). */}
-          {IS_CREATIVE && !IS_OPTION3 && (
+          {IS_CREATIVE && !IS_STILL_ARC && (
             <Hemicycle forecast={painted} chamber={state.chamber} />
           )}
 
           {/* OPTION 3: the banner belongs to the section, so the pinned
               timer and controls stay through it (the gate watches the
               section). */}
-          {IS_OPTION3 && <PlanBanner />}
+          {IS_STILL_ARC && <PlanBanner />}
           </section>
 
           {/* CREATIVE EDITION (option 2): the Cosmos Waveform and "The
               Nation Speaks", after the arc and before the feed (Sep 18 2026). */}
-          {isOption2 && extras.nation && <NationSpeaks />}
+          {isCreativeFull && extras.nation && <NationSpeaks />}
 
           {/* OPTIONS 2 and 3: the chapter rail down the left edge. */}
-          {IS_OPTION3 && <ChapterRail option={3} />}
-          {isOption2 && <ChapterRail option={2} />}
+          {IS_STILL_ARC && <ChapterRail option={2} />}
+          {isCreativeFull && <ChapterRail option={3} />}
 
           {/* The boundary between map and feed is now editorial, not chromatic:
               the plan banner sits where the surface-step used to be. */}
-          {!IS_OPTION3 && <PlanBanner />}
+          {!IS_STILL_ARC && <PlanBanner />}
 
           <CoverageFeed calls={feedCalls} />
 
@@ -384,7 +379,7 @@ export default function App() {
             onToggle={setDevOpen}
           />
         )}
-        <OptionSwitcher extras={extras} onExtras={onExtras} shape={shape} onShape={onShape} />
+        <OptionSwitcher shape={shape} onShape={onShape} />
         {features.results && <NightClock night={state.night} dispatch={dispatch} />}
         <ThemeToggle />
       </div>

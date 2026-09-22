@@ -16,7 +16,7 @@
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import { Countdown } from './Countdown';
-import { IS_OPTION3, RACE_SEGMENTS } from '../data/edition';
+import { IS_STILL_ARC, RACE_SEGMENTS } from '../data/edition';
 import { SOURCES, sourceKind, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 import type { Chamber } from '../data/types';
@@ -254,14 +254,14 @@ export function MapSelectors({
      the row slides down into its place. */
   const [scrolled, setScrolled] = useState(() => typeof window !== 'undefined' && window.scrollY > 0);
   useEffect(() => {
-    if (!IS_OPTION3) return;
+    if (!IS_STILL_ARC) return;
     const onScroll = () => setScrolled(window.scrollY > 0);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (IS_OPTION3) {
+  if (IS_STILL_ARC) {
     /* OPTION 3 (Sep 21 2026, Figma 11589:227618): the Election Day
        clock in a capsule above the controls, the three pinned together —
        the race as a segmented control, the source as a chip that opens

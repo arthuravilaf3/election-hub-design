@@ -20,7 +20,7 @@ import { INTRO_AT, Letters, introDelay } from './Intro';
 import { Countdown } from './Countdown';
 import { GameCallout } from './GameCallout';
 import { asset } from '../data/assets';
-import { IS_CREATIVE, IS_OPTION3, type DotsShape } from '../data/edition';
+import { IS_CREATIVE, IS_STILL_ARC, type DotsShape } from '../data/edition';
 import { CURRENT_SEATS } from '../data/summary';
 import polymarketLogo from '../images/polymarketlogo.png';
 import type { ForecastData, ResultsData } from '../data/hero';
@@ -61,7 +61,7 @@ export function RaceHeader({
 
   return (
     <>
-      <header className={`hub-header${IS_OPTION3 ? ' hub-header--o3' : ''}`}>
+      <header className={`hub-header${IS_STILL_ARC ? ' hub-header--o3' : ''}`}>
         <div className="hub-brand">
           <h1 className="hub-title">
             {/* Entrance: the letters resolve one by one out of a blur. */}
@@ -83,7 +83,7 @@ export function RaceHeader({
             {/* Freshness of the read lives here, after the sponsor (decided
                 Sep 2026 over three other placements). Option 3 moves it
                 under the headline (the comp's hero). */}
-            {!IS_OPTION3 && (forecast.updated || resultsMode) && (
+            {!IS_STILL_ARC && (forecast.updated || resultsMode) && (
               <>
                 <span className="hub-dot" aria-hidden="true">
                   •
@@ -126,15 +126,15 @@ export function RaceHeader({
           {/* The countdown sits above the headline and OUTSIDE the keyed
               block, so a race or source switch leaves it where it is. In
               option 3 it lives with the map's controls instead. */}
-          {!IS_OPTION3 && !results && <Countdown compact />}
-          {!IS_OPTION3 && results && (
+          {!IS_STILL_ARC && !results && <Countdown compact />}
+          {!IS_STILL_ARC && results && (
             <p className={`dots-updated dots-updated--night${results.delayed ? ' is-delayed' : ''}`}>{updatedLine}</p>
           )}
           <div className="dots-copy" key={headline}>
             <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
               {headline}
             </h2>
-            {IS_OPTION3 && (forecast.updated || resultsMode) && (
+            {IS_STILL_ARC && (forecast.updated || resultsMode) && (
               <p className="dots-updated intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
                 {updatedLine}
               </p>
@@ -220,7 +220,7 @@ function SeatLine({
       <div className="seatline-ends">
         <span className="seatline-end seatline-end--dem">
           <b className="seatline-big">{pd}</b>
-          {IS_OPTION3 ? (
+          {IS_STILL_ARC ? (
             <abbr className="seatline-label" title="Democrats">
               D
             </abbr>
@@ -232,7 +232,7 @@ function SeatLine({
           {majority} to win
         </span>
         <span className="seatline-end seatline-end--rep">
-          {IS_OPTION3 ? (
+          {IS_STILL_ARC ? (
             <>
               <b className="seatline-big">{pr}</b>
               <abbr className="seatline-label" title="Republicans">
@@ -264,13 +264,13 @@ function SeatLine({
         {results ? (
           <>
             <span>{results.calledDem} called</span>
-            {IS_OPTION3 && <span className="seatline-toss">{results.open} uncalled</span>}
+            {IS_STILL_ARC && <span className="seatline-toss">{results.open} uncalled</span>}
             <span>{results.calledRep} called</span>
           </>
         ) : (
           <>
             <span>{cur.dem} current</span>
-            {IS_OPTION3 && <span className="seatline-toss">Toss Ups: {toss}</span>}
+            {IS_STILL_ARC && <span className="seatline-toss">Toss Ups: {toss}</span>}
             <span>{cur.rep} current</span>
           </>
         )}

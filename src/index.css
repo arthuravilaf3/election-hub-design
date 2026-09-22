@@ -4724,37 +4724,37 @@ body {
 /* ==================== OPTION 3 (Sep 21 2026, Figma 11589:227618) ====================
    The still-arc cut. Everything here is either a class only option 3 renders
    (the controls block, the rail, the switch) or a shared rule re-set under
-   [data-option='3'], which data/edition.ts stamps on <html>. */
+   [data-option='2'], which data/edition.ts stamps on <html>. */
 
 /* The masthead: the name at 40px with its '26 mark, the arc mark 251 × 97. */
-[data-option='3'] .hub-title {
+[data-option='2'] .hub-title {
   font-size: 40px;
 }
 
-[data-option='3'] .hub-mark {
+[data-option='2'] .hub-mark {
   width: 56px;
   height: 48px;
 }
 
-[data-option='3'] .hub-rightplace {
+[data-option='2'] .hub-rightplace {
   width: 251px;
   height: 97px;
 }
 
 /* The hero on the comp's 1100px rail: headline Regular 52 at 120%, the
    freshness under it, then the seat line. */
-[data-option='3'] .dots.dots--creative {
+[data-option='2'] .dots.dots--creative {
   gap: 32px;
   width: 100%;
   max-width: 1100px;
   margin-inline: auto;
 }
 
-[data-option='3'] .dots--creative .dots-copy {
+[data-option='2'] .dots--creative .dots-copy {
   gap: 8px;
 }
 
-[data-option='3'] .dots--creative .dots-title {
+[data-option='2'] .dots--creative .dots-title {
   line-height: 1.2;
   font-weight: 400;
 }
@@ -4768,18 +4768,18 @@ body {
 
 /* "203 D": the figure and the party's letter in one weight and size
    (Regular 24, −0.68px), both in ink; "Toss Ups: N" between the currents. */
-[data-option='3'] .seatline-end {
+[data-option='2'] .seatline-end {
   gap: 6px;
 }
 
-[data-option='3'] .seatline-big {
+[data-option='2'] .seatline-big {
   font-size: 24px;
   line-height: 34px;
   font-weight: 400;
   letter-spacing: -0.68px;
 }
 
-[data-option='3'] .seatline-label {
+[data-option='2'] .seatline-label {
   font-size: 24px;
   line-height: 34px;
   font-weight: 400;
@@ -4788,15 +4788,15 @@ body {
   color: var(--ink);
 }
 
-[data-option='3'] .seatline-bar {
+[data-option='2'] .seatline-bar {
   gap: 4px;
 }
 
-[data-option='3'] .seatline-run {
+[data-option='2'] .seatline-run {
   border-radius: 200px;
 }
 
-[data-option='3'] .seatline-current {
+[data-option='2'] .seatline-current {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   margin-top: 8px;
@@ -4805,17 +4805,17 @@ body {
   color: var(--ink-subtle);
 }
 
-[data-option='3'] .seatline-current > :last-child {
+[data-option='2'] .seatline-current > :last-child {
   text-align: right;
 }
 
 /* The map to the rail's edges with a 16px corner; the banner on the 1100
    rail, inside the section so the pinned controls stay through it. */
-[data-option='3'] .map-card {
+[data-option='2'] .map-card {
   border-radius: 16px;
 }
 
-[data-option='3'] .map-section .plan-banner {
+[data-option='2'] .map-section .plan-banner {
   width: 100%;
   max-width: 1100px;
   margin-inline: auto;
@@ -5014,7 +5014,7 @@ body {
   }
 
   /* The headline wraps on a phone; the comp's one line is a desktop fact. */
-  [data-option='3'] .dots.dots--creative .dots-title {
+  [data-option='2'] .dots.dots--creative .dots-title {
     white-space: normal;
     text-wrap: balance;
   }
@@ -5151,7 +5151,7 @@ body {
 
 /* Both: the headline in Regular. */
 [data-option='1'] .dots-title,
-[data-option='2'] .dots-title {
+[data-option='3'] .dots-title {
   font-weight: 400;
 }
 
@@ -5193,7 +5193,7 @@ body {
 }
 
 [data-option='1'] .countdown-caption,
-[data-option='2'] .countdown-caption {
+[data-option='3'] .countdown-caption {
   display: none;
 }
 
@@ -5214,15 +5214,15 @@ body {
 }
 
 /* Option 2: no '26 mark, the name at 40px, the arc mark twice the size. */
-[data-option='2'] .hub-mark {
+[data-option='3'] .hub-mark {
   display: none;
 }
 
-[data-option='2'] .hub-title {
+[data-option='3'] .hub-title {
   font-size: 40px;
 }
 
-[data-option='2'] .hub-rightplace {
+[data-option='3'] .hub-rightplace {
   width: 450px;
   height: 220px;
 }
@@ -5308,7 +5308,7 @@ body {
 }
 
 @media (max-width: 700px) {
-  [data-option='2'] .hub-rightplace {
+  [data-option='3'] .hub-rightplace {
     width: 300px;
     height: 147px;
   }

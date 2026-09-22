@@ -7,22 +7,23 @@
 import { useEffect, useState } from 'react';
 import { track } from '../data/analytics';
 
-/* Option 3 follows the comp's order and targets (Map is the hero, Forecast
-   the card); option 2 sends Forecast to the arc on scroll. */
+/* The still-arc cut (2) follows the comp's order and targets (Map is the
+   hero, Forecast the card); the full creative edition (3) sends Forecast to
+   the arc on scroll. */
 const MARKS_BY_OPTION: Record<2 | 3, Array<{ id: string; label: string; sel: string }>> = {
-  3: [
+  2: [
     { id: 'map', label: 'Map', sel: '.dots--creative' },
     { id: 'forecast', label: 'Forecast', sel: '.map-card' },
     { id: 'coverage', label: 'Coverage', sel: '.feed-section' },
   ],
-  2: [
+  3: [
     { id: 'map', label: 'Map', sel: '.map-card' },
     { id: 'forecast', label: 'Forecast', sel: '.r3-stage' },
     { id: 'coverage', label: 'Coverage', sel: '.feed-section' },
   ],
 };
 
-export function ChapterRail({ option = 3 }: { option?: 2 | 3 }) {
+export function ChapterRail({ option = 2 }: { option?: 2 | 3 }) {
   const MARKS = MARKS_BY_OPTION[option];
   const [active, setActive] = useState(0);
 
