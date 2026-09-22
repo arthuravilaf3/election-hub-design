@@ -742,6 +742,10 @@
 .home-section {
   margin-top: 48px;
 }
+/* The band already closed the takeover with its own space under it. */
+.home-section:first-child {
+  margin-top: 0;
+}
 .home-section-title {
   font-size: 17px;
   font-weight: 700;
@@ -845,4 +849,14 @@
   .en-live-dot {
     animation: none;
   }
+}
+
+/* Prototype chrome, not design. The hub parks its night clock bottom-LEFT,
+   above the Polymarket ticker; on this page the takeover is at the top, so
+   the clock landed on the map. Moved to the free corner here only — the
+   component and the hub's own placement are untouched. */
+:root[data-page='home'] .night-clock {
+  left: auto;
+  right: 24px;
+  bottom: 24px;
 }
