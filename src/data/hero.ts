@@ -191,3 +191,25 @@ export function resultsFor(
     control,
   };
 }
+
+/**
+ * The results split in the forecast's shape, for the creative pieces that
+ * paint a three-way dem / open / rep split (the arc, the Capitol strip):
+ * a party's side is what it has plus what it leads, the gap is the races
+ * too early to call. Counts, not projections — the pieces just repaint.
+ */
+export function resultsAsForecast(results: ResultsData, base: ForecastData): ForecastData {
+  const total = results.total;
+  const gap = Math.max(1.4, (results.early / total) * 100);
+  const demSide = ((results.demTotal + results.leadingDem) / total) * 100;
+  return {
+    ...base,
+    headline: results.headline,
+    title: results.headline,
+    emphasis: undefined,
+    updated: results.updatedLine,
+    tossups: results.early,
+    demShare: demSide + gap / 2,
+    tossupShare: gap,
+  };
+}

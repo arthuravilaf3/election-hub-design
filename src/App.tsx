@@ -36,7 +36,7 @@ import { resultsLabel } from './data/sources';
 import { track } from './data/analytics';
 import { picksForChamber } from './data/trust';
 import { featuresFor, initialPhase, type Phase } from './data/phases';
-import { forecastFor, resultsFor } from './data/hero';
+import { forecastFor, resultsAsForecast, resultsFor } from './data/hero';
 import { DEFAULT_RESULTS_PROVIDER } from './data/sources';
 import { summarize } from './data/summary';
 import { HOUSE_DISTRICT_COUNT } from './data/mockRaces';
@@ -100,6 +100,9 @@ export default function App() {
         : null,
     [anyResults, summary, state.chamber, state.night.feedAsOf, state.night.delayed, resultsProvider]
   );
+  /* What the creative pieces (the arcs, the Capitol strip) paint: the
+     projection before the polls close, the feed's counts after. */
+  const painted = results ? resultsAsForecast(results, forecast) : forecast;
   const called = summary.calledDem + summary.calledRep;
 
   const zoomedRace = state.zoomedId ? races[state.zoomedId] : undefined;
@@ -274,7 +277,7 @@ export default function App() {
           {/* OPTION 3: the still arc between the seat line and the map —
               the chamber's seats, coloured by the same projection, answering
               the pointer the way the dots did, on no scroll. */}
-          {IS_OPTION3 && <Hemicycle forecast={forecast} chamber={state.chamber} still />}
+          {IS_OPTION3 && <Hemicycle forecast={painted} chamber={state.chamber} still />}
 
           <MapCard
             races={races}
@@ -322,13 +325,13 @@ export default function App() {
 
           {/* CREATIVE EDITION (option 2): House Colors, the Capitol in the
               chamber's split, right after the map (moved Sep 18 2026). */}
-          {isOption2 && extras.capitol && <HouseColors forecast={forecast} />}
+          {isOption2 && extras.capitol && <HouseColors forecast={painted} />}
 
           {/* R3 + R53: every seat of the chamber in a hemicycle, and the
               projected Republican count, under the map. The Race/Source
               pills stay pinned through here (the gate watches the section). */}
           {IS_CREATIVE && !IS_OPTION3 && (
-            <Hemicycle forecast={forecast} chamber={state.chamber} />
+            <Hemicycle forecast={painted} chamber={state.chamber} />
           )}
 
           {/* OPTION 3: the banner belongs to the section, so the pinned

@@ -1278,6 +1278,17 @@ button,
 .seatline-run--gain-rep { background: var(--rating-safe-rep); }
 .seatline-run--keep-rep { background: var(--rating-likely-rep); }
 
+/* Election night runs: called solid, leading hatched, too early gray. */
+.seatline-run--called-dem { background: var(--dem-5); }
+.seatline-run--lead-dem {
+  background: repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 5px), var(--dem-3);
+}
+.seatline-run--early { background: var(--uncalled); }
+.seatline-run--lead-rep {
+  background: repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 5px), var(--rep-3);
+}
+.seatline-run--called-rep { background: var(--rep-5); }
+
 .seatline-current {
   display: flex;
   justify-content: space-between;

@@ -140,7 +140,7 @@ export function RaceHeader({
               </p>
             )}
           </div>
-          <SeatLine forecast={forecast} chamber={chamber} />
+          <SeatLine forecast={forecast} results={results} chamber={chamber} />
         </section>
       ) : (
       /* Keyed on the RACE only: a race change rebuilds the grid and replays
@@ -169,24 +169,52 @@ const CHAMBER_BODY: Record<Chamber, string> = { house: 'House', senate: 'Senate'
  * each gains under this source, the toss-ups — and the majority marked
  * where it falls. Same projection as the dots and the hemicycle.
  */
-function SeatLine({ forecast, chamber }: { forecast: ForecastData; chamber: Chamber }) {
+function SeatLine({
+  forecast,
+  results,
+  chamber,
+}: {
+  forecast: ForecastData;
+  results: ResultsData | null;
+  chamber: Chamber;
+}) {
   const total = forecast.dem + forecast.rep;
   const gap = forecast.tossupShare;
-  const pd = Math.round((total * Math.max(0, forecast.demShare - gap / 2)) / 100);
-  const toss = Math.round((total * gap) / 100);
-  const pr = Math.max(0, total - pd - toss);
   const cur = CURRENT_SEATS[chamber];
-  const keepD = Math.min(cur.dem, pd);
-  const keepR = Math.min(cur.rep, pr);
   const majority = Math.floor(total / 2) + 1;
   const pct = (n: number) => `${((n / total) * 100).toFixed(2)}%`;
-  const runs: Array<[string, number]> = [
-    ['keep-dem', keepD],
-    ['gain-dem', pd - keepD],
-    ['toss', toss],
-    ['gain-rep', pr - keepR],
-    ['keep-rep', keepR],
-  ];
+  /* Election night: the two ends are seats the party HAS (held + called),
+     the bar runs called-D, leading-D (hatched), too early, leading-R,
+     called-R — the feed's split, a lead never drawn as a result. */
+  let pd: number;
+  let pr: number;
+  let toss: number;
+  let runs: Array<[string, number]>;
+  if (results) {
+    pd = results.demTotal;
+    pr = results.repTotal;
+    toss = Math.max(0, total - pd - pr - results.leadingDem - results.leadingRep);
+    runs = [
+      ['called-dem', pd],
+      ['lead-dem', results.leadingDem],
+      ['early', toss],
+      ['lead-rep', results.leadingRep],
+      ['called-rep', pr],
+    ];
+  } else {
+    pd = Math.round((total * Math.max(0, forecast.demShare - gap / 2)) / 100);
+    toss = Math.round((total * gap) / 100);
+    pr = Math.max(0, total - pd - toss);
+    const keepD = Math.min(cur.dem, pd);
+    const keepR = Math.min(cur.rep, pr);
+    runs = [
+      ['keep-dem', keepD],
+      ['gain-dem', pd - keepD],
+      ['toss', toss],
+      ['gain-rep', pr - keepR],
+      ['keep-rep', keepR],
+    ];
+  }
   return (
     <div className="seatline intro-rise" style={introDelay(INTRO_AT.statement + 120)}>
       <div className="seatline-ends">
@@ -222,16 +250,30 @@ function SeatLine({ forecast, chamber }: { forecast: ForecastData; chamber: Cham
       <div
         className="seatline-bar"
         role="img"
-        aria-label={`Projected: Democrats ${pd}, toss-ups ${toss}, Republicans ${pr} of ${total}; ${majority} to win.`}
+        aria-label={
+          results
+            ? `Seats: Democrats ${pd} (${results.leadingDem} more leading), too early ${toss}, Republicans ${pr} (${results.leadingRep} more leading) of ${total}; ${majority} to win.`
+            : `Projected: Democrats ${pd}, toss-ups ${toss}, Republicans ${pr} of ${total}; ${majority} to win.`
+        }
       >
         {runs.map(([k, n]) => (
           <span key={k} className={`seatline-run seatline-run--${k}`} style={{ width: pct(n) }} />
         ))}
       </div>
       <div className="seatline-current">
-        <span>{cur.dem} current</span>
-        {IS_OPTION3 && <span className="seatline-toss">Toss Ups: {toss}</span>}
-        <span>{cur.rep} current</span>
+        {results ? (
+          <>
+            <span>{results.calledDem} called</span>
+            {IS_OPTION3 && <span className="seatline-toss">{results.open} uncalled</span>}
+            <span>{results.calledRep} called</span>
+          </>
+        ) : (
+          <>
+            <span>{cur.dem} current</span>
+            {IS_OPTION3 && <span className="seatline-toss">Toss Ups: {toss}</span>}
+            <span>{cur.rep} current</span>
+          </>
+        )}
       </div>
     </div>
   );

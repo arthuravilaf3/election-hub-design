@@ -436,26 +436,25 @@
   height: 22px;
   margin-right: 6px;
   border-radius: 50%;
-  background: #4b4b7a;
-  color: #fff;
+  background: #7c6dd6;
+  color: #10101a;
   font-size: 10px;
   font-weight: 400;
   letter-spacing: 0;
   text-indent: 0;
   vertical-align: -6px;
 }
-/* Author colours cycle so the column reads as many voices. Chrome only —
-   never a party hue. */
-.en-msg:nth-child(5n + 1):not(.en-msg--house) .en-avatar {
-  background: #7c6dd6;
-}
-.en-msg:nth-child(5n + 2):not(.en-msg--house) .en-avatar {
+/* The file's four avatar colours, cycling so the column reads as many
+   voices. Chrome only — never a party hue. The initials are set in ink, not
+   the file's white: white on these pastels measures 2.2-4.2:1, and the mark
+   is decorative anyway (aria-hidden, with the author's name beside it). */
+.en-msg:nth-child(4n + 2):not(.en-msg--house) .en-avatar {
   background: #d66d6d;
 }
-.en-msg:nth-child(5n + 3):not(.en-msg--house) .en-avatar {
+.en-msg:nth-child(4n + 3):not(.en-msg--house) .en-avatar {
   background: #37a2a2;
 }
-.en-msg:nth-child(5n + 4):not(.en-msg--house) .en-avatar {
+.en-msg:nth-child(4n + 4):not(.en-msg--house) .en-avatar {
   background: #6db6d6;
 }
 .en-msg-author {
@@ -464,8 +463,10 @@
   color: var(--ink-subtlest);
 }
 .en-msg-reply {
+  align-self: flex-start;
   margin-left: 28px;
   padding: 0;
+  text-align: left;
   border: 0;
   background: none;
   color: var(--ink-subtlest);
@@ -484,6 +485,7 @@
 }
 .en-msg--house .en-avatar {
   background: var(--brand-pressed);
+  color: #fff;
   font-size: 9px;
   font-weight: 700;
 }
