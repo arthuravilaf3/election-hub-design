@@ -497,8 +497,8 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
       L.dots[i].style.transform = `translate(${nx.toFixed(2)}px, ${ny.toFixed(2)}px) scale(${ns.toFixed(3)})`;
       L.dots[i].style.zIndex = ns > 1.02 ? '1' : '';
       // The dots under the hand darken a little with their swell (Arthur,
-      // Sep 22 2026): full swell = 20% darker, easing back with it.
-      L.dots[i].style.filter = ns > 1.005 ? `brightness(${(1 - (0.2 * (ns - 1)) / A).toFixed(3)})` : '';
+      // Sep 22 2026): full swell = 40% darker, easing back with it.
+      L.dots[i].style.filter = ns > 1.005 ? `brightness(${(1 - (0.4 * (ns - 1)) / A).toFixed(3)})` : '';
     }
     if (moving) L.raf = window.requestAnimationFrame(tick);
   };
