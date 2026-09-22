@@ -27,12 +27,13 @@ export function useElectionData() {
     saveTrust(state.trust);
   }, [state.trust]);
 
-  // The cutover banner is non-blocking and auto-dismisses.
+  // The cutover banner is non-blocking and auto-dismisses. A warning (the
+  // feed is late) stays up: it is the state of the map, not a notice.
   useEffect(() => {
-    if (state.banner === null) return;
+    if (state.banner === null || state.bannerTone === 'warning') return;
     const t = window.setTimeout(() => dispatch({ type: 'CLEAR_BANNER' }), 6000);
     return () => window.clearTimeout(t);
-  }, [state.banner]);
+  }, [state.banner, state.bannerTone]);
 
   return { state, dispatch };
 }

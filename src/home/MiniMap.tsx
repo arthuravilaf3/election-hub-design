@@ -11,21 +11,20 @@
  */
 import { fillFor, isCalled, isHatched } from '../data/encoding';
 import { MAP_VIEWBOX, STATE_SHAPES } from '../data/states';
-import type { Chamber, StateRace } from '../data/types';
+import type { StateRace } from '../data/types';
 
 interface MiniMapProps {
   races: Record<string, StateRace>;
-  chamber: Chamber;
   sourceId: string;
 }
 
-export function MiniMap({ races, chamber, sourceId }: MiniMapProps) {
+export function MiniMap({ races, sourceId }: MiniMapProps) {
   return (
-    <svg className="rail-map" viewBox={MAP_VIEWBOX} role="presentation" aria-hidden="true" focusable="false">
+    <svg className="band-map" viewBox={MAP_VIEWBOX} role="presentation" aria-hidden="true" focusable="false">
       <defs>
         {/* Same diagonal hatch as the full map: the non-colour channel for
             "counting", so a leading race can never pass for a called one. */}
-        <pattern id="rail-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <pattern id="band-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <line x1="0" y1="0" x2="0" y2="6" stroke="var(--hatch)" strokeWidth="2" />
         </pattern>
       </defs>
@@ -42,11 +41,10 @@ export function MiniMap({ races, chamber, sourceId }: MiniMapProps) {
               stroke={isCalled(race) ? 'var(--selection)' : 'var(--state-border)'}
               strokeWidth={isCalled(race) ? 1.8 : 1}
             />
-            {isHatched(race) && <path d={shape.d} fill="url(#rail-hatch)" />}
+            {isHatched(race) && <path d={shape.d} fill="url(#band-hatch)" />}
           </g>
         );
       })}
-      <title>{`${chamber} map`}</title>
     </svg>
   );
 }

@@ -13,7 +13,9 @@
  */
 import { MiniMap } from './MiniMap';
 import { HOLDOVER } from './homeContent';
+import { resultsLabel } from '../data/sources';
 import { summarize } from '../data/summary';
+import { formatET } from '../data/time';
 import { HOUSE_DISTRICT_COUNT } from '../data/mockRaces';
 import type { ElectionState } from '../state/electionReducer';
 
@@ -66,13 +68,15 @@ interface ResultsBandProps {
 export function ResultsBand({ state }: ResultsBandProps) {
   const mapRaces = state.ballot[state.chamber];
   const mapSummary = summarize(mapRaces, state.chamber, state.sourceId, HOUSE_DISTRICT_COUNT);
-  const resultsSource =
-    Object.values(mapRaces).find((r) => r.results?.source)?.results?.source ?? 'certified feed';
+  const resultsSource = resultsLabel(
+    Object.values(mapRaces).find((r) => r.results?.providerId)?.results?.providerId ?? ''
+  );
+  const { feedAsOf, delayed } = state.night;
 
   return (
     <section className="results-band" aria-label="Live results">
       <div className="band-map-block">
-        <MiniMap races={mapRaces} chamber={state.chamber} sourceId={state.sourceId} />
+        <MiniMap races={mapRaces} sourceId={state.sourceId} />
         <div className="band-map-side">
           <ul className="band-legend">
             <li>
@@ -110,9 +114,12 @@ export function ResultsBand({ state }: ResultsBandProps) {
             />
           );
         })}
-        <p className="band-source">
-          Calls from {resultsSource}. Seats not on this ballot are a fixture — the hub tracks 29
-          curated House districts, not 435.
+        {/* Freshness is not optional: the band says who called it and when
+            the last batch landed, and says so louder when the feed stalls. */}
+        <p className={`band-source${delayed ? ' band-source--delayed' : ''}`}>
+          {delayed ? 'Results delayed' : `Calls from ${resultsSource}`}
+          {feedAsOf ? ` · updated ${formatET(new Date(feedAsOf).getTime())}` : ''}. Seats not on this
+          ballot are a fixture — the hub tracks 29 curated House districts, not 435.
         </p>
       </div>
     </section>

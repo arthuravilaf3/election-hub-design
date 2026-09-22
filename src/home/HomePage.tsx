@@ -14,55 +14,40 @@
  * map's encoding is identical in both themes, so no result changes with it.
  *
  * The hero carousel and Top Stories are gone by the same round's call: the
- * stream IS the lead on this night, and a second full-width promo right под
+ * stream IS the lead on this night, and a second full-width promo right under
  * it only competed with it. The page runs takeover, then Opinion Board.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { DWNav } from '../components/DWNav';
 import { SiteFooter } from '../components/SiteFooter';
-import { DevToolbar } from '../components/DevToolbar';
+import { NightClock } from '../components/NightClock';
 import { ElectionNight } from './ElectionNight';
 import { EPISODES, HOSTS, OPINION } from './homeContent';
 import { useElectionData } from '../state/useElectionData';
+import { useNightClock } from '../state/useNightClock';
+import { msOfMinute } from '../data/night';
 
-const POLL_CLOSING_INTERVAL_MS = 900;
+/* 9:41 PM ET — the moment the block's header names, and a good one to open
+   on: the east is called, the midwest is counting, the west is still too
+   early. `?night=HH:MM` overrides it (useNightClock reads the param). */
+const OPENS_AT = msOfMinute(3 * 60 + 41);
 
 export function HomePage() {
   const { state, dispatch } = useElectionData();
-  const [devOpen, setDevOpen] = useState(false);
 
-  /* The page opens mid-night: polls have closed, the certified feed is in,
-     and the Senate is the chamber on the map (35 states on the ballot reads
-     as a map; the curated 29 House districts read as scattered dots). */
+  /* The page opens mid-night, on the hub's own simulated clock (night.ts) —
+     the same authored outcome the full map runs on, so the two can never
+     disagree about who has been called. Senate is the chamber on the map: 35
+     states on the ballot read as a map, the curated 29 House districts read
+     as scattered dots. */
+  const started = useRef(false);
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
     dispatch({ type: 'SET_CHAMBER', chamber: 'senate' });
-    dispatch({ type: 'SET_GLOBAL_MODE', mode: 'results' });
-    dispatch({ type: 'CLEAR_BANNER' });
+    dispatch({ type: 'NIGHT_TICK', at: OPENS_AT });
   }, [dispatch]);
-
-  // Same per-state cutover wave the hub's toolbar drives, so the simulator
-  // behaves identically on this page.
-  const pollTimers = useRef<number[]>([]);
-  useEffect(() => () => pollTimers.current.forEach((t) => window.clearTimeout(t)), []);
-  const runPollClosings = () => {
-    pollTimers.current.forEach((t) => window.clearTimeout(t));
-    pollTimers.current = [];
-    const pending = Object.values(state.ballot[state.chamber])
-      .filter((r) => r.mode === 'prediction')
-      .sort((a, b) => (a.cutoverAt ?? '').localeCompare(b.cutoverAt ?? ''));
-    const waves = new Map<string, string[]>();
-    for (const race of pending) {
-      const key = race.cutoverAt ?? 'unknown';
-      waves.set(key, [...(waves.get(key) ?? []), race.id]);
-    }
-    [...waves.values()].forEach((ids, i) => {
-      pollTimers.current.push(
-        window.setTimeout(() => {
-          ids.forEach((stateId) => dispatch({ type: 'CUTOVER_STATE', stateId }));
-        }, i * POLL_CLOSING_INTERVAL_MS)
-      );
-    });
-  };
+  useNightClock(state, dispatch, true);
 
   return (
     <div className="home">
@@ -150,15 +135,9 @@ export function HomePage() {
 
       <SiteFooter />
 
-      {/* Prototype chrome: the hub's own election-night simulator, so calling
-          a race here moves the band exactly as it moves the full map. */}
-      <DevToolbar
-        state={state}
-        dispatch={dispatch}
-        onRunPollClosings={runPollClosings}
-        open={devOpen}
-        onToggle={setDevOpen}
-      />
+      {/* Prototype chrome: the hub's own clock. Playing the night moves the
+          band exactly as it moves the full map — one reducer, one outcome. */}
+      <NightClock night={state.night} dispatch={dispatch} />
     </div>
   );
 }

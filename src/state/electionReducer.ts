@@ -28,6 +28,8 @@ export interface ElectionState {
   zoomedId: string | null;
   /** Non-blocking banner text (cutover notice), null when hidden. */
   banner: string | null;
+  /** Warning = the feed is late; info = a cutover notice. */
+  bannerTone: 'info' | 'warning';
   /** Text for the polite aria-live region (race calls, cutover, switches). */
   announcement: string;
   /** One-shot flash signal; nonce distinguishes repeat flashes of a state. */
@@ -91,6 +93,9 @@ export type ElectionAction =
   | { type: 'RESET' };
 
 export const CUTOVER_BANNER = 'Live results have replaced predictions.';
+/** The provider has gone quiet: the map holds its last count and says so. */
+export const DELAYED_BANNER = 'Results delayed — the provider has not published a new batch. The map holds its last count.';
+export const RESUMED_BANNER = 'Results are updating again.';
 
 const STATUS_ORDER: Record<RaceStatus, number> = { uncalled: 0, counting: 1, called: 2 };
 
@@ -102,6 +107,7 @@ export function initialElectionState(): ElectionState {
     selectedId: null,
     zoomedId: null,
     banner: null,
+    bannerTone: 'info',
     announcement: '',
     flash: null,
     staggering: false,
@@ -201,6 +207,7 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
       let calls = state.night.calls;
       let announcement = state.announcement;
       let banner = state.banner;
+      let bannerTone = state.bannerTone;
       let staggering = state.staggering;
       let flash = state.flash;
       if (at > prev) {
@@ -221,7 +228,10 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
           const firstCutover = CHAMBERS.every((c) =>
             Object.values(state.ballot[c]).every((r) => r.mode === 'prediction')
           );
-          if (firstCutover) banner = CUTOVER_BANNER;
+          if (firstCutover) {
+            banner = CUTOVER_BANNER;
+            bannerTone = 'info';
+          }
           // A wave of closings recolours the map as one sweep, not a scatter.
           if (events.cutovers.length >= 4) staggering = true;
         }
@@ -229,11 +239,23 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
         // Scrubbing back: the log is the night up to here, nothing more.
         calls = calls.filter((c) => c.at <= at);
       }
+      // The outage, both ways: it starts (a warning that stays up until the
+      // feed is back) and it ends (a note that goes on its own).
+      if (feed.delayed && !state.night.delayed) {
+        banner = DELAYED_BANNER;
+        bannerTone = 'warning';
+        announcement = DELAYED_BANNER;
+      } else if (!feed.delayed && state.night.delayed) {
+        banner = RESUMED_BANNER;
+        bannerTone = 'info';
+        announcement = RESUMED_BANNER;
+      }
       return {
         ...state,
         ballot,
         flash,
         banner,
+        bannerTone,
         staggering,
         announcement,
         night: { ...state.night, at, feedAsOf: feed.asOf, delayed: feed.delayed, calls },
@@ -313,6 +335,7 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
         ...state,
         ballot: mapEveryRace(state.ballot, cutoverRace),
         banner: CUTOVER_BANNER,
+        bannerTone: 'info',
         staggering: true,
         announcement: CUTOVER_BANNER,
       };
@@ -329,6 +352,7 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
         ...state,
         ballot: mapStateAcrossChambers(state.ballot, action.stateId, cutoverRace),
         banner: firstCutover ? CUTOVER_BANNER : state.banner,
+        bannerTone: firstCutover ? 'info' : state.bannerTone,
         announcement: `${nameOf(action.stateId)}: polls closed, live results replacing prediction.`,
       };
     }

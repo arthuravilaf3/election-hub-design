@@ -10,6 +10,7 @@ import { fillFor, hasNoRead, readFor } from '../data/encoding';
 import { picksForChamber } from '../data/trust';
 import type { RaceStatus } from '../data/types';
 import { snapshotAt, trueLeaderOf } from '../data/night';
+import { DELAYED_BANNER, RESUMED_BANNER } from './electionReducer';
 
 /** Results mode with the SENATE active, the night at 10 PM ET — a moment
  *  with races in every status (data/night.ts is the only source of results). */
@@ -301,10 +302,17 @@ describe('the night clock', () => {
     expect(s.night.calls.every((c) => c.at <= at('2026-11-03T19:30:00-05:00'))).toBe(true);
   });
 
-  it('marks the provider outage on the feed', () => {
-    const s = nightState('2026-11-03T22:20:00-05:00');
+  it('marks the provider outage on the feed, raises a warning, and clears it when the feed is back', () => {
+    let s = nightState('2026-11-03T22:00:00-05:00');
+    s = electionReducer(s, { type: 'NIGHT_TICK', at: at('2026-11-03T22:20:00-05:00') });
     expect(s.night.delayed).toBe(true);
     expect(s.night.feedAsOf).toBe(new Date(at('2026-11-03T22:10:00-05:00')).toISOString());
+    expect(s.banner).toBe(DELAYED_BANNER);
+    expect(s.bannerTone).toBe('warning');
+    s = electionReducer(s, { type: 'NIGHT_TICK', at: at('2026-11-03T22:40:00-05:00') });
+    expect(s.night.delayed).toBe(false);
+    expect(s.banner).toBe(RESUMED_BANNER);
+    expect(s.bannerTone).toBe('info');
   });
 
   it('ignores the manual simulator while the clock is engaged', () => {

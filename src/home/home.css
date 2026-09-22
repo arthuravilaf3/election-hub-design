@@ -1,12 +1,16 @@
 /*
- * The homepage edition: dailywire.com with the election-night takeover.
+ * The homepage edition: dailywire.com on election night.
  *
- * THEME. The page runs light (the site is a light surface, set in main.tsx).
- * The takeover and the results widget are DW+ dark surfaces sitting on it, so
- * they RE-DECLARE the hub's dark chrome tokens locally instead of inventing
- * colours. The data-viz tokens (party ramps, reporting steps, hatch) are
- * deliberately NOT re-declared where they are theme-independent — the map
- * inside the widget must encode exactly as the full map does.
+ * DARK, END TO END. The site's own home is a light surface; on this night the
+ * page is a DW+ dark one, so nothing here re-declares a theme — every token
+ * resolves to the dark-mode value colors.css already owns, nav and footer
+ * included. Surfaces follow the DW 3.0 file: page on --surface-dim, panels on
+ * --surface, the composer and the house message a step above on --surface-2.
+ *
+ * Measurements for the stream and the chat come from DW 3.0 Source of Truth,
+ * "Desktop - Default" 11123:6768 (Sep 22 2026), scaled to this repo's 64px
+ * rail instead of the file's 32px one — the chat keeps its designed 448px and
+ * the video column takes the rest.
  */
 
 /* No Polymarket ticker on this page, so the body's reserved strip goes. */
@@ -24,7 +28,7 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 0 32px 0 0;
+  padding-right: 32px;
   background: #ffd400;
   color: #121212;
   text-decoration: none;
@@ -57,23 +61,19 @@
   font-weight: 700;
 }
 
-/* The real slot is ~290px tall. Held at 160 here: this page exists to judge
-   what sits UNDER it, and 290px of grey before the first pixel of coverage
+/* The real slot is ~290px tall. Held at 120 here: this page exists to judge
+   what sits UNDER it, and 290px of filler before the first pixel of coverage
    buys nothing. Restore the real height before any layout measurement. */
 .home-ad {
   display: grid;
   place-items: start center;
-  height: 160px;
+  height: 120px;
   padding-top: 14px;
-  background: #efefef;
-  color: #6b6b6b;
+  background: var(--surface);
+  color: var(--ink-subtlest);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1em;
-}
-
-.home-chrome {
-  background: var(--surface-dim);
 }
 
 /* ---------- masthead ---------- */
@@ -87,19 +87,18 @@
   align-items: center;
   gap: 24px;
 }
-.home-date {
+.home-date,
+.home-tagline {
   font-size: 14px;
-  color: var(--ink);
+  color: var(--ink-subtle);
+}
+.home-tagline {
+  justify-self: end;
 }
 .home-wordmark {
   font-size: 32px;
   font-weight: 700;
   letter-spacing: 0.02em;
-}
-.home-tagline {
-  justify-self: end;
-  font-size: 14px;
-  color: var(--ink);
 }
 
 /* ====================================================================== */
@@ -107,21 +106,7 @@
 /* ====================================================================== */
 
 .en {
-  /* The hub's dark chrome, declared locally so every child resolves dark on
-     a light page. Values are the dark-mode originals in colors.css. */
-  --ink: #fafafa;
-  --ink-soft: #a3a3a3;
-  --ink-subtle: #dfdfdf;
-  --ink-subtlest: #8f8f8f;
-  --surface-dim: #0a0909;
-  --surface: #151515;
-  --surface-2: #212121;
-  --surface-hover: #292929;
-  --border: #424242;
-
-  background: var(--surface-dim);
-  color: var(--ink);
-  padding: 22px 0 34px;
+  padding: 8px 0 40px;
 }
 .en-rail {
   max-width: var(--rail);
@@ -135,8 +120,10 @@
   gap: 14px;
   padding-bottom: 16px;
   margin-bottom: 20px;
-  border-bottom: 1px solid #242424;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
 }
+/* LIVE is chrome, so it takes brand — never the party ramp — and brand/600
+   is the step that clears AA with white (the nav's SIGN UP precedent). */
 .en-live {
   display: inline-flex;
   align-items: center;
@@ -194,8 +181,8 @@
 
 .en-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 400px;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 448px;
+  gap: 16px;
   align-items: stretch;
 }
 
@@ -206,7 +193,7 @@
 }
 .en-stage {
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 912 / 502;
   border-radius: 8px;
   overflow: hidden;
   background: var(--surface);
@@ -220,56 +207,35 @@
 .en-mark {
   position: absolute;
   bottom: 18px;
-  font-size: 15px;
+  color: #fff;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #fff;
   text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
   pointer-events: none;
 }
 .en-mark--dw {
-  left: 20px;
+  left: 24px;
+  font-size: 17px;
+}
+.en-mark--dw i {
+  font-style: normal;
+  color: var(--brand);
 }
 .en-mark--show {
-  right: 20px;
-  font-size: 13px;
-  letter-spacing: 0.14em;
+  right: 24px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
 }
 
+/* The file draws a clean frame, so the controls are a small cluster rather
+   than a bar: captions and the persistent player are PRD requirements and
+   have to be reachable, the picture is what the design is about. */
 .en-controls {
   position: absolute;
-  inset: 0 0 auto 0;
+  top: 14px;
+  right: 14px;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px 44px;
-  background: linear-gradient(to bottom, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0));
-}
-.en-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--brand-pressed);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 4px 8px;
-  border-radius: 2px;
-}
-.en-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.en-viewers {
-  font-size: 12px;
-  color: #e6e6e6;
-}
-.en-controls-spacer {
-  flex: 1;
+  gap: 8px;
 }
 .en-ctrl {
   display: grid;
@@ -278,182 +244,256 @@
   height: 30px;
   border: 0;
   border-radius: 4px;
-  background: rgb(255 255 255 / 0.1);
+  background: rgb(0 0 0 / 0.45);
   color: #fff;
   cursor: pointer;
 }
 .en-ctrl:hover {
-  background: rgb(255 255 255 / 0.2);
+  background: rgb(0 0 0 / 0.7);
 }
 
+/* The text block is inset 56px from the video's left edge (file 11123:6772). */
+.en-text {
+  padding: 24px 0 0 56px;
+}
 .en-status {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 7px;
-  margin: 18px 0 0;
+  margin: 0;
   font-size: 14px;
+  line-height: 1.57;
 }
-.en-status .en-status-dot {
+.en-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   background: var(--brand);
 }
+.en-viewers {
+  margin-left: 12px;
+  color: var(--ink-subtlest);
+}
 .en-title {
-  font-size: 30px;
-  line-height: 1.2;
+  max-width: 800px;
+  margin: 8px 0 0;
+  font-size: 24px;
+  line-height: 1.25;
   font-weight: 600;
-  margin: 10px 0 0;
   text-wrap: balance;
 }
 .en-meta {
-  font-size: 15px;
-  color: var(--ink-soft);
-  margin: 12px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.1;
+  color: var(--ink-subtlest);
+}
+.en-meta-link {
+  color: var(--ink);
+  text-decoration: none;
+}
+.en-meta-link:hover {
+  text-decoration: underline;
 }
 .en-dek {
-  font-size: 17px;
-  line-height: 1.55;
-  margin: 18px 0 0;
-  max-width: 64ch;
+  max-width: 800px;
+  margin: 32px 0 0;
+  font-size: 16px;
+  line-height: 1.8;
 }
 .en-share {
   display: flex;
-  gap: 10px;
-  margin-top: 22px;
+  gap: 12px;
+  margin-top: 32px;
 }
 .en-share-btn {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border: 0;
   border-radius: 50%;
-  background: var(--surface-2);
-  color: var(--ink);
   cursor: pointer;
 }
-.en-share-btn:hover {
-  background: var(--surface-hover);
+.en-share-btn--fb {
+  background: #1877f2;
+  color: #fff;
+}
+.en-share-btn--x {
+  background: #000;
+  color: #fff;
+}
+.en-share-btn--send {
+  background: #d9d9d9;
+  color: #1a1a1a;
 }
 
 /* ---------- chat ---------- */
 
+/* The holder is the grid item; the panel is taken out of flow inside it. A
+   stretched grid item still reports its own content height, so a chat with
+   more messages than the stream column is tall would grow the row and hang
+   below the share buttons. Out of flow it contributes nothing, so the row is
+   the stream's and the panel ends exactly where the text does. */
+.en-chat-holder {
+  position: relative;
+  min-width: 0;
+}
 .en-chat {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  justify-content: space-between;
+  overflow: hidden;
+  padding-top: 32px;
   background: var(--surface);
-  border-radius: 10px;
-  padding: 20px 20px 16px;
+  border-radius: 8px;
+}
+.en-chat-top {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  flex: 1;
+  min-height: 0;
+  padding-inline: 24px;
 }
 .en-chat-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
 .en-chat-title {
-  font-size: 22px;
-  font-weight: 600;
   margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 600;
 }
 .en-chat-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: 0;
   background: none;
   color: var(--ink);
-  font-size: 12px;
+  font: inherit;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  line-height: 1.1;
+  letter-spacing: 0.56px;
+  text-transform: uppercase;
   cursor: pointer;
 }
-.en-chat-note {
-  font-size: 12px;
-  color: var(--ink-soft);
-  margin: 6px 0 12px;
+.en-chat-rule {
+  height: 0;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
 }
 .en-chat-scroll {
   flex: 1;
-  min-height: 220px;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.en-chat-scroll::-webkit-scrollbar {
+  display: none;
 }
 .en-chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 0 40px;
 }
 .en-msg {
   display: flex;
-  gap: 12px;
-  padding: 9px 0;
+  flex-direction: column;
+  gap: 4px;
 }
-.en-msg--house {
-  background: var(--surface-2);
-  border-radius: 8px;
-  padding: 12px;
-  margin: 4px 0;
-}
-.en-avatar {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  font-size: 10px;
-  font-weight: 700;
-  color: #fff;
-  background: #4b4b7a;
-}
-/* Stable-enough author colours: the fixture cycles, so the column reads as
-   many voices rather than one. Chrome only — never a party hue. */
-.en-msg:nth-child(6n + 1):not(.en-msg--house) .en-avatar {
-  background: #6d55c9;
-}
-.en-msg:nth-child(6n + 2):not(.en-msg--house) .en-avatar {
-  background: #b5514a;
-}
-.en-msg:nth-child(6n + 3):not(.en-msg--house) .en-avatar {
-  background: #2e7d6b;
-}
-.en-msg:nth-child(6n + 4):not(.en-msg--house) .en-avatar {
-  background: #3f6fb5;
-}
-.en-msg:nth-child(6n + 5):not(.en-msg--house) .en-avatar {
-  background: #a06a2c;
-}
-.en-avatar--house,
-.en-msg--house .en-avatar {
-  background: var(--brand-pressed);
-}
-.en-msg-body {
-  min-width: 0;
-}
+/* One paragraph, hanging indent: the avatar and the name sit on the first
+   line and wrapped lines clear the avatar, as the file draws it. */
 .en-msg-text {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.45;
+  padding-left: 28px;
+  text-indent: -28px;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0.28px;
+  color: var(--ink);
+}
+.en-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #4b4b7a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-indent: 0;
+  vertical-align: -6px;
+}
+/* Author colours cycle so the column reads as many voices. Chrome only —
+   never a party hue. */
+.en-msg:nth-child(5n + 1):not(.en-msg--house) .en-avatar {
+  background: #7c6dd6;
+}
+.en-msg:nth-child(5n + 2):not(.en-msg--house) .en-avatar {
+  background: #d66d6d;
+}
+.en-msg:nth-child(5n + 3):not(.en-msg--house) .en-avatar {
+  background: #37a2a2;
+}
+.en-msg:nth-child(5n + 4):not(.en-msg--house) .en-avatar {
+  background: #6db6d6;
 }
 .en-msg-author {
   font-weight: 600;
-}
-.en-msg--house .en-msg-author {
-  color: var(--brand-hover);
+  line-height: 1.2;
+  color: var(--ink-subtlest);
 }
 .en-msg-reply {
-  margin-top: 4px;
+  margin-left: 28px;
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ink-soft);
-  font-size: 13px;
+  color: var(--ink-subtlest);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.25;
   cursor: pointer;
 }
 .en-msg-reply:hover {
   color: var(--ink);
 }
+.en-msg--house {
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.en-msg--house .en-avatar {
+  background: var(--brand-pressed);
+  font-size: 9px;
+  font-weight: 700;
+}
+.en-msg--house .en-msg-author {
+  color: var(--brand-hover);
+}
 
 .en-chat-foot {
   position: relative;
-  padding-top: 12px;
+  flex: none;
 }
 .en-chat-foot::before {
   content: '';
@@ -461,7 +501,7 @@
   bottom: 100%;
   left: 0;
   right: 0;
-  height: 44px;
+  height: 78px;
   background: linear-gradient(to top, var(--surface), rgb(21 21 21 / 0));
   pointer-events: none;
 }
@@ -471,13 +511,13 @@
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  padding: 12px 12px 12px 14px;
+  padding: 24px;
   border: 0;
-  border-radius: 8px;
   background: var(--surface-2);
-  color: var(--ink-soft);
+  color: var(--ink-subtlest);
   font: inherit;
-  font-size: 15px;
+  font-size: 14px;
+  letter-spacing: 0.28px;
   text-align: left;
   cursor: text;
 }
@@ -487,16 +527,13 @@
 .en-composer-send {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--surface-hover);
+  width: 32px;
+  height: 32px;
   color: var(--ink);
 }
 .en-gate {
   background: var(--surface-2);
-  border-radius: 8px;
-  padding: 14px;
+  padding: 20px 24px;
 }
 .en-gate-line {
   margin: 0;
@@ -506,7 +543,8 @@
 .en-gate-sub {
   margin: 4px 0 0;
   font-size: 13px;
-  color: var(--ink-soft);
+  line-height: 1.45;
+  color: var(--ink-subtlest);
 }
 .en-gate-actions {
   display: flex;
@@ -520,164 +558,140 @@
   background: var(--brand-pressed);
   color: #fff;
   font: inherit;
-  font-weight: 600;
   font-size: 13px;
+  font-weight: 600;
   padding: 8px 14px;
   cursor: pointer;
 }
 .en-gate-back {
   border: 0;
   background: none;
-  color: var(--ink-soft);
+  color: var(--ink-subtlest);
   font: inherit;
   font-size: 13px;
   cursor: pointer;
 }
 
 /* ====================================================================== */
-/* RESULTS WIDGET                                                         */
+/* RESULTS BAND — under the stream and the chat                           */
 /* ====================================================================== */
 
-.results-rail {
-  /* Same local dark declaration as the takeover — one surface, two places. */
-  --ink: #fafafa;
-  --ink-soft: #a3a3a3;
-  --surface: #151515;
-  --surface-2: #212121;
-  --state-border: #151515;
-  --not-on-ballot: #292929;
-  --uncalled: #424242;
-  --no-read: #8f8f8f;
-  --selection: #ffffff;
-  --hatch: rgb(255 255 255 / 0.35);
-
-  box-sizing: border-box;
-  background: var(--surface);
-  color: var(--ink);
-  border-radius: 12px;
-  padding: 16px;
-  max-width: 420px;
-  margin: 0 auto 56px;
-}
-
-.rail-head {
+.results-band {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 48px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
 }
-.rail-kicker {
-  display: inline-flex;
+
+.band-map-block {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: none;
+}
+.band-map {
+  display: block;
+  width: 190px;
+  height: auto;
+}
+.band-map-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.band-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--ink-subtlest);
+}
+.band-legend li {
+  display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
-.rail-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--brand);
+.band-legend b {
+  color: var(--ink);
 }
-.rail-full {
+.band-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 1px;
+  flex: none;
+}
+/* Called and Leading happen to BOTH parties, so both swatches are split — a
+   single red chip would read as "Republicans called". */
+.band-swatch--called {
+  background: linear-gradient(to right, var(--party-dem) 0 50%, var(--party-rep) 50% 100%);
+  outline: 1px solid var(--selection);
+}
+.band-swatch--leading {
+  background:
+    repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 4px),
+    linear-gradient(to right, var(--dem-1) 0 50%, var(--rep-1) 50% 100%);
+}
+.band-swatch--early {
+  background: var(--uncalled);
+}
+.band-full {
   font-size: 12px;
   font-weight: 600;
   color: var(--ink);
   text-decoration: none;
 }
-.rail-full:hover {
+.band-full:hover {
   text-decoration: underline;
 }
 
-.rail-map-wrap {
-  background: var(--surface-2);
-  border-radius: 8px;
-  padding: 10px 10px 8px;
+.band-balances {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 48px;
+  align-items: start;
 }
-.rail-map {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.rail-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  list-style: none;
-  margin: 6px 0 0;
-  padding: 0;
-  font-size: 11px;
-  color: var(--ink-soft);
-}
-.rail-legend li {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-.rail-legend b {
-  color: var(--ink);
-}
-.rail-swatch {
-  width: 9px;
-  height: 9px;
-  border-radius: 1px;
-}
-/* Called and Leading happen to BOTH parties, so both swatches are split —
-   a single red chip would read as "Republicans called". */
-.rail-swatch--called {
-  background: linear-gradient(to right, var(--party-dem) 0 50%, var(--party-rep) 50% 100%);
-  outline: 1px solid var(--selection);
-}
-.rail-swatch--leading {
-  background:
-    repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 4px),
-    linear-gradient(to right, var(--dem-1) 0 50%, var(--rep-1) 50% 100%);
-}
-.rail-swatch--early {
-  background: var(--uncalled);
-}
-
-.rail-balance {
-  margin-top: 16px;
-}
-.rail-balance-head {
+.band-balance-head {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin: 0 0 7px;
+  gap: 10px;
+  margin: 0 0 8px;
 }
-.rail-balance-label {
-  font-size: 12px;
+.band-balance-label {
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.rail-balance-sub {
-  font-size: 11px;
-  color: var(--ink-soft);
+.band-balance-sub {
+  font-size: 12px;
+  color: var(--ink-subtlest);
 }
-.rail-bar {
+.band-bar {
   position: relative;
   display: flex;
-  height: 10px;
+  height: 12px;
   border-radius: 2px;
   overflow: hidden;
   background: var(--uncalled);
 }
-.rail-bar-seg {
+.band-bar-seg {
   height: 100%;
 }
-.rail-bar-seg--dem {
+.band-bar-seg--dem {
   background: var(--bar-dem);
 }
-.rail-bar-seg--rep {
+.band-bar-seg--rep {
   margin-left: auto;
   background: var(--bar-rep);
 }
-.rail-bar-mark {
+.band-bar-mark {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -685,182 +699,51 @@
   background: var(--ink);
   transform: translateX(-50%);
 }
-.rail-bar-legend {
+.band-bar-legend {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  margin: 5px 0 0;
-  font-size: 12px;
+  margin: 6px 0 0;
+  font-size: 13px;
 }
-/* The numbers are NOT set in the party hues. indigo/500 on the card measures
-   2.51:1 — the hub only tints party text in light mode, and the bar directly
-   above already carries the colour. The D and R do the identifying, which is
-   the encoding the PRD asks for anyway: never colour alone. */
-.rail-num--dem,
-.rail-num--rep {
-  color: var(--ink);
+/* The numbers are NOT set in the party hues: indigo/500 on this surface
+   measures 2.51:1, and the hub only tints party text in light mode. The bar
+   above carries the colour and the D and R do the identifying — which is the
+   encoding the PRD asks for anyway: never colour alone. */
+.band-num {
   font-weight: 700;
 }
-.rail-num--win {
-  color: var(--ink-soft);
+.band-num--win {
+  font-weight: 400;
+  color: var(--ink-subtlest);
 }
-.rail-source {
-  margin: 14px 0 0;
+.band-source {
+  grid-column: 1 / -1;
+  margin: 0;
   font-size: 11px;
-  line-height: 1.45;
-  color: var(--ink-soft);
+  line-height: 1.5;
+  color: var(--ink-subtlest);
+}
+.band-source--delayed {
+  color: var(--warning);
 }
 
 /* ====================================================================== */
-/* THE HOME BELOW                                                         */
+/* THE SECTIONS BELOW                                                     */
 /* ====================================================================== */
 
 .home-main {
   max-width: var(--rail);
   margin: 0 auto;
-  padding: 36px var(--rail-pad) 64px;
+  padding: 8px var(--rail-pad) 72px;
 }
-/* Wide: the sections keep a column and the widget takes its own, stuck to
-   the top through the whole scroll. */
-@media (min-width: 1280px) {
-  .home-main {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 292px;
-    gap: 40px;
-    align-items: start;
-  }
-  .results-rail {
-    position: sticky;
-    top: 16px;
-    max-width: none;
-    margin: 0;
-  }
+.home-section {
+  margin-top: 48px;
 }
-
 .home-section-title {
   font-size: 17px;
   font-weight: 700;
   margin: 0 0 16px;
-}
-
-.home-hero-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 36px;
-  align-items: start;
-}
-.home-hero {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  border-radius: 2px;
-  overflow: hidden;
-  background: #111;
-}
-.home-hero-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.home-hero-kicker {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: var(--brand-pressed);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 5px 11px;
-  border-radius: 3px;
-}
-.home-hero-body {
-  position: absolute;
-  inset: auto 0 0 0;
-  padding: 80px 28px 44px;
-  background: linear-gradient(to top, rgb(0 0 0 / 0.86), rgb(0 0 0 / 0));
-  color: #fff;
-  text-align: center;
-}
-.home-hero-title {
-  font-size: 22px;
-  line-height: 1.3;
-  font-weight: 700;
-  margin: 0 0 18px;
-  text-wrap: balance;
-}
-.home-hero-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  border: 0;
-  border-radius: 3px;
-  background: var(--brand-pressed);
-  color: #fff;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  padding: 12px 22px;
-  cursor: pointer;
-}
-.home-hero-play {
-  width: 0;
-  height: 0;
-  border-left: 9px solid currentColor;
-  border-top: 5.5px solid transparent;
-  border-bottom: 5.5px solid transparent;
-}
-.home-hero-dots {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-}
-.home-hero-dots span {
-  width: 48px;
-  height: 2px;
-  background: rgb(255 255 255 / 0.35);
-}
-.home-hero-dots span.is-on {
-  background: #fff;
-}
-
-.home-top-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.home-top-item {
-  display: flex;
-  gap: 16px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
-}
-.home-top-item:first-child {
-  padding-top: 0;
-}
-.home-top-item img {
-  flex: none;
-  width: 68px;
-  height: 52px;
-  object-fit: cover;
-  border-radius: 2px;
-}
-.home-top-item h3 {
-  margin: 0;
-  font-size: 17px;
-  line-height: 1.3;
-  font-weight: 700;
-}
-.home-byline {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: var(--ink-soft);
-}
-
-.home-section {
-  margin-top: 44px;
 }
 .home-row {
   display: grid;
@@ -885,12 +768,17 @@
   line-height: 1.3;
   font-weight: 700;
 }
-/* Opinion is commentary, and it is set in the exclusive serif so it can
-   never be mistaken for reporting. */
+/* Opinion is commentary, set in the exclusive serif so it can never be
+   mistaken for reporting. */
 .home-card-title--opinion {
   font-family: var(--font-exclusive);
   font-size: 21px;
   font-weight: 400;
+}
+.home-byline {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--ink-subtlest);
 }
 .home-host img {
   width: 100%;
@@ -909,21 +797,34 @@
 /* ---------- narrow ---------- */
 
 @media (max-width: 1180px) {
-  .en-grid,
-  .home-hero-row {
+  .en-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-  .en-chat-scroll {
-    max-height: 340px;
+  /* Out of the two-column arrangement the panel goes back in flow, with its
+     own height — there is no stream column left to match. */
+  .en-chat-holder {
+    height: 520px;
+  }
+  .en-text {
+    padding-left: 0;
+  }
+  .results-band {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 24px;
   }
   .home-row--8 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 @media (max-width: 760px) {
+  .band-balances,
   .home-row--4,
   .home-row--8 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .band-balances {
+    grid-template-columns: 1fr;
   }
   .home-masthead {
     grid-template-columns: 1fr;

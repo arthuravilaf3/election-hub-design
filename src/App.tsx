@@ -241,11 +241,20 @@ export default function App() {
                 LIVE
               </span>
               <span className="mode-chip">{anyResults ? 'Results' : 'Predictions'}</span>
+              {state.night.delayed && (
+                <span className="mode-chip mode-chip--warning">
+                  <span aria-hidden="true">⚠ </span>Results delayed
+                </span>
+              )}
             </div>
           )}
 
           {state.banner && (
-            <CutoverBanner text={state.banner} onDismiss={() => dispatch({ type: 'CLEAR_BANNER' })} />
+            <CutoverBanner
+              text={state.banner}
+              tone={state.bannerTone}
+              onDismiss={() => dispatch({ type: 'CLEAR_BANNER' })}
+            />
           )}
 
           {/* THE MAP SECTION: tabs, the headline they drive and the seat

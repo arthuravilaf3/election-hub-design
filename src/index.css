@@ -375,6 +375,18 @@ button,
   .cutover-banner { animation: none; }
 }
 
+/* The feed is late: the same banner in warning, and it does not go on its
+   own — the map's state is the notice. */
+.cutover-banner--warning {
+  background: var(--warning);
+  color: #141414;
+}
+
+.mode-chip--warning {
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 60%, transparent);
+}
+
 .cutover-banner-close {
   font: inherit;
   font-size: 12px;

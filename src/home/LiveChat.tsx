@@ -75,7 +75,7 @@ export function LiveChat() {
               <li key={m.id} className={`en-msg${m.house ? ' en-msg--house' : ''}`}>
                 <p className="en-msg-text">
                   <span className={`en-avatar${m.house ? ' en-avatar--house' : ''}`} aria-hidden="true">
-                    {m.house ? '' : m.mark}
+                    {m.mark}
                   </span>
                   <span className="en-msg-author">{m.author}</span> {m.text}
                 </p>
