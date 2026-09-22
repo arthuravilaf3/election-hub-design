@@ -36,7 +36,8 @@ import { resultsLabel } from './data/sources';
 import { track } from './data/analytics';
 import { picksForChamber } from './data/trust';
 import { featuresFor, initialPhase, type Phase } from './data/phases';
-import { forecastFor } from './data/hero';
+import { forecastFor, resultsFor } from './data/hero';
+import { DEFAULT_RESULTS_PROVIDER } from './data/sources';
 import { summarize } from './data/summary';
 import { HOUSE_DISTRICT_COUNT } from './data/mockRaces';
 import { STATE_SHAPES } from './data/states';
@@ -87,8 +88,18 @@ export default function App() {
     [races, state.chamber, state.sourceId, summary.seatsUp]
   );
   // Whoever the certified feed is, once results are live.
-  const resultsProvider = Object.values(races).find((r) => r.results?.providerId)?.results?.providerId;
-  const resultsSource = resultsProvider ? resultsLabel(resultsProvider) : undefined;
+  const resultsProvider =
+    Object.values(races).find((r) => r.results?.providerId)?.results?.providerId ?? DEFAULT_RESULTS_PROVIDER;
+  const resultsSource = anyResults ? resultsLabel(resultsProvider) : undefined;
+  /* The results statement: the feed's counts, the clock's freshness. When
+     the manual simulator (no clock) is driving, there is no batch time. */
+  const results = useMemo(
+    () =>
+      anyResults
+        ? resultsFor(summary, state.chamber, { asOf: state.night.feedAsOf, delayed: state.night.delayed }, resultsProvider)
+        : null,
+    [anyResults, summary, state.chamber, state.night.feedAsOf, state.night.delayed, resultsProvider]
+  );
   const called = summary.calledDem + summary.calledRep;
 
   const zoomedRace = state.zoomedId ? races[state.zoomedId] : undefined;
@@ -245,6 +256,7 @@ export default function App() {
             dotsShape={shape}
             chamber={state.chamber}
             forecast={forecast}
+            results={results}
             resultsMode={anyResults}
             called={called}
             raceCount={Object.keys(races).length}

@@ -23,7 +23,7 @@ import { asset } from '../data/assets';
 import { IS_CREATIVE, IS_OPTION3, type DotsShape } from '../data/edition';
 import { CURRENT_SEATS } from '../data/summary';
 import polymarketLogo from '../images/polymarketlogo.png';
-import type { ForecastData } from '../data/hero';
+import type { ForecastData, ResultsData } from '../data/hero';
 import type { Chamber } from '../data/types';
 
 /** Document-level title, mirrored in <title>. */
@@ -35,6 +35,8 @@ interface RaceHeaderProps {
   dotsShape?: DotsShape;
   chamber: Chamber;
   forecast: ForecastData;
+  /** Election night: the feed's statement, once any race has results. */
+  results?: ResultsData | null;
   resultsMode: boolean;
   /** Races already called — the statement's subject in results mode. */
   called: number;
@@ -46,6 +48,7 @@ export function RaceHeader({
   dotsShape = 'grid',
   chamber,
   forecast,
+  results = null,
   resultsMode,
   called,
   raceCount,
@@ -53,8 +56,8 @@ export function RaceHeader({
   /* The presenting sponsor is Polymarket, whatever source the map shows —
      "Presented by" is a partnership line, not a data attribution. The data
      source stays named where it lives: the SOURCE pill and the panel. */
-  const headline = resultsMode ? `${called} of ${raceCount} races called` : forecast.headline;
-  const updatedLine = resultsMode ? 'Updating live' : `Updated ${forecast.updated}`;
+  const headline = results ? results.headline : resultsMode ? `${called} of ${raceCount} races called` : forecast.headline;
+  const updatedLine = results ? results.updatedLine : resultsMode ? 'Updating live' : `Updated ${forecast.updated}`;
 
   return (
     <>
@@ -123,7 +126,10 @@ export function RaceHeader({
           {/* The countdown sits above the headline and OUTSIDE the keyed
               block, so a race or source switch leaves it where it is. In
               option 3 it lives with the map's controls instead. */}
-          {!IS_OPTION3 && <Countdown compact />}
+          {!IS_OPTION3 && !results && <Countdown compact />}
+          {!IS_OPTION3 && results && (
+            <p className={`dots-updated dots-updated--night${results.delayed ? ' is-delayed' : ''}`}>{updatedLine}</p>
+          )}
           <div className="dots-copy" key={headline}>
             <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
               {headline}
@@ -143,6 +149,7 @@ export function RaceHeader({
       <Dots
         key={`${chamber}:${resultsMode ? 'results' : 'forecast'}:${dotsShape}`}
         forecast={forecast}
+        results={results}
         chamber={chamber}
         shape={dotsShape}
         headline={headline}
@@ -232,6 +239,7 @@ function SeatLine({ forecast, chamber }: { forecast: ForecastData; chamber: Cham
 
 interface DotsProps {
   forecast: ForecastData;
+  results: ResultsData | null;
   chamber: Chamber;
   shape: DotsShape;
   headline: string;
@@ -325,7 +333,7 @@ function arcLayout(total: number, shape: 'arc' | 'semi'): ArcLayout {
   };
 }
 
-function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsProps) {
+function Dots({ forecast, results, chamber, headline, resultsMode, called, shape }: DotsProps) {
   const total = forecast.dem + forecast.rep;
   const grid = DOT_GRID[chamber];
 
@@ -390,8 +398,7 @@ function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsP
     // a little — the country pulling apart under the reader's hand. The hot
     // dot is the nearest one; parties are read off the classes so a source
     // switch (which only recolours) is picked up without re-measuring.
-    const party = (el: HTMLElement) =>
-      el.classList.contains('dot--rep') ? 'rep' : el.classList.contains('dot--dem') ? 'dem' : 'toss';
+    const party = (el: HTMLElement) => el.dataset.party ?? 'toss';
     let hot = -1;
     let hotD2 = Infinity;
     for (let i = 0; i < L.dots.length; i += 1) {
@@ -488,27 +495,58 @@ function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsP
   }, []);
   const gap = forecast.tossupShare;
   const demShare = Math.max(0, forecast.demShare - gap / 2);
-  const dem = Math.round((total * demShare) / 100);
-  const toss = Math.round((total * gap) / 100);
-  const rep = Math.max(0, total - dem - toss);
   const tail = resultsMode
     ? `${called} called`
     : `${forecast.tossups} toss-up${forecast.tossups === 1 ? '' : 's'}`;
   const body = chamber === 'governor' ? 'governorships' : chamber === 'house' ? 'House' : 'Senate';
 
-  const seats: Array<'rep' | 'toss' | 'dem'> = [
-    ...Array<'rep'>(rep).fill('rep'),
-    ...Array<'toss'>(toss).fill('toss'),
-    ...Array<'dem'>(dem).fill('dem'),
-  ];
+  /* THE SEATS. Pre-election: the projection under the active source (dem,
+     the toss-up gap, rep). Election night: the FEED's own split — seats the
+     party already has (held or called), seats it leads, seats too early to
+     call — in five bands, so a lead and a result never look alike. */
+  type Band = 'rep' | 'rep-lead' | 'uncalled' | 'toss' | 'dem-lead' | 'dem';
+  const PARTY_OF: Record<Band, 'rep' | 'dem' | 'toss'> = {
+    rep: 'rep',
+    'rep-lead': 'rep',
+    uncalled: 'toss',
+    toss: 'toss',
+    'dem-lead': 'dem',
+    dem: 'dem',
+  };
+  let bands: Array<[Band, number]>;
+  if (results) {
+    bands = [
+      ['rep', results.repTotal],
+      ['rep-lead', results.leadingRep],
+      ['uncalled', Math.max(0, total - results.repTotal - results.leadingRep - results.leadingDem - results.demTotal)],
+      ['dem-lead', results.leadingDem],
+      ['dem', results.demTotal],
+    ];
+  } else {
+    const dem = Math.round((total * demShare) / 100);
+    const toss = Math.round((total * gap) / 100);
+    const rep = Math.max(0, total - dem - toss);
+    bands = [
+      ['rep', rep],
+      ['toss', toss],
+      ['dem', dem],
+    ];
+  }
+  // Top-down reading order: Republicans first, Democrats from the bottom.
+  const seats: Band[] = bands.flatMap(([band, n]) => Array<Band>(Math.max(0, n)).fill(band));
 
-  // The arcs: seats coloured by their bearing, left to right — dem, the
-  // toss-ups at the crown, rep — the same reading as the big arc.
+  // The arcs: seats coloured by their bearing, left to right — the same
+  // bands in the opposite order (dem left, rep right), as on the big arc.
   const arc = shape === 'grid' ? null : arcLayout(total, shape);
-  const arcParty = (i: number): 'rep' | 'toss' | 'dem' => {
+  const leftToRight: Array<[Band, number]> = [...bands].reverse();
+  const arcParty = (i: number): Band => {
     if (!arc) return 'toss';
-    const rank = arcRank[i];
-    return rank < dem ? 'dem' : rank < dem + toss ? 'toss' : 'rep';
+    let rank = arcRank[i];
+    for (const [band, n] of leftToRight) {
+      if (rank < n) return band;
+      rank -= n;
+    }
+    return leftToRight[leftToRight.length - 1][0];
   };
   const arcRank: number[] = [];
   if (arc) {
@@ -532,26 +570,45 @@ function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsP
             line under the headline, with the freshness of the read below it. */}
         <p className="dots-seats intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
           <span className="dots-num">
-            <b className="dots-party dots-party--dem">D</b> {forecast.dem}
+            <b className="dots-party dots-party--dem">D</b> {results ? results.demTotal : forecast.dem}
           </span>
           <span className="hub-dot" aria-hidden="true">
             •
           </span>
           <span className="dots-num">
-            <b className="dots-party dots-party--rep">R</b> {forecast.rep}
+            <b className="dots-party dots-party--rep">R</b> {results ? results.repTotal : forecast.rep}
           </span>
           <span className="hub-dot" aria-hidden="true">
             •
           </span>
-          <span>{forecast.seatsUp} seats up</span>
-          <span className="hub-dot" aria-hidden="true">
-            •
-          </span>
-          <span>{tail}</span>
+          {results ? (
+            <>
+              <span>{results.open} uncalled</span>
+              <span className="hub-dot" aria-hidden="true">
+                •
+              </span>
+              <span>{results.majority} to win</span>
+            </>
+          ) : (
+            <>
+              <span>{forecast.seatsUp} seats up</span>
+              <span className="hub-dot" aria-hidden="true">
+                •
+              </span>
+              <span>{tail}</span>
+            </>
+          )}
         </p>
         {/* The Election Day clock as the copy's last line (Sep 21 2026):
-            with the headline and the seats, not adrift above them. */}
-        <Countdown compact />
+            with the headline and the seats, not adrift above them. On the
+            night, the provider and its last batch take that line. */}
+        {results ? (
+          <p className={`dots-updated dots-updated--night${results.delayed ? ' is-delayed' : ''}`}>
+            {results.updatedLine}
+          </p>
+        ) : (
+          <Countdown compact />
+        )}
       </div>
       {/* The game's call, pushed to the foot of the column so it lines up
           with the bottom of the dots. */}
@@ -572,7 +629,11 @@ function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsP
           } as React.CSSProperties
         }
         role="img"
-        aria-label={`Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${total}. ${forecast.seatsUp} seats up, ${tail}.`}
+        aria-label={
+          results
+            ? `Seats: Democrats ${results.demTotal} (${results.calledDem} called, ${results.leadingDem} leading), Republicans ${results.repTotal} (${results.calledRep} called, ${results.leadingRep} leading), of ${total}. ${results.open} uncalled, ${results.majority} to win.`
+            : `Current seats: Democrats ${forecast.dem}, Republicans ${forecast.rep}, of ${total}. ${forecast.seatsUp} seats up, ${tail}.`
+        }
         ref={gridRef}
         onPointerMove={onPointerMove}
         onPointerLeave={onPointerLeave}
@@ -593,6 +654,7 @@ function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsP
                 <span
                   key={i}
                   className={`dot dot--${arcParty(i)}${firstDeal ? '' : ' dot--redeal'}`}
+                  data-party={PARTY_OF[arcParty(i)]}
                   style={
                     {
                       '--i': i,
@@ -616,6 +678,7 @@ function Dots({ forecast, chamber, headline, resultsMode, called, shape }: DotsP
             <span
               key={i}
               className={`dot dot--${party}${firstDeal ? '' : ' dot--redeal'}`}
+              data-party={PARTY_OF[party]}
               style={{ '--i': i, '--dot-delay': `${Math.round(delay)}ms` } as React.CSSProperties}
             />
           );

@@ -1429,6 +1429,37 @@ button,
   background: var(--rating-tossup);
 }
 
+/* Election night: a lead is hatched (the map's own channel for "not a
+   result yet"); too early to call is the map's uncalled gray. */
+.dot--dem-lead {
+  background: repeating-linear-gradient(45deg, var(--hatch) 0 1.5px, transparent 1.5px 4px), var(--dem-3);
+}
+
+.dot--rep-lead {
+  background: repeating-linear-gradient(45deg, var(--hatch) 0 1.5px, transparent 1.5px 4px), var(--rep-3);
+}
+
+.dot--uncalled {
+  background: var(--uncalled);
+}
+
+/* The provider line where the clock was; the delay notice in warning. */
+.dots-updated--night {
+  font-size: 14px;
+  color: var(--ink-subtlest);
+}
+
+.dots-updated--night.is-delayed {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+[data-option='1'] .dots-copy .dots-updated--night {
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--ink-subtlest) 40%, transparent);
+}
+
 /* ---------- Live row ---------- */
 
 .live-row {

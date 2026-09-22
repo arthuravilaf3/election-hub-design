@@ -11,8 +11,9 @@
  * probability framing entirely. Everything else here is real ballot data.
  */
 import { leanOf, readFor } from './encoding';
-import { CURRENT_SEATS } from './summary';
-import { formatDateET } from './time';
+import { CURRENT_SEATS, type ChamberSummary } from './summary';
+import { resultsLabel } from './sources';
+import { formatDateET, formatET } from './time';
 import type { Chamber, StateRace } from './types';
 
 const CHAMBER_PHRASE: Record<Chamber, string> = {
@@ -106,5 +107,87 @@ export function forecastFor(
     // The toss-up races carved out at the boundary between the two blocs.
     // Floored so the neutral gap never disappears at House scale (6/435).
     tossupShare: Math.max(1.4, (tossups / current.total) * 100),
+  };
+}
+
+/**
+ * ELECTION NIGHT (Sep 2026): the statement once results are in — what the
+ * provider has called, who leads where it has not, and whether control is
+ * settled. Every number is the feed's (summarize()); seats not on the
+ * ballot stay with their holders, as the forecast did, so the chamber
+ * always adds up to itself.
+ */
+export interface ResultsData {
+  headline: string;
+  /** "Results by AP · updated 9:42 PM ET", or the delay notice. */
+  updatedLine: string;
+  delayed: boolean;
+  /** Seats already the party's: held (not up) + called. */
+  demTotal: number;
+  repTotal: number;
+  calledDem: number;
+  calledRep: number;
+  leadingDem: number;
+  leadingRep: number;
+  /** Races with no call yet — leading or too early. */
+  open: number;
+  /** Too early to call. */
+  early: number;
+  majority: number;
+  total: number;
+  seatsUp: number;
+  /** Which party, if any, has reached the majority on called seats alone. */
+  control: 'dem' | 'rep' | null;
+}
+
+export function resultsFor(
+  summary: ChamberSummary,
+  chamber: Chamber,
+  feed: { asOf: string | null; delayed: boolean },
+  providerId: string
+): ResultsData {
+  const current = CURRENT_SEATS[chamber];
+  const seatsUp = summary.seatsUp;
+  const demHeldUp = Math.round((seatsUp * current.dem) / current.total);
+  const demHeld = current.dem - demHeldUp;
+  const repHeld = current.rep - (seatsUp - demHeldUp);
+  const demTotal = demHeld + summary.calledDem;
+  const repTotal = repHeld + summary.calledRep;
+  const majority = Math.floor(current.total / 2) + 1;
+  const control = demTotal >= majority ? 'dem' : repTotal >= majority ? 'rep' : null;
+  const called = summary.calledDem + summary.calledRep;
+  const open = seatsUp - called;
+  const body = chamber === 'governor' ? 'governorships' : chamber === 'house' ? 'House' : 'Senate';
+  let headline: string;
+  if (control) {
+    const party = control === 'dem' ? 'Democrats' : 'Republicans';
+    const had = (current.dem >= majority ? 'dem' : 'rep') === control;
+    headline =
+      chamber === 'governor'
+        ? `${party} hold the most governorships`
+        : `${party} ${had ? 'keep' : 'take'} the ${body}`;
+  } else {
+    headline = `${called} of ${seatsUp} races called`;
+  }
+  const stamp = feed.asOf ? formatET(new Date(feed.asOf).getTime()) : '';
+  const updatedLine = feed.delayed
+    ? `Results delayed · last update ${stamp}`
+    : `Results by ${resultsLabel(providerId)}${stamp ? ` · updated ${stamp}` : ''}`;
+  return {
+    headline,
+    updatedLine,
+    delayed: feed.delayed,
+    demTotal,
+    repTotal,
+    calledDem: summary.calledDem,
+    calledRep: summary.calledRep,
+    leadingDem: summary.leadingDem,
+    leadingRep: summary.leadingRep,
+    open,
+    early: summary.uncalled,
+    majority,
+    total: current.total,
+    seatsUp,
+    control,
   };
 }

@@ -8,7 +8,7 @@
  * for House it structurally cannot (29 curated districts is not 435).
  */
 import { leanOf, readFor } from './encoding';
-import type { Chamber, StateRace } from './types';
+import type { Chamber, Results, StateRace } from './types';
 
 export interface SeatCount {
   dem: number;
@@ -78,20 +78,28 @@ export function summarize(
   let uncalled = 0;
   let isResults = false;
 
+  const count = (r: Results | undefined) => {
+    if (r?.status === 'called') {
+      if (r.leader === 'dem') calledDem += 1;
+      else calledRep += 1;
+    } else if (r?.status === 'counting') {
+      leading += 1;
+      if (r.leader === 'dem') leadingDem += 1;
+      else if (r.leader === 'rep') leadingRep += 1;
+    } else {
+      uncalled += 1;
+    }
+  };
+
   for (const race of Object.values(races)) {
     if (race.mode === 'results') {
       isResults = true;
-      const r = race.results;
-      if (r?.status === 'called') {
-        if (r.leader === 'dem') calledDem += 1;
-        else calledRep += 1;
-      } else if (r?.status === 'counting') {
-        leading += 1;
-        if (r.leader === 'dem') leadingDem += 1;
-        else if (r.leader === 'rep') leadingRep += 1;
-      } else {
-        uncalled += 1;
-      }
+      // The House is counted by SEAT — the curated districts, each with
+      // its own count — so the headline numbers add up to the "seats up"
+      // the reader was shown all cycle, not to 16 states.
+      const seats = chamber === 'house' ? race.districts?.filter((d) => d.curated) : undefined;
+      if (seats && seats.length) seats.forEach((d) => count(d.results));
+      else count(race.results);
       continue;
     }
 
