@@ -16,6 +16,7 @@ import { OptionSwitcher } from './components/OptionSwitcher';
 import {
   IS_CREATIVE,
   IS_STILL_ARC,
+  OPTIONS_STRICT,
   readExtras,
   type DotsShape,
   type Extras,
@@ -59,8 +60,9 @@ export default function App() {
   const [extras] = useState<Extras>(readExtras);
   const isCreativeFull = IS_CREATIVE && !IS_STILL_ARC;
   /* Option 1's seats are the arc (Arthur, Sep 22 2026 — the grid and the
-     semi-arc left the switch; their layouts stay in RaceHeader). */
-  const shape: DotsShape = 'arc';
+     semi-arc left the switch; their layouts stay in RaceHeader). The base
+     build proper (and the lock harness) keep the comp's grid. */
+  const shape: DotsShape = OPTIONS_STRICT ? 'arc' : 'grid';
   const features = featuresFor(phase);
   const mapSectionRef = useRef<HTMLElement>(null);
   useMessageApi(state, dispatch);
