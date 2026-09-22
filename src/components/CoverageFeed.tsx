@@ -323,7 +323,15 @@ function SkeletonRows({ count, kind = 'all' }: { count: number; kind?: ItemKind 
   );
 }
 
-export function CoverageFeed() {
+/** A race call, as the feed carries it (election night, P3). */
+export interface FeedCall {
+  key: string;
+  stateId: string;
+  headline: string;
+  time: string;
+}
+
+export function CoverageFeed({ calls = [] }: { calls?: FeedCall[] }) {
   const [filter, setFilter] = useState<ItemKind | 'all'>('all');
   const [host, setHost] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -1129,6 +1137,34 @@ export function CoverageFeed() {
                   Clear filters ✕
                 </button>
               </div>
+            )}
+
+            {/* ELECTION NIGHT (PRD tenet 4): every call the map shows is
+                also here, newest first, above the day's coverage — so the
+                results and the narrative never disagree. A click hands off
+                to the map (the same event the race tags use). */}
+            {filter === 'all' && barMode === 'browse' && calls.length > 0 && (
+              <ul className="feed-calls" aria-label="Race calls">
+                {calls.map((c) => (
+                  <li key={c.key}>
+                    <button
+                      type="button"
+                      className="feed-call"
+                      onClick={() => {
+                        track('feed_call_click', { stateId: c.stateId });
+                        window.dispatchEvent(new CustomEvent('dw-open-map', { detail: { stateId: c.stateId } }));
+                      }}
+                    >
+                      <span className="feed-call-kicker">
+                        <span aria-hidden="true">✓ </span>Race called
+                        <span className="feed-sep" aria-hidden="true">•</span>
+                        <span className="feed-time">{c.time}</span>
+                      </span>
+                      <span className="feed-call-headline">{c.headline}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
 
             {rows.map((row, i) => {

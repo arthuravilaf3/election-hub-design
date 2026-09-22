@@ -564,6 +564,70 @@ const selected = await page.evaluate(
 check('usmap-select selects', selected.outline, true);
 check('usmap-select does NOT zoom', selected.zoomed, false);
 
+// ---- ELECTION NIGHT (Sep 2026, PRD "Election Results Map") -------------
+// Phase 3, the base edition, the clock pinned at 9:40 PM ET by the URL.
+await page.goto(`${BASE}/?phase=3&edition=base&night=21:40`);
+await page.waitForSelector('.state-shape');
+await page.waitForTimeout(1200);
+const night = await page.evaluate(() => ({
+  clock: !!document.querySelector('aside.night-clock'),
+  time: document.querySelector('.night-time')?.textContent,
+  called: document.querySelectorAll('.state-shape.is-called').length,
+  hatched: document.querySelectorAll('.hatch-overlay').length,
+  legend: [...document.querySelectorAll('.legend-strip li')].map((l) => l.textContent),
+  updated: document.querySelector('.dots-updated--night')?.textContent ?? '',
+  bands: ['dot--rep', 'dot--rep-lead', 'dot--uncalled', 'dot--dem-lead', 'dot--dem'].map(
+    (c) => document.querySelectorAll('.' + c).length
+  ),
+  countdown: !!document.querySelector('.countdown'),
+  headline: document.querySelector('.dots-title')?.textContent,
+}));
+check('night: the clock is on and pinned', night.clock && night.time, '9:40 PM ET');
+check('night: races have been called on the map', night.called > 0, true);
+check('night: leads are hatched, not solid', night.hatched > 0, true);
+check(
+  'night: the legend names the three statuses',
+  ['Too early to call', 'Leading', 'Called'].every((w) => night.legend.some((l) => l.includes(w))),
+  true
+);
+check('night: the header names the provider and the batch', /Results by AP · updated 9:40 PM ET/.test(night.updated), true);
+check('night: the dots paint the feed (called, leading and early bands all present)', night.bands.every((n) => n > 0), true);
+check('night: no countdown on the night', night.countdown, false);
+check('night: the headline counts calls', /of \d+ races called|keep|take|hold/.test(night.headline ?? ''), true);
+
+// The provider outage: a warning that stays, and the header says so.
+await page.goto(`${BASE}/?phase=3&edition=base&night=22:20`);
+await page.waitForSelector('.state-shape');
+await page.waitForTimeout(1200);
+const delayed = await page.evaluate(() => ({
+  chip: document.querySelector('.mode-chip--warning')?.textContent ?? '',
+  updated: document.querySelector('.dots-updated--night')?.textContent ?? '',
+  pip: !!document.querySelector('.night-delayed'),
+}));
+check('night: results delayed — chip', /Results delayed/.test(delayed.chip), true);
+check('night: results delayed — header line', /Results delayed · last update 10:10 PM ET/.test(delayed.updated), true);
+check('night: results delayed — clock pip', delayed.pip, true);
+
+// Scrub back to 6:30 PM: no polls closed, nothing called, no results byline.
+await page.locator('.night-range').fill('30');
+await page.waitForTimeout(800);
+const early = await page.evaluate(() => ({
+  called: document.querySelectorAll('.state-shape.is-called').length,
+  results: document.querySelectorAll('[class*="mode-results"], .seg-results').length,
+  time: document.querySelector('.night-time')?.textContent,
+}));
+check('night: scrubbed back to 6:30 PM', early.time, '6:30 PM ET');
+check('night: nothing called before the polls close', early.called, 0);
+check('night: no results byline before the polls close', early.results, 0);
+
+// Play: the clock moves on its own.
+await page.locator('.night-speed-option').nth(2).click();
+await page.locator('.night-play').click();
+await page.waitForTimeout(1500);
+await page.locator('.night-play').click();
+const played = await page.evaluate(() => document.querySelector('.night-time')?.textContent);
+check('night: play advances the clock', played !== '6:30 PM ET', true);
+
 console.log('PASS (' + ok.length + ')');
 ok.forEach((l) => console.log('  ✓ ' + l));
 if (fails.length) {

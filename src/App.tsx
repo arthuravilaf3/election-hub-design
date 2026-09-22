@@ -6,7 +6,7 @@ import { DevToolbar } from './components/DevToolbar';
 import { IS_PREVIEW_FRAME } from './components/MobilePreview';
 import { ThemeToggle } from './components/ThemeToggle';
 import { CutoverBanner } from './components/CutoverBanner';
-import { CoverageFeed } from './components/CoverageFeed';
+import { CoverageFeed, type FeedCall } from './components/CoverageFeed';
 import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
 import { HouseColors } from './components/HouseColors';
@@ -41,6 +41,9 @@ import { DEFAULT_RESULTS_PROVIDER } from './data/sources';
 import { summarize } from './data/summary';
 import { HOUSE_DISTRICT_COUNT } from './data/mockRaces';
 import { STATE_SHAPES } from './data/states';
+import { formatET } from './data/time';
+import { CHAMBER_LABEL } from './data/summary';
+import { PARTY_LABEL } from './data/encoding';
 import type { Chamber } from './data/types';
 
 const POLL_CLOSING_INTERVAL_MS = 900;
@@ -99,6 +102,17 @@ export default function App() {
         ? resultsFor(summary, state.chamber, { asOf: state.night.feedAsOf, delayed: state.night.delayed }, resultsProvider)
         : null,
     [anyResults, summary, state.chamber, state.night.feedAsOf, state.night.delayed, resultsProvider]
+  );
+  /* The night's calls as feed items, newest first (PRD tenet 4). */
+  const feedCalls = useMemo<FeedCall[]>(
+    () =>
+      [...state.night.calls].reverse().map((c) => ({
+        key: `${c.chamber}:${c.stateId}:${c.at}`,
+        stateId: c.stateId,
+        headline: `${resultsLabel(resultsProvider)} calls ${STATE_SHAPES.find((s) => s.id === c.stateId)?.name ?? c.stateId} ${c.chamber === 'governor' ? 'governor' : CHAMBER_LABEL[c.chamber]} for the ${PARTY_LABEL[c.leader]}`,
+        time: formatET(c.at),
+      })),
+    [state.night.calls, resultsProvider]
   );
   /* What the creative pieces (the arcs, the Capitol strip) paint: the
      projection before the polls close, the feed's counts after. */
@@ -352,7 +366,7 @@ export default function App() {
               the plan banner sits where the surface-step used to be. */}
           {!IS_OPTION3 && <PlanBanner />}
 
-          <CoverageFeed />
+          <CoverageFeed calls={feedCalls} />
 
           {/* Race calls, cutover notices and control changes are announced politely. */}
           <div aria-live="polite" className="visually-hidden">

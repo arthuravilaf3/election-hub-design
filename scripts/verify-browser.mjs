@@ -530,6 +530,22 @@ await page.locator('.filter-x').click(); // exit motion restores browse
 await page.waitForTimeout(600);
 console.log('feed: all', allCount, '→ shorts grid', JSON.stringify(shortsGrid), '| opinion tone:', JSON.stringify(opinionTone));
 
+// ELECTION NIGHT (Sep 2026): the results drawer and the clock, under axe.
+await page.goto(`${BASE.replace('phase=4', 'phase=3')}&night=23:00`);
+await page.waitForSelector('.state-shape');
+await page.waitForTimeout(1200);
+await page.evaluate(() => window.dispatchEvent(new CustomEvent('dw-open-map', { detail: { stateId: 'OH' } })));
+await page.waitForTimeout(1800);
+const nightDrawer = await page.evaluate(() => ({
+  chip: document.querySelector('.race-chip')?.textContent ?? null,
+  bar: !!document.querySelector('.reporting-bar[role="progressbar"]'),
+  rows: document.querySelectorAll('.race-panel .bar-row, .drawer .bar-row').length,
+  calls: document.querySelectorAll('.feed-call').length,
+}));
+console.log('night drawer:', JSON.stringify(nightDrawer));
+await page.screenshot({ path: SHOT('night-drawer'), fullPage: false });
+await page.waitForTimeout(1200); // let axe run on the night
+
 const axeLines = consoleLines.filter((l) => /axe|violation/i.test(l));
 console.log('--- axe console output ---');
 console.log(axeLines.length ? axeLines.join('\n') : '(no axe violations logged)');

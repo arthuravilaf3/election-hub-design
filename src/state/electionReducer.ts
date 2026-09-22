@@ -228,7 +228,9 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
           const firstCutover = CHAMBERS.every((c) =>
             Object.values(state.ballot[c]).every((r) => r.mode === 'prediction')
           );
-          if (firstCutover) {
+          // The notice is for a reader who WATCHED the polls close; one who
+          // lands mid-night (the clock pinned by the URL) just sees results.
+          if (firstCutover && state.night.at !== null) {
             banner = CUTOVER_BANNER;
             bannerTone = 'info';
           }

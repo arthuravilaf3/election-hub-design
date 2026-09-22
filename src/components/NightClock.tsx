@@ -26,18 +26,19 @@ export function NightClock({ night, dispatch }: NightClockProps) {
 
   if (at === null) {
     return (
-      <section className="night-clock night-clock--off" aria-label="Election night clock">
+      <aside className="night-clock night-clock--off" aria-label="Election night clock">
         <button type="button" className="night-start" onClick={() => dispatch({ type: 'NIGHT_PLAY' })}>
           <span className="night-start-dot" aria-hidden="true" />
           Start election night
         </button>
-      </section>
+      </aside>
     );
   }
 
   const minute = minuteOf(at);
   return (
-    <section className="night-clock" role="group" aria-label="Election night clock">
+    /* A landmark of its own (axe "region"): prototype chrome outside main. */
+    <aside className="night-clock" aria-label="Election night clock">
       <div className="night-row">
         <button
           type="button"
@@ -101,6 +102,6 @@ export function NightClock({ night, dispatch }: NightClockProps) {
         }
         onChange={(e) => dispatch({ type: 'NIGHT_TICK', at: msOfMinute(Number(e.target.value)) })}
       />
-    </section>
+    </aside>
   );
 }
