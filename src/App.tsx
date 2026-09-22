@@ -30,6 +30,7 @@ import { useElectionData } from './state/useElectionData';
 import { activeRaces } from './state/electionReducer';
 import { emitMapEvent, useMessageApi } from './hooks/useMessageApi';
 import { isLive } from './data/encoding';
+import { resultsLabel } from './data/sources';
 import { track } from './data/analytics';
 import { picksForChamber } from './data/trust';
 import { featuresFor, initialPhase, type Phase } from './data/phases';
@@ -82,7 +83,8 @@ export default function App() {
     [races, state.chamber, state.sourceId, summary.seatsUp]
   );
   // Whoever the certified feed is, once results are live.
-  const resultsSource = Object.values(races).find((r) => r.results?.source)?.results?.source;
+  const resultsProvider = Object.values(races).find((r) => r.results?.providerId)?.results?.providerId;
+  const resultsSource = resultsProvider ? resultsLabel(resultsProvider) : undefined;
   const called = summary.calledDem + summary.calledRep;
 
   const zoomedRace = state.zoomedId ? races[state.zoomedId] : undefined;

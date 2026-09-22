@@ -46,6 +46,10 @@ export interface ChamberSummary {
   /** Results-mode counts, from the certified feed. Meaningless pre-election. */
   calledDem: number;
   calledRep: number;
+  /** Counting races, by who leads. `leading` is their sum (plus any lead
+      the feed has not named yet). A lead is not a result. */
+  leadingDem: number;
+  leadingRep: number;
   leading: number;
   uncalled: number;
 }
@@ -68,6 +72,8 @@ export function summarize(
   let unrated = 0;
   let calledDem = 0;
   let calledRep = 0;
+  let leadingDem = 0;
+  let leadingRep = 0;
   let leading = 0;
   let uncalled = 0;
   let isResults = false;
@@ -81,6 +87,8 @@ export function summarize(
         else calledRep += 1;
       } else if (r?.status === 'counting') {
         leading += 1;
+        if (r.leader === 'dem') leadingDem += 1;
+        else if (r.leader === 'rep') leadingRep += 1;
       } else {
         uncalled += 1;
       }
@@ -110,6 +118,8 @@ export function summarize(
     unrated,
     calledDem,
     calledRep,
+    leadingDem,
+    leadingRep,
     leading,
     uncalled,
   };

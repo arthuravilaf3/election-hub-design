@@ -1,7 +1,8 @@
 import { DISTRICT_COUNT, districtId } from './districts';
+import { DEFAULT_RESULTS_PROVIDER } from './sources';
 import type { Ballot, Candidate, Chamber, District, Party, Results, SourceRead, StateRace } from './types';
 
-const RESULTS_SOURCE = 'AP vote count (mock)';
+const RESULTS_PROVIDER = DEFAULT_RESULTS_PROVIDER;
 
 // Poll-close waves (ET, mock election night) used for per-state cutoverAt.
 const CLOSE: Record<string, string> = {
@@ -145,13 +146,13 @@ function seedResults(id: string, poll: number): Results {
   const leader: Party = poll >= 0 ? 'dem' : 'rep';
   const h = hash(id);
   if (abs >= 15) {
-    return { status: 'called', reporting: 70 + (h % 27), leader, margin: poll, source: RESULTS_SOURCE };
+    return { status: 'called', reporting: 70 + (h % 27), leader, margin: poll, providerId: RESULTS_PROVIDER };
   }
-  if (h % 11 === 0) return { status: 'uncalled', reporting: 0, source: RESULTS_SOURCE };
+  if (h % 11 === 0) return { status: 'uncalled', reporting: 0, providerId: RESULTS_PROVIDER };
   if (abs >= 6) {
-    return { status: 'counting', reporting: 45 + (h % 45), leader, margin: poll, source: RESULTS_SOURCE };
+    return { status: 'counting', reporting: 45 + (h % 45), leader, margin: poll, providerId: RESULTS_PROVIDER };
   }
-  return { status: 'counting', reporting: 8 + (h % 60), leader, margin: poll, source: RESULTS_SOURCE };
+  return { status: 'counting', reporting: 8 + (h % 60), leader, margin: poll, providerId: RESULTS_PROVIDER };
 }
 
 /** FIXTURE candidate names — deterministic per race so reloads are stable. */

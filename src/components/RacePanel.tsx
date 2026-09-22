@@ -25,7 +25,7 @@ import {
   readLine,
   statusLine,
 } from '../data/encoding';
-import { SOURCES, sourceKind, sourceLabel } from '../data/sources';
+import { SOURCES, resultsAttribution, sourceKind, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 
 /** Long form for the panel title — the comp names the body, not the tab. */
@@ -432,7 +432,7 @@ export function RacePanel({
         {isResults ? (
           <section className="drawer-block">
             <p className="race-panel-status">{statusLine(shown, src)}</p>
-            <p className="drawer-note">Source: {shown.results?.source}</p>
+            <p className="drawer-note">Source: {resultsAttribution(shown.results?.providerId ?? '')}</p>
           </section>
         ) : (
           <>

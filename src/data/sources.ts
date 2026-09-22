@@ -77,3 +77,36 @@ export function sourceKind(sourceId: string): string {
   const kind = getSource(sourceId)?.kind;
   return kind ? KIND_LABEL[kind] : '';
 }
+
+/**
+ * RESULTS PROVIDERS (election night, Sep 2026) — kept apart from SOURCES on
+ * purpose: a vote count is not a prediction, it is never offered in the
+ * SOURCE picker, and the map never blends the two. One provider certifies
+ * every call (PRD tenet 1); licensing is still open, so the id is the only
+ * thing the rest of the app may hold.
+ */
+export interface ResultsProvider {
+  id: string;
+  /** Short label — "Results by AP". */
+  label: string;
+  /** Full attribution for the sourcing disclosure. */
+  attribution: string;
+}
+
+export const RESULTS_PROVIDERS: ResultsProvider[] = [
+  { id: 'ap', label: 'AP', attribution: 'AP vote count (mock)' },
+];
+
+export const DEFAULT_RESULTS_PROVIDER = RESULTS_PROVIDERS[0].id;
+
+export function getResultsProvider(providerId: string): ResultsProvider | undefined {
+  return RESULTS_PROVIDERS.find((p) => p.id === providerId);
+}
+
+export function resultsLabel(providerId: string): string {
+  return getResultsProvider(providerId)?.label ?? 'the certified feed';
+}
+
+export function resultsAttribution(providerId: string): string {
+  return getResultsProvider(providerId)?.attribution ?? 'Certified results feed';
+}

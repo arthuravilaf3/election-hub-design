@@ -8,8 +8,8 @@
 // probability. Each gets its own ramp and its own legend; nothing here converts
 // between them (PRD: "never blended into a single misleading number").
 
-import { sourceAttribution, sourceLabel, getSource } from './sources';
-import type { Party, PredictionParty, SourceRead, StateRace } from './types';
+import { resultsAttribution, sourceAttribution, sourceLabel, getSource } from './sources';
+import type { Party, PredictionParty, Results, SourceRead, StateRace } from './types';
 
 export const PARTY_LABEL: Record<Party, string> = {
   dem: 'Democrat',
@@ -60,6 +60,37 @@ export function ratingOf(read: SourceRead): Rating {
   if (a < 5) return `lean-${side}`;
   if (a < 15) return `likely-${side}`;
   return `safe-${side}`;
+}
+
+/**
+ * ELECTION NIGHT (Sep 2026): the three words the PRD gives a race, each
+ * with a glyph so the status never rides on colour alone.
+ *   Too early to call  — 'uncalled': before the feed names a leader (the
+ *                        simulation withholds one under TOO_EARLY_BELOW %)
+ *   Leading            — 'counting': someone is ahead; a lead is not a result
+ *   Called             — 'called': the provider certified it (tenet 1)
+ */
+export const TOO_EARLY_BELOW = 5;
+
+export type StatusWord = 'Called' | 'Leading' | 'Too early to call';
+
+export interface StatusLabel {
+  label: StatusWord;
+  icon: '✓' | '→' | '…';
+  tone: 'called' | 'leading' | 'early';
+}
+
+export function statusLabel(r: Results | undefined): StatusLabel {
+  if (r?.status === 'called') return { label: 'Called', icon: '✓', tone: 'called' };
+  if (r?.status === 'counting' && r.leader) return { label: 'Leading', icon: '→', tone: 'leading' };
+  return { label: 'Too early to call', icon: '…', tone: 'early' };
+}
+
+/** "Republican +4.2" — the margin of the votes counted so far. */
+export function fmtLead(r: Results): string {
+  if (!r.leader) return '';
+  const pts = r.margin === undefined ? '' : ` +${Math.abs(r.margin).toFixed(1)}`;
+  return `${PARTY_LABEL[r.leader]}${pts}`;
 }
 
 /** Counting races: reporting % -> chart.*.reporting step 1-4; 5 is
@@ -182,13 +213,14 @@ export function statusLine(race: StateRace, sourceId: string): string {
     return `${RATING_LABEL[ratingOf(read)]} — ${readLine(read)}`;
   }
   const r = race.results;
-  if (!r || r.status === 'uncalled') return 'Uncalled — no results yet';
-  if (r.status === 'counting') {
-    const lead = r.leader ? `${PARTY_LABEL[r.leader]} leading` : 'no leader yet';
-    return `Counting — ${r.reporting}% reporting, ${lead}`;
+  const s = statusLabel(r);
+  if (!r || s.tone === 'early') {
+    // The glyph is the non-colour channel; the count, when there is one,
+    // says how early.
+    return r && r.reporting > 0 ? `… Too early to call — ${r.reporting}% in` : '… Too early to call';
   }
-  // Check mark = non-color channel for "called".
-  return `✓ Called for ${r.leader ? PARTY_LABEL[r.leader] : 'unknown'} (${r.reporting}% reporting)`;
+  if (s.tone === 'leading') return `→ Leading — ${fmtLead(r)}, ${r.reporting}% in`;
+  return `✓ Called for ${r.leader ? PARTY_LABEL[r.leader] : 'unknown'} — ${r.reporting}% in`;
 }
 
 /** Full aria-label for a map state, e.g.
@@ -200,17 +232,15 @@ export function describeRace(name: string, race: StateRace, sourceId: string): s
     return `${name}, ${RATING_LABEL[ratingOf(read)]} per ${sourceLabel(sourceId)}`;
   }
   const r = race.results;
-  if (!r || r.status === 'uncalled') return `${name}, uncalled, no results yet`;
-  if (r.status === 'counting') {
-    const lead = r.leader ? `${PARTY_LABEL[r.leader]} leading` : 'no leader yet';
-    return `${name}, counting, ${r.reporting}% reporting, ${lead}`;
-  }
+  const s = statusLabel(r);
+  if (!r || s.tone === 'early') return `${name}, too early to call, ${r?.reporting ?? 0}% reporting`;
+  if (s.tone === 'leading') return `${name}, ${fmtLead(r)} leading, ${r.reporting}% reporting`;
   return `${name}, called for ${r.leader ? PARTY_LABEL[r.leader] : 'unknown'}, ${r.reporting}% reporting`;
 }
 
 /** Attribution for whatever is currently on screen for this race. */
 export function sourceOf(race: StateRace, sourceId: string): string {
-  if (race.mode === 'results') return race.results?.source ?? 'unknown source';
+  if (race.mode === 'results') return resultsAttribution(race.results?.providerId ?? '');
   return readFor(race, sourceId) ? sourceAttribution(sourceId) : 'not published by this source';
 }
 

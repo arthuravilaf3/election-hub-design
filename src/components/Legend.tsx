@@ -35,13 +35,16 @@ const NO_DATA_ITEM: Item = ['No data from this source', 'var(--no-read)'];
 
 /* Results: the five reporting steps — hatched through step 3, plain at 4,
    called at 5 with an outline — and the two neutrals. */
+/* The three statuses the PRD names — Too early / Leading / Called — each
+   with a word, not only a colour; the leading steps carry the reporting
+   band that sets their shade. */
 const RESULTS_ITEMS: Array<[string, string, ('hatched' | 'called')?]> = [
-  ['Uncalled — no results yet', 'var(--uncalled)'],
-  ['Leading, <25% in', 'var(--rep-1)', 'hatched'],
-  ['<50% in', 'var(--rep-2)', 'hatched'],
-  ['<75% in', 'var(--rep-3)', 'hatched'],
-  ['75%+ in', 'var(--rep-4)'],
-  ['✓ Called — certified result', 'var(--rep-5)', 'called'],
+  ['Too early to call', 'var(--uncalled)'],
+  ['Leading — <25% in', 'var(--rep-1)', 'hatched'],
+  ['Leading — <50% in', 'var(--rep-2)', 'hatched'],
+  ['Leading — <75% in', 'var(--rep-3)', 'hatched'],
+  ['Leading — 75%+ in', 'var(--rep-4)'],
+  ['✓ Called', 'var(--rep-5)', 'called'],
   ['Not on ballot', 'var(--not-on-ballot)'],
 ];
 

@@ -33,13 +33,35 @@ export interface SourceRead {
   asOf: string;
 }
 
+/** One candidate's count in the results feed (election night, Sep 2026). */
+export interface CandidateResult {
+  name: string;
+  party: Party | 'ind';
+  votes: number;
+  /** Share of the votes counted so far, 0-100. */
+  pct: number;
+}
+
+/**
+ * The results provider's read of a race. `status` is the provider's word:
+ * 'called' only when it has certified the call (hub tenet 1); 'uncalled'
+ * is "too early to call" — before any meaningful count; 'counting' is a
+ * lead, never a result.
+ */
 export interface Results {
   status: RaceStatus;
   /** Percent of expected vote reported, 0-100. */
   reporting: number;
   leader?: Party;
+  /** Signed margin in points of the votes counted so far: +dem / -rep. */
   margin?: number;
-  source: string;
+  /** Provider id, see RESULTS_PROVIDERS in sources.ts. */
+  providerId: string;
+  /** Per-candidate counts, once the provider has published any. */
+  votes?: CandidateResult[];
+  totalVotes?: number;
+  /** ISO timestamp of the provider's last batch for THIS race. */
+  asOf?: string;
 }
 
 /** A House district within a state — rendered in the zoomed frame, not on the map. */

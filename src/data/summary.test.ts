@@ -56,12 +56,28 @@ describe('tenet 2: estimates and results never share the headline', () => {
       races[id] = {
         ...races[id],
         mode: 'results',
-        results: { status: 'counting', reporting: 99, leader: 'dem', source: 'AP' },
+        results: { status: 'counting', reporting: 99, leader: 'dem', providerId: 'ap' },
       };
     }
     const s = summarize(races, 'senate', 'dw-poll-avg', HOUSE_DISTRICT_COUNT);
     expect(s.calledDem).toBe(0);
     expect(s.calledRep).toBe(0);
     expect(s.leading).toBe(35);
+  });
+
+  it('splits the leads by party, and the split adds up to the leads', () => {
+    const races = senate();
+    const ids = Object.keys(races);
+    ids.forEach((id, i) => {
+      races[id] = {
+        ...races[id],
+        mode: 'results',
+        results: { status: 'counting', reporting: 30, leader: i % 3 === 0 ? 'dem' : 'rep', providerId: 'ap' },
+      };
+    });
+    const s = summarize(races, 'senate', 'dw-poll-avg', HOUSE_DISTRICT_COUNT);
+    expect(s.leadingDem).toBe(12);
+    expect(s.leadingRep).toBe(23);
+    expect(s.leadingDem + s.leadingRep).toBe(s.leading);
   });
 });

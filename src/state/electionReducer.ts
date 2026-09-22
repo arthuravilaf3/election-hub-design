@@ -1,7 +1,7 @@
 import type { Ballot, Chamber, Mode, Party, RaceStatus, StateRace } from '../data/types';
 import { PARTY_LABEL, leanOf, readFor } from '../data/encoding';
 import { buildBallot } from '../data/mockRaces';
-import { DEFAULT_SOURCE_ID, sourceLabel } from '../data/sources';
+import { DEFAULT_RESULTS_PROVIDER, DEFAULT_SOURCE_ID, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 import { STATE_SHAPES } from '../data/states';
 import { loadTrust, trustKey, type TrustPicks } from '../data/trust';
@@ -106,7 +106,7 @@ function cutoverRace(race: StateRace): StateRace {
   return {
     ...race,
     mode: 'results',
-    results: race.results ?? { status: 'uncalled', reporting: 0, source: 'AP vote count (mock)' },
+    results: race.results ?? { status: 'uncalled', reporting: 0, providerId: DEFAULT_RESULTS_PROVIDER },
   };
 }
 

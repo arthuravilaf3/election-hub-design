@@ -7,6 +7,7 @@ import {
   leanOf,
   ratingOf,
   readLine,
+  statusLabel,
   statusLine,
 } from './encoding';
 import type { SourceRead, StateRace } from './types';
@@ -31,12 +32,12 @@ describe('results mode keeps the status encoding', () => {
     const base = race([], { mode: 'results' });
     const counting = {
       ...base,
-      results: { status: 'counting' as const, reporting: 100, leader: 'rep' as const, source: 'AP' },
+      results: { status: 'counting' as const, reporting: 100, leader: 'rep' as const, providerId: 'ap' },
     };
     expect(fillFor(counting, 'dw-poll-avg')).toBe('var(--rep-4)');
     const called = {
       ...base,
-      results: { status: 'called' as const, reporting: 62, leader: 'rep' as const, source: 'AP' },
+      results: { status: 'called' as const, reporting: 62, leader: 'rep' as const, providerId: 'ap' },
     };
     expect(fillFor(called, 'dw-poll-avg')).toBe('var(--rep-5)');
   });
@@ -45,7 +46,7 @@ describe('results mode keeps the status encoding', () => {
     const results = (status: 'uncalled' | 'counting' | 'called') =>
       race([], {
         mode: 'results',
-        results: { status, reporting: 50, leader: 'dem', source: 'AP' },
+        results: { status, reporting: 50, leader: 'dem', providerId: 'ap' },
       });
     expect(isHatched(results('counting'))).toBe(true);
     expect(isHatched(results('called'))).toBe(false);
@@ -116,5 +117,33 @@ describe('freshness', () => {
 
   it('treats a missing read as stale rather than silently fresh', () => {
     expect(freshnessOf(undefined, NOW)).toEqual({ label: 'no data', stale: true });
+  });
+});
+
+describe('election night: three status words, never colour alone', () => {
+  it('names Too early / Leading / Called with a glyph each', () => {
+    expect(statusLabel({ status: 'uncalled', reporting: 0, providerId: 'ap' })).toMatchObject({
+      label: 'Too early to call',
+      icon: '…',
+    });
+    expect(
+      statusLabel({ status: 'counting', reporting: 40, leader: 'rep', margin: -4.2, providerId: 'ap' })
+    ).toMatchObject({ label: 'Leading', icon: '→' });
+    expect(statusLabel({ status: 'called', reporting: 88, leader: 'dem', providerId: 'ap' })).toMatchObject({
+      label: 'Called',
+      icon: '✓',
+    });
+  });
+
+  it('a count with no leader named is still too early', () => {
+    expect(statusLabel({ status: 'counting', reporting: 3, providerId: 'ap' }).label).toBe('Too early to call');
+  });
+
+  it('the status line carries the lead and the reporting share', () => {
+    const r = race([], {
+      mode: 'results',
+      results: { status: 'counting', reporting: 43, leader: 'rep', margin: -4.2, providerId: 'ap' },
+    });
+    expect(statusLine(r, 'dw-poll-avg')).toBe('→ Leading — Republican +4.2, 43% in');
   });
 });

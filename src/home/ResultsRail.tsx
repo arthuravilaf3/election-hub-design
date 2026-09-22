@@ -15,6 +15,7 @@
  */
 import { MiniMap } from './MiniMap';
 import { HOLDOVER } from './homeContent';
+import { resultsLabel } from '../data/sources';
 import { summarize } from '../data/summary';
 import { HOUSE_DISTRICT_COUNT } from '../data/mockRaces';
 import type { ElectionState } from '../state/electionReducer';
@@ -66,8 +67,9 @@ interface ResultsRailProps {
 export function ResultsRail({ state }: ResultsRailProps) {
   const mapRaces = state.ballot[state.chamber];
   const mapSummary = summarize(mapRaces, state.chamber, state.sourceId, HOUSE_DISTRICT_COUNT);
-  const resultsSource =
-    Object.values(mapRaces).find((r) => r.results?.source)?.results?.source ?? 'certified feed';
+  const resultsSource = resultsLabel(
+    Object.values(mapRaces).find((r) => r.results?.providerId)?.results?.providerId ?? ''
+  );
 
   return (
     <aside className="results-rail" aria-label="Live results">
