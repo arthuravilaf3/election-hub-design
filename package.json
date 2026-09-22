@@ -10,7 +10,7 @@
     "test": "vitest run",
     "lint": "eslint src",
     "generate:map": "node scripts/generate-map.mjs",
-    "build:pages": "tsc --noEmit && VITE_EDITION=base vite build --base=/election-hub-prototype/ --outDir dist-pages --emptyOutDir && VITE_EDITION=creative vite build --base=/election-hub-prototype/creative/ --outDir dist-pages/creative --emptyOutDir && VITE_EDITION=options vite build --base=/election-hub-prototype/options/ --outDir dist-pages/options --emptyOutDir",
+    "build:pages": "tsc --noEmit && VITE_EDITION=base vite build --base=/election-hub-prototype/ --outDir dist-pages --emptyOutDir && VITE_EDITION=creative vite build --base=/election-hub-prototype/creative/ --outDir dist-pages/creative --emptyOutDir && VITE_EDITION=options vite build --base=/election-hub-prototype/options/ --outDir dist-pages/options --emptyOutDir && VITE_EDITION=homepage vite build --base=/election-hub-prototype/election-day/ --outDir dist-pages/election-day --emptyOutDir",
     "pack": "VITE_EDITION=base vite build --base=./ && PACK_OUT=election-hub-prototype.html node scripts/pack-html.mjs && VITE_EDITION=creative vite build --base=./ && PACK_OUT=election-hub-prototype-creative.html node scripts/pack-html.mjs"
   },
   "dependencies": {

@@ -138,3 +138,21 @@ export function storeDotsShape(shape: DotsShape): void {
     // Private mode: the in-session choice still works.
   }
 }
+
+/* THE HOMEPAGE EDITION (Sep 22 2026): dailywire.com's home with the
+   election-night takeover above the hero — a separate ROOT, not a mode of the
+   hub. main.tsx renders HomePage instead of App.
+
+   It deliberately does NOT extend `Edition`. The hub still has two editions;
+   everything the takeover borrows (map geometry, the reducer, the chart
+   tokens) resolves exactly as it does in the hub, so nothing here can drift
+   the map's encoding. Build-time VITE_EDITION=homepage; dev ?edition=homepage. */
+export const IS_HOMEPAGE: boolean = (() => {
+  if (built === 'homepage') return true;
+  if (!import.meta.env.DEV) return false;
+  try {
+    return new URLSearchParams(window.location.search).get('edition') === 'homepage';
+  } catch {
+    return false;
+  }
+})();

@@ -1,0 +1,945 @@
+/*
+ * The homepage edition: dailywire.com with the election-night takeover.
+ *
+ * THEME. The page runs light (the site is a light surface, set in main.tsx).
+ * The takeover and the results widget are DW+ dark surfaces sitting on it, so
+ * they RE-DECLARE the hub's dark chrome tokens locally instead of inventing
+ * colours. The data-viz tokens (party ramps, reporting steps, hatch) are
+ * deliberately NOT re-declared where they are theme-independent — the map
+ * inside the widget must encode exactly as the full map does.
+ */
+
+/* No Polymarket ticker on this page, so the body's reserved strip goes. */
+:root[data-page='home'] body {
+  padding-bottom: 0;
+}
+
+.home {
+  background: var(--surface-dim);
+}
+
+/* ---------- promo bar + ad slot ---------- */
+
+.home-promo {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 32px 0 0;
+  background: #ffd400;
+  color: #121212;
+  text-decoration: none;
+  height: 60px;
+  overflow: hidden;
+}
+.home-promo-art {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  width: 280px;
+  background: #1b1b1b;
+  color: #ffd400;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.home-promo-line {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.home-promo-line b {
+  font-size: 19px;
+  color: #0b7a3b;
+}
+.home-promo-cta {
+  margin-left: auto;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+/* The real slot is ~290px tall. Held at 160 here: this page exists to judge
+   what sits UNDER it, and 290px of grey before the first pixel of coverage
+   buys nothing. Restore the real height before any layout measurement. */
+.home-ad {
+  display: grid;
+  place-items: start center;
+  height: 160px;
+  padding-top: 14px;
+  background: #efefef;
+  color: #6b6b6b;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.home-chrome {
+  background: var(--surface-dim);
+}
+
+/* ---------- masthead ---------- */
+
+.home-masthead {
+  max-width: var(--rail);
+  margin: 0 auto;
+  padding: 22px var(--rail-pad) 26px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+}
+.home-date {
+  font-size: 14px;
+  color: var(--ink);
+}
+.home-wordmark {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.home-tagline {
+  justify-self: end;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* ====================================================================== */
+/* THE TAKEOVER                                                           */
+/* ====================================================================== */
+
+.en {
+  /* The hub's dark chrome, declared locally so every child resolves dark on
+     a light page. Values are the dark-mode originals in colors.css. */
+  --ink: #fafafa;
+  --ink-soft: #a3a3a3;
+  --ink-subtle: #dfdfdf;
+  --ink-subtlest: #8f8f8f;
+  --surface-dim: #0a0909;
+  --surface: #151515;
+  --surface-2: #212121;
+  --surface-hover: #292929;
+  --border: #424242;
+
+  background: var(--surface-dim);
+  color: var(--ink);
+  padding: 22px 0 34px;
+}
+.en-rail {
+  max-width: var(--rail);
+  margin: 0 auto;
+  padding-inline: var(--rail-pad);
+}
+
+.en-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #242424;
+}
+.en-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--brand-pressed);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 5px 9px 4px;
+  border-radius: 2px;
+}
+.en-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: en-pulse 2s ease-in-out infinite;
+}
+@keyframes en-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+.en-head-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+.en-head-time {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.en-head-spacer {
+  flex: 1;
+}
+.en-sponsor {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+.en-sponsor img {
+  height: 15px;
+  width: auto;
+  display: block;
+}
+
+.en-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 24px;
+  align-items: stretch;
+}
+
+/* ---------- player ---------- */
+
+.en-player {
+  min-width: 0;
+}
+.en-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.en-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.en-mark {
+  position: absolute;
+  bottom: 18px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #fff;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
+  pointer-events: none;
+}
+.en-mark--dw {
+  left: 20px;
+}
+.en-mark--show {
+  right: 20px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+}
+
+.en-controls {
+  position: absolute;
+  inset: 0 0 auto 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 44px;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0));
+}
+.en-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-pressed);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 2px;
+}
+.en-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.en-viewers {
+  font-size: 12px;
+  color: #e6e6e6;
+}
+.en-controls-spacer {
+  flex: 1;
+}
+.en-ctrl {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+  cursor: pointer;
+}
+.en-ctrl:hover {
+  background: rgb(255 255 255 / 0.2);
+}
+
+.en-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 18px 0 0;
+  font-size: 14px;
+}
+.en-status .en-status-dot {
+  background: var(--brand);
+}
+.en-title {
+  font-size: 30px;
+  line-height: 1.2;
+  font-weight: 600;
+  margin: 10px 0 0;
+  text-wrap: balance;
+}
+.en-meta {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 12px 0 0;
+}
+.en-dek {
+  font-size: 17px;
+  line-height: 1.55;
+  margin: 18px 0 0;
+  max-width: 64ch;
+}
+.en-share {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+.en-share-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+}
+.en-share-btn:hover {
+  background: var(--surface-hover);
+}
+
+/* ---------- chat ---------- */
+
+.en-chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 20px 20px 16px;
+}
+.en-chat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.en-chat-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+.en-chat-close {
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.en-chat-note {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 6px 0 12px;
+}
+.en-chat-scroll {
+  flex: 1;
+  min-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.en-chat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.en-msg {
+  display: flex;
+  gap: 12px;
+  padding: 9px 0;
+}
+.en-msg--house {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 4px 0;
+}
+.en-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: #4b4b7a;
+}
+/* Stable-enough author colours: the fixture cycles, so the column reads as
+   many voices rather than one. Chrome only — never a party hue. */
+.en-msg:nth-child(6n + 1):not(.en-msg--house) .en-avatar {
+  background: #6d55c9;
+}
+.en-msg:nth-child(6n + 2):not(.en-msg--house) .en-avatar {
+  background: #b5514a;
+}
+.en-msg:nth-child(6n + 3):not(.en-msg--house) .en-avatar {
+  background: #2e7d6b;
+}
+.en-msg:nth-child(6n + 4):not(.en-msg--house) .en-avatar {
+  background: #3f6fb5;
+}
+.en-msg:nth-child(6n + 5):not(.en-msg--house) .en-avatar {
+  background: #a06a2c;
+}
+.en-avatar--house,
+.en-msg--house .en-avatar {
+  background: var(--brand-pressed);
+}
+.en-msg-body {
+  min-width: 0;
+}
+.en-msg-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.en-msg-author {
+  font-weight: 600;
+}
+.en-msg--house .en-msg-author {
+  color: var(--brand-hover);
+}
+.en-msg-reply {
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 13px;
+  cursor: pointer;
+}
+.en-msg-reply:hover {
+  color: var(--ink);
+}
+
+.en-chat-foot {
+  position: relative;
+  padding-top: 12px;
+}
+.en-chat-foot::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  height: 44px;
+  background: linear-gradient(to top, var(--surface), rgb(21 21 21 / 0));
+  pointer-events: none;
+}
+.en-composer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 12px 12px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: text;
+}
+.en-composer:hover {
+  background: var(--surface-hover);
+}
+.en-composer-send {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+.en-gate {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 14px;
+}
+.en-gate-line {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.en-gate-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.en-gate-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.en-gate-btn {
+  border: 0;
+  border-radius: 4px;
+  background: var(--brand-pressed);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.en-gate-back {
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ====================================================================== */
+/* RESULTS WIDGET                                                         */
+/* ====================================================================== */
+
+.results-rail {
+  /* Same local dark declaration as the takeover — one surface, two places. */
+  --ink: #fafafa;
+  --ink-soft: #a3a3a3;
+  --surface: #151515;
+  --surface-2: #212121;
+  --state-border: #151515;
+  --not-on-ballot: #292929;
+  --uncalled: #424242;
+  --no-read: #8f8f8f;
+  --selection: #ffffff;
+  --hatch: rgb(255 255 255 / 0.35);
+
+  box-sizing: border-box;
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 16px;
+  max-width: 420px;
+  margin: 0 auto 56px;
+}
+
+.rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.rail-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.rail-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+.rail-full {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+.rail-full:hover {
+  text-decoration: underline;
+}
+
+.rail-map-wrap {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 10px 10px 8px;
+}
+.rail-map {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.rail-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.rail-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.rail-legend b {
+  color: var(--ink);
+}
+.rail-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+}
+/* Called and Leading happen to BOTH parties, so both swatches are split —
+   a single red chip would read as "Republicans called". */
+.rail-swatch--called {
+  background: linear-gradient(to right, var(--party-dem) 0 50%, var(--party-rep) 50% 100%);
+  outline: 1px solid var(--selection);
+}
+.rail-swatch--leading {
+  background:
+    repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 4px),
+    linear-gradient(to right, var(--dem-1) 0 50%, var(--rep-1) 50% 100%);
+}
+.rail-swatch--early {
+  background: var(--uncalled);
+}
+
+.rail-balance {
+  margin-top: 16px;
+}
+.rail-balance-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 7px;
+}
+.rail-balance-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.rail-balance-sub {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.rail-bar {
+  position: relative;
+  display: flex;
+  height: 10px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--uncalled);
+}
+.rail-bar-seg {
+  height: 100%;
+}
+.rail-bar-seg--dem {
+  background: var(--bar-dem);
+}
+.rail-bar-seg--rep {
+  margin-left: auto;
+  background: var(--bar-rep);
+}
+.rail-bar-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--ink);
+  transform: translateX(-50%);
+}
+.rail-bar-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 5px 0 0;
+  font-size: 12px;
+}
+/* The numbers are NOT set in the party hues. indigo/500 on the card measures
+   2.51:1 — the hub only tints party text in light mode, and the bar directly
+   above already carries the colour. The D and R do the identifying, which is
+   the encoding the PRD asks for anyway: never colour alone. */
+.rail-num--dem,
+.rail-num--rep {
+  color: var(--ink);
+  font-weight: 700;
+}
+.rail-num--win {
+  color: var(--ink-soft);
+}
+.rail-source {
+  margin: 14px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+/* ====================================================================== */
+/* THE HOME BELOW                                                         */
+/* ====================================================================== */
+
+.home-main {
+  max-width: var(--rail);
+  margin: 0 auto;
+  padding: 36px var(--rail-pad) 64px;
+}
+/* Wide: the sections keep a column and the widget takes its own, stuck to
+   the top through the whole scroll. */
+@media (min-width: 1280px) {
+  .home-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 292px;
+    gap: 40px;
+    align-items: start;
+  }
+  .results-rail {
+    position: sticky;
+    top: 16px;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+.home-section-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
+.home-hero-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 36px;
+  align-items: start;
+}
+.home-hero {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #111;
+}
+.home-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.home-hero-kicker {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: var(--brand-pressed);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 3px;
+}
+.home-hero-body {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 80px 28px 44px;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.86), rgb(0 0 0 / 0));
+  color: #fff;
+  text-align: center;
+}
+.home-hero-title {
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 700;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+.home-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--brand-pressed);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 22px;
+  cursor: pointer;
+}
+.home-hero-play {
+  width: 0;
+  height: 0;
+  border-left: 9px solid currentColor;
+  border-top: 5.5px solid transparent;
+  border-bottom: 5.5px solid transparent;
+}
+.home-hero-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+}
+.home-hero-dots span {
+  width: 48px;
+  height: 2px;
+  background: rgb(255 255 255 / 0.35);
+}
+.home-hero-dots span.is-on {
+  background: #fff;
+}
+
+.home-top-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.home-top-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.home-top-item:first-child {
+  padding-top: 0;
+}
+.home-top-item img {
+  flex: none;
+  width: 68px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+.home-top-item h3 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+.home-byline {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.home-section {
+  margin-top: 44px;
+}
+.home-row {
+  display: grid;
+  gap: 24px;
+}
+.home-row--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.home-row--8 {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+.home-card img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+}
+.home-card-title {
+  margin: 14px 0 0;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+/* Opinion is commentary, and it is set in the exclusive serif so it can
+   never be mistaken for reporting. */
+.home-card-title--opinion {
+  font-family: var(--font-exclusive);
+  font-size: 21px;
+  font-weight: 400;
+}
+.home-host img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+}
+.home-host p {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------- narrow ---------- */
+
+@media (max-width: 1180px) {
+  .en-grid,
+  .home-hero-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .en-chat-scroll {
+    max-height: 340px;
+  }
+  .home-row--8 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .home-row--4,
+  .home-row--8 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .home-masthead {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 10px;
+  }
+  .home-tagline {
+    justify-self: center;
+  }
+  .home-promo-art {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .en-live-dot {
+    animation: none;
+  }
+}
