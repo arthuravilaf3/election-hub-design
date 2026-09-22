@@ -35,8 +35,10 @@ export type Option = 1 | 2 | 3;
 export const OPTIONS_BUILD = built === 'options' || import.meta.env.DEV;
 const OPTION_KEY = 'dw-option';
 
+/* Option 2 (the full creative edition) left the switch on Sep 22 2026; it
+   still exists as the /creative/ build, but the one link offers 1 and 3. */
 function parseOption(v: string | null): Option | null {
-  return v === '1' || v === '2' || v === '3' ? (Number(v) as Option) : null;
+  return v === '1' || v === '3' ? (Number(v) as Option) : null;
 }
 
 function readOption(): Option {

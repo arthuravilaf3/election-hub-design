@@ -15,7 +15,6 @@ import { IS_PREVIEW_FRAME } from './MobilePreview';
 
 const OPTIONS: Array<{ id: Option; name: string }> = [
   { id: 1, name: 'Base' },
-  { id: 2, name: 'Creative' },
   { id: 3, name: 'Still arc' },
 ];
 
