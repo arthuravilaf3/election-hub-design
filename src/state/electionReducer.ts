@@ -1,5 +1,6 @@
 import type { Ballot, Chamber, Mode, Party, RaceStatus, StateRace } from '../data/types';
-import { PARTY_LABEL, leanOf, readFor } from '../data/encoding';
+import { PARTY_LABEL, readFor } from '../data/encoding';
+import { trueLeaderOf } from '../data/night';
 import { buildBallot } from '../data/mockRaces';
 import { DEFAULT_RESULTS_PROVIDER, DEFAULT_SOURCE_ID, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
@@ -85,20 +86,12 @@ export function activeRaces(state: ElectionState): Record<string, StateRace> {
 }
 
 /**
- * PROTOTYPE ONLY — falls back to the polling read when a race is called with no
- * result leader, so the dev simulator can call an uncalled race.
- *
- * DO NOT SHIP. Hub tenet 3: "Called" must trace only to the certified results
- * feed, never to a DW+ projection. A production build must drop this fallback
- * and refuse to render "Called" without a leader from the feed.
+ * Who a race is called for when the dev tools call it by hand: the night's
+ * answer key (data/night.ts), never the polling read. Hub tenet 3 / PRD
+ * tenet 1: "Called" traces only to the results provider.
  */
-function impliedLeader(race: StateRace): Party {
-  if (race.results?.leader) return race.results.leader;
-  const poll = race.reads.find((r) => r.kind === 'poll') ?? race.reads[0];
-  if (!poll) return 'rep';
-  const lean = leanOf(poll);
-  if (lean !== 'tossup') return lean;
-  return (poll.margin ?? (poll.demOdds ?? 50) - 50) >= 0 ? 'dem' : 'rep';
+function feedLeader(race: StateRace): Party {
+  return race.results?.leader ?? trueLeaderOf(`${race.chamber}:${race.id}`);
 }
 
 function cutoverRace(race: StateRace): StateRace {
@@ -231,7 +224,7 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
       if (action.status === 'called') {
         return electionReducer(state, { type: 'CALL_RACE', stateId: action.stateId });
       }
-      const leader = race.results.leader ?? impliedLeader(race);
+      const leader = race.results.leader ?? feedLeader(race);
       return {
         ...state,
         ballot: mapActiveRace(state, action.stateId, (r) => ({
@@ -252,7 +245,7 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
       if (race.results.status === 'called') return state; // facts don't un-count
       const reporting = Math.min(100, Math.max(0, Math.round(action.reporting)));
       const status = race.results.status === 'uncalled' && reporting > 0 ? 'counting' : race.results.status;
-      const leader = status === 'counting' ? race.results.leader ?? impliedLeader(race) : race.results.leader;
+      const leader = status === 'counting' ? race.results.leader ?? feedLeader(race) : race.results.leader;
       return {
         ...state,
         ballot: mapActiveRace(state, action.stateId, (r) => ({
@@ -266,7 +259,7 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
       const race = state.ballot[state.chamber][action.stateId];
       if (!race || race.mode !== 'results' || !race.results) return state;
       if (race.results.status === 'called') return state;
-      const leader = impliedLeader(race);
+      const leader = feedLeader(race);
       return {
         ...state,
         ballot: mapActiveRace(state, action.stateId, (r) => ({

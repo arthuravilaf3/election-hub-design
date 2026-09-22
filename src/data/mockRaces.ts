@@ -1,8 +1,6 @@
 import { DISTRICT_COUNT, districtId } from './districts';
-import { DEFAULT_RESULTS_PROVIDER } from './sources';
-import type { Ballot, Candidate, Chamber, District, Party, Results, SourceRead, StateRace } from './types';
+import type { Ballot, Candidate, Chamber, District, Party, SourceRead, StateRace } from './types';
 
-const RESULTS_PROVIDER = DEFAULT_RESULTS_PROVIDER;
 
 // Poll-close waves (ET, mock election night) used for per-state cutoverAt.
 const CLOSE: Record<string, string> = {
@@ -136,25 +134,6 @@ function buildReads(id: string, [, poll, kalshi, poly]: Seed, now: number): Sour
   return reads.filter((r) => !MARKET_GAPS[r.sourceId]?.includes(id));
 }
 
-/**
- * FIXTURE ONLY — results are derived from the polling margin so the existing
- * election-night simulation still has something to play. Nothing at runtime
- * may infer a result from a prediction (hub tenet 3).
- */
-function seedResults(id: string, poll: number): Results {
-  const abs = Math.abs(poll);
-  const leader: Party = poll >= 0 ? 'dem' : 'rep';
-  const h = hash(id);
-  if (abs >= 15) {
-    return { status: 'called', reporting: 70 + (h % 27), leader, margin: poll, providerId: RESULTS_PROVIDER };
-  }
-  if (h % 11 === 0) return { status: 'uncalled', reporting: 0, providerId: RESULTS_PROVIDER };
-  if (abs >= 6) {
-    return { status: 'counting', reporting: 45 + (h % 45), leader, margin: poll, providerId: RESULTS_PROVIDER };
-  }
-  return { status: 'counting', reporting: 8 + (h % 60), leader, margin: poll, providerId: RESULTS_PROVIDER };
-}
-
 /** FIXTURE candidate names — deterministic per race so reloads are stable. */
 const DEM_NAMES = ['Becky Stille', 'Laura Chen', 'Marcus Webb', 'Angela Torres', 'David Kim', 'Sarah Whitfield', 'James Porter', 'Maria Alvarez'];
 const REP_NAMES = ['Adrian Smith', 'Tom Hardin', 'Grace Miller', 'Frank Delgado', 'Nancy Cole', 'Peter Vance', 'Rachel Boone', 'Carl Jensen'];
@@ -228,14 +207,15 @@ function buildRace(seed: Seed, chamber: Chamber, now: number, districts?: Distri
     reads: buildReads(`${chamber}:${id}`, seed, now),
     candidates: buildCandidates(`${chamber}:${id}`, poll),
     districts,
-    results: seedResults(`${chamber}:${id}`, poll),
+    // No results here: the night (data/night.ts) supplies them from the
+    // clock, and only once this state's polls have closed.
     cutoverAt: CLOSE[WAVE[id] ?? '21'],
   };
 }
 
 /**
- * Every race starts in prediction mode; results are pre-seeded so cutover
- * (global or per-state) reveals a night already in progress.
+ * Every race starts in prediction mode with no results at all — results
+ * exist only as a function of the night's clock (data/night.ts).
  *
  * A state absent from a chamber's record has no race in that chamber.
  */

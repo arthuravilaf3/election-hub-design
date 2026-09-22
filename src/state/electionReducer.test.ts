@@ -9,20 +9,21 @@ import {
 import { fillFor, hasNoRead, readFor } from '../data/encoding';
 import { picksForChamber } from '../data/trust';
 import type { RaceStatus } from '../data/types';
+import { snapshotAt, trueLeaderOf } from '../data/night';
 
-/** Results mode with the SENATE active — the chamber whose seeds cover every
- *  status (the curated House subset is all close races, so it seeds no
- *  'called' states). */
+/** Results mode with the SENATE active, the night at 10 PM ET — a moment
+ *  with races in every status (data/night.ts is the only source of results). */
+const TEN_PM = new Date('2026-11-03T22:00:00-05:00').getTime();
 function resultsState(): ElectionState {
   let s = electionReducer(initialElectionState(), { type: 'SET_CHAMBER', chamber: 'senate' });
   s = electionReducer(s, { type: 'SET_GLOBAL_MODE', mode: 'results' });
-  return s;
+  return { ...s, ballot: snapshotAt(s.ballot, TEN_PM) };
 }
 
-/** First state in the active chamber whose seeded results are in `status`. */
+/** First state in the active chamber whose results are in `status`. */
 function findByStatus(state: ElectionState, status: RaceStatus): string {
   const hit = Object.values(activeRaces(state)).find((r) => r.results?.status === status);
-  if (!hit) throw new Error(`no seeded race with status ${status}`);
+  if (!hit) throw new Error(`no race with status ${status}`);
   return hit.id;
 }
 
@@ -145,7 +146,8 @@ describe('chamber and source switching', () => {
 
 describe('cutover', () => {
   it('global cutover flips every race in every chamber and shows the banner', () => {
-    const s = resultsState();
+    let s = electionReducer(initialElectionState(), { type: 'SET_CHAMBER', chamber: 'senate' });
+    s = electionReducer(s, { type: 'SET_GLOBAL_MODE', mode: 'results' });
     for (const chamber of ['senate', 'house', 'governor'] as const) {
       expect(Object.values(s.ballot[chamber]).every((r) => r.mode === 'results')).toBe(true);
     }
@@ -163,10 +165,8 @@ describe('cutover', () => {
     expect(s.banner).toBe(CUTOVER_BANNER);
   });
 
-  it('cutover initializes results for a race without seeded results', () => {
+  it('cutover initializes an empty count for a race with no results yet', () => {
     const init = electionReducer(initialElectionState(), { type: 'SET_CHAMBER', chamber: 'senate' });
-    delete init.ballot.senate.GA.results;
-    delete init.ballot.governor.GA.results;
     const s = electionReducer(init, { type: 'CUTOVER_STATE', stateId: 'GA' });
     expect(s.ballot.senate.GA.results).toMatchObject({ status: 'uncalled', reporting: 0 });
   });
@@ -215,12 +215,12 @@ describe('calling races', () => {
     expect(s.announcement).toContain('called for');
   });
 
-  it('falls back to the polling read when calling a race with no leader', () => {
+  it("calls a leaderless race for the night's answer key, never the polling read", () => {
     let s = resultsState();
     const id = findByStatus(s, 'uncalled');
     expect(activeRaces(s)[id].results?.leader).toBeUndefined();
     s = electionReducer(s, { type: 'CALL_RACE', stateId: id });
-    expect(activeRaces(s)[id].results?.leader).toBeDefined();
+    expect(activeRaces(s)[id].results?.leader).toBe(trueLeaderOf(`senate:${id}`));
   });
 
   it('calling twice is a no-op (no second flash)', () => {

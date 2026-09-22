@@ -73,6 +73,8 @@ export interface District {
   /** One of the editor-curated "29 closest races" — the set the map and the
    *  game are scoped to. The rest of the delegation is context. */
   curated?: boolean;
+  /** Election night: the provider's count for this seat (curated seats only). */
+  results?: Results;
 }
 
 /** One named candidate in a race (drawer redesign, Aug 2026). Mock data. */
