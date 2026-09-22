@@ -23,9 +23,8 @@ import {
   ratingOf,
   readFor,
   readLine,
-  statusLine,
 } from '../data/encoding';
-import { SOURCES, resultsAttribution, sourceKind, sourceLabel } from '../data/sources';
+import { SOURCES, sourceKind, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 
 /** Long form for the panel title — the comp names the body, not the tab. */
@@ -67,27 +66,14 @@ function SourcePicker({ value, onChange }: { value: string; onChange: (id: strin
 }
 import { districtLabel } from '../data/districts';
 import { asset } from '../data/assets';
+import { photoFor } from './candidatePhoto';
+import { ResultsBlock } from './ResultsBlock';
 import type { Candidate, Chamber, District, StateRace } from '../data/types';
 
 const GROW_MS = 800;
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
-}
-
-/** PLACEHOLDER portraits (mock-licensed stock, public/candidates/) — the same
- *  six faces repeat across states by design; real data brings real photos.
- *  Pools split by the fixture name lists' genders so photo and name agree. */
-const PHOTOS_M = ['c0', 'c2', 'c4'];
-const PHOTOS_F = ['c1', 'c3', 'c5'];
-const FEMALE_FIRST = new Set(['Becky', 'Laura', 'Angela', 'Sarah', 'Maria', 'Grace', 'Nancy', 'Rachel', 'Jill', 'Dana']);
-
-function photoFor(name: string): string {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 997;
-  const pool = FEMALE_FIRST.has(name.split(' ')[0]) ? PHOTOS_F : PHOTOS_M;
-  // -cut = background removed (macOS Vision), composited over the party color.
-  return asset(`candidates/${pool[h % pool.length]}-cut.png`);
 }
 
 /** Candidate photo-bars: bar and number grow in the same animation frame. */
@@ -430,10 +416,20 @@ export function RacePanel({
         </header>
 
         {isResults ? (
-          <section className="drawer-block">
-            <p className="race-panel-status">{statusLine(shown, src)}</p>
-            <p className="drawer-note">Source: {resultsAttribution(shown.results?.providerId ?? '')}</p>
-          </section>
+          <>
+            {/* The chamber tabs stay; the source picker does not — on the
+                night there is one provider and no estimate to switch to. */}
+            <div className="drawer-tabrow">
+              <DrawerTabs
+                tabs={chambers.map((c) => ({ id: c, label: CHAMBER_TITLE[c] }))}
+                value={shown.chamber}
+                onChange={(id) => onChamber(id as Chamber)}
+              />
+            </div>
+            <div role="tabpanel" id="drawer-tabpanel" aria-labelledby={`drawer-tab-${shown.chamber}`}>
+              <ResultsBlock race={shown} showDistricts={showDistricts} />
+            </div>
+          </>
         ) : (
           <>
             {/* The tab row reads as "what you are looking at": the race on

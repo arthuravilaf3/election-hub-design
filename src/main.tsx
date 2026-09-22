@@ -7,13 +7,13 @@ import './colors.css';
 import './index.css';
 import './home/home.css';
 
-/* The homepage edition IS dailywire.com, and the site is a light surface —
-   the takeover is the only dark thing on it (see `.en` in home/home.css).
-   Both flags are set after the imports, so ThemeToggle's module-eval read of
-   a stored 'dark' preference cannot win, and before the first paint, so the
-   page never flashes the hub's dark canvas. */
+/* The homepage edition is dailywire.com on election night, and that page is a
+   DW+ DARK surface end to end (Arthur, Sep 22 2026). Dark is the token source
+   of truth, so no theme is set — a stored light preference is cleared instead,
+   after the imports (ThemeToggle applies it at module eval) and before the
+   first paint, so the page cannot flash light. */
 if (IS_HOMEPAGE) {
-  document.documentElement.dataset.theme = 'light';
+  delete document.documentElement.dataset.theme;
   document.documentElement.dataset.page = 'home';
 }
 

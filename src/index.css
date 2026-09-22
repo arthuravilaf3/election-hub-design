@@ -5587,3 +5587,86 @@ body {
     display: none;
   }
 }
+
+/* ==================== THE RACE ON ELECTION NIGHT (drawer) ==================== */
+
+/* The provider's word on the race, as a chip: the glyph is the non-colour
+   channel, the word is the status the PRD names. */
+.race-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.race-chip--called {
+  background: var(--ink);
+  color: var(--surface-dim);
+}
+
+.race-chip--leading {
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+
+.race-chip--early {
+  border: 1px dashed var(--border);
+  color: var(--ink-subtlest);
+}
+
+/* How much of the expected vote is in. */
+.reporting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.reporting-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.reporting-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--ink);
+  transition: width var(--harden-ms) var(--harden-ease);
+}
+
+.reporting-pct {
+  font-size: 13px;
+  color: var(--ink-subtlest);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-value--votes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.bar-votes {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-subtlest);
+}
+
+.bar-win {
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reporting-bar > span {
+    transition: none;
+  }
+}

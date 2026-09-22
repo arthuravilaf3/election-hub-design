@@ -1,5 +1,6 @@
 import { freshnessOf, readFor, sourceOf, statusLine } from '../data/encoding';
 import { CHAMBER_LABEL } from '../data/summary';
+import { formatET } from '../data/time';
 import type { Chamber, StateRace } from '../data/types';
 
 interface MapTooltipProps {
@@ -46,6 +47,12 @@ export function MapTooltip({ name, race, chamber, sourceId, trusted, x, y }: Map
       {/* Every number carries its provenance and its age. */}
       <p className="map-tooltip-source">
         {sourceOf(race, sourceId)}
+        {race.mode === 'results' && race.results?.asOf && (
+          <>
+            {' · '}
+            updated {formatET(new Date(race.results.asOf).getTime())}
+          </>
+        )}
         {freshness && (
           <>
             {' · '}

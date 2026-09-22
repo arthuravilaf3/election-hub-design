@@ -1,12 +1,21 @@
 /**
  * The stream — the anchor of the night (PRD: "live video stream, primary
- * visual weight"). Redrawn from the DW+ watch page Arthur sent (Sep 22 2026):
- * 16:9 frame, the status/title/meta/dek block beneath it, share row at the
- * foot, chat alongside.
+ * visual weight").
+ *
+ * Built to DW 3.0 Source of Truth, "Desktop - Default" 11123:6768 (Sep 22
+ * 2026): the video frame at 912x502 with 8px radius and the two burnt-in
+ * watermarks, then the text block INSET 56px from the video's left edge —
+ * status line, heading, show · date, dek — and the three share circles 28px
+ * wide, 12px apart, at the foot.
  *
  * MOCK: a poster, not a video element. Nothing here plays.
  *
- * Status is TEXT + ICON, never colour alone (hub a11y rule) — the red dot is
+ * WHAT THE FILE DOES NOT DRAW. The file shows a clean frame, so the controls
+ * are a small cluster top-right (captions and the persistent player are P1/P2
+ * in the PRD and have to be visible somewhere), and the viewer count rides the
+ * status line below rather than a bar over the picture.
+ *
+ * Status is TEXT + ICON, never colour alone (hub a11y rule) — the dot is
  * decoration on top of the word "Live", not the carrier of it.
  */
 import { STREAM } from './homeContent';
@@ -34,7 +43,6 @@ function StatusIcon({ kind }: { kind: 'dot' | 'clock' | 'replay' }) {
   );
 }
 
-/* Tabler-style glyphs at 18px, matching the nav's stroke weight. */
 const CONTROLS: Array<{ id: string; label: string; path: React.ReactNode }> = [
   {
     id: 'cc',
@@ -70,10 +78,11 @@ const CONTROLS: Array<{ id: string; label: string; path: React.ReactNode }> = [
   },
 ];
 
+/* The file's three circles: Facebook blue, X black, send on a light chip. */
 const SHARE: Array<{ id: string; label: string; path: React.ReactNode }> = [
-  { id: 'fb', label: 'Share on Facebook', path: <path d="M13.5 8.5h2V6h-2c-1.7 0-3 1.3-3 3v1.5H9V13h1.5v5H13v-5h2l.5-2.5H13V9c0-.3.2-.5.5-.5Z" fill="currentColor" /> },
-  { id: 'x', label: 'Share on X', path: <path d="M7 6.5 11.4 12 7.2 17.5h1.5l3.4-4.5 3.4 4.5H18l-4.4-5.7L17.6 6.5h-1.5l-3.1 4.1-3.1-4.1H7Z" fill="currentColor" /> },
-  { id: 'send', label: 'Send', path: <path d="M19 5 5 11l5 2 2 5 7-13Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /> },
+  { id: 'fb', label: 'Share on Facebook', path: <path d="M15.2 9.6h1.8V7.2h-1.8c-1.6 0-2.9 1.3-2.9 2.9v1.3h-1.6v2.4h1.6v5h2.4v-5h1.8l.5-2.4h-2.3v-1.3c0-.3.2-.5.5-.5Z" fill="currentColor" /> },
+  { id: 'x', label: 'Share on X', path: <path d="M8.4 7.8 12.6 13 8.6 18.2h1.4l3.3-4.3 3.2 4.3h3.1l-4.2-5.4 3.8-5h-1.4l-3 3.9-2.9-3.9H8.4Z" fill="currentColor" /> },
+  { id: 'send', label: 'Send', path: <path d="M20 7 6.5 12.8l4.8 1.9 1.9 4.8L20 7Z" fill="currentColor" /> },
 ];
 
 export function LivePlayer() {
@@ -84,18 +93,12 @@ export function LivePlayer() {
     <div className="en-player">
       <div className="en-stage">
         <img className="en-poster" src={STREAM.poster} alt="" />
-        {/* The two watermarks the real player burns in. They own the bottom
-            edge, so the status and the controls take the top one. */}
-        <span className="en-mark en-mark--dw">DAILYWIRE+</span>
+        <span className="en-mark en-mark--dw">
+          DAILY WIRE<i aria-hidden="true">+</i>
+        </span>
         <span className="en-mark en-mark--show">ELECTION NIGHT</span>
 
         <div className="en-controls">
-          <span className="en-pill">
-            <StatusIcon kind={status.icon} />
-            {status.label}
-          </span>
-          <span className="en-viewers">{viewers} watching</span>
-          <span className="en-controls-spacer" />
           {CONTROLS.map((c) => (
             <button key={c.id} type="button" className="en-ctrl" aria-label={c.label} title={c.label}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -106,24 +109,37 @@ export function LivePlayer() {
         </div>
       </div>
 
-      <p className="en-status">
-        <StatusIcon kind={status.icon} />
-        {status.label}
-      </p>
-      <h2 className="en-title">{STREAM.title}</h2>
-      <p className="en-meta">
-        {STREAM.show} <span aria-hidden="true">·</span> {STREAM.date}
-      </p>
-      <p className="en-dek">{STREAM.dek}</p>
+      <div className="en-text">
+        <p className="en-status">
+          <StatusIcon kind={status.icon} />
+          {status.label}
+          <span className="en-viewers">{viewers} watching</span>
+        </p>
+        <h2 className="en-title">{STREAM.title}</h2>
+        <p className="en-meta">
+          <a className="en-meta-link" href="https://www.dailywire.com/watch">
+            {STREAM.show}
+          </a>
+          <span aria-hidden="true">•</span>
+          {STREAM.date}
+        </p>
+        <p className="en-dek">{STREAM.dek}</p>
 
-      <div className="en-share">
-        {SHARE.map((s) => (
-          <button key={s.id} type="button" className="en-share-btn" aria-label={s.label} title={s.label}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              {s.path}
-            </svg>
-          </button>
-        ))}
+        <div className="en-share">
+          {SHARE.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={`en-share-btn en-share-btn--${s.id}`}
+              aria-label={s.label}
+              title={s.label}
+            >
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <g transform="translate(2 2)">{s.path}</g>
+              </svg>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

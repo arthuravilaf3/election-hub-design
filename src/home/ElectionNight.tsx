@@ -1,22 +1,32 @@
 /**
  * THE TAKEOVER — the election-night block that sits between the wordmark and
- * the home's own hero on Nov 3 (option A, approved Sep 22 2026: a dark band
- * above the hero, everything below it intact).
+ * the rest of the home on Nov 3 (option A, approved Sep 22 2026: a dark band
+ * above everything, the sections below it intact).
  *
- * Two surfaces this round: the stream and the chat, laid out as the DW+ watch
- * page lays them out. The live blog is deliberately not here yet — Arthur's
- * call, Sep 22: "vamos focar no video e no chat do video". When it lands it
- * belongs under the stream, in the left column, because the PRD makes the
- * blog the system of record and the chat its companion, never its container.
+ * Three surfaces, in the order Arthur set on Sep 22: the stream and the chat
+ * side by side, then the results band under both. The live blog is
+ * deliberately not here yet — "vamos focar no video e no chat do video".
+ * When it lands it belongs under the stream, in the left column, because the
+ * PRD makes the blog the system of record and the chat its companion.
  *
- * The band carries the sponsor line ("Presented by Polymarket") because the
- * night's coverage is the sponsored surface, not the map inside the widget.
+ * The chat is positioned inside a holder rather than stretched as a grid
+ * item: a stretched item still reports its own content height, so a chat with
+ * more messages than the stream column is tall would grow the row and leave
+ * the panel hanging below the share buttons. In the holder it contributes no
+ * height at all, so the row is the stream's, and the panel ends exactly where
+ * the text does — the 767px the Figma gives both columns.
  */
 import { LivePlayer } from './LivePlayer';
 import { LiveChat } from './LiveChat';
+import { ResultsBand } from './ResultsBand';
 import polymarketLogo from '../images/polymarketlogo.png';
+import type { ElectionState } from '../state/electionReducer';
 
-export function ElectionNight() {
+interface ElectionNightProps {
+  state: ElectionState;
+}
+
+export function ElectionNight({ state }: ElectionNightProps) {
   return (
     <section className="en" aria-label="Election night coverage">
       <div className="en-rail">
@@ -36,8 +46,12 @@ export function ElectionNight() {
 
         <div className="en-grid">
           <LivePlayer />
-          <LiveChat />
+          <div className="en-chat-holder">
+            <LiveChat />
+          </div>
         </div>
+
+        <ResultsBand state={state} />
       </div>
     </section>
   );

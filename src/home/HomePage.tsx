@@ -3,22 +3,26 @@
  *
  * The home is transcribed from the live site (Sep 22 2026) so the takeover
  * can be judged in place: promo bar, ad slot, the nav the hub already owns,
- * the date/wordmark line, then the hero and the sections. The one change is
- * that the election-night block is inserted ABOVE the hero and everything
- * else moves down intact — option A, approved Sep 22 2026.
+ * the date/wordmark line, then the sections. The election-night block goes
+ * ABOVE all of it and everything else moves down intact — option A, approved
+ * Sep 22 2026.
  *
- * The page runs in LIGHT mode (the site is #FAFAFA); the takeover and the
- * results widget re-declare the hub's dark tokens locally, so the same
- * semantic names resolve dark inside them and the map's encoding is
- * untouched. See `.en` and `.results-rail` in home.css.
+ * DARK, END TO END (Arthur, Sep 22: the nav is dark "assim como o resto da
+ * pagina"). The site's own home is a light surface; on election night this
+ * page is a DW+ dark one, so nothing here sets a theme and every token
+ * resolves to its dark-mode value — nav, sections and footer included. The
+ * map's encoding is identical in both themes, so no result changes with it.
+ *
+ * The hero carousel and Top Stories are gone by the same round's call: the
+ * stream IS the lead on this night, and a second full-width promo right под
+ * it only competed with it. The page runs takeover, then Opinion Board.
  */
 import { useEffect, useRef, useState } from 'react';
 import { DWNav } from '../components/DWNav';
 import { SiteFooter } from '../components/SiteFooter';
 import { DevToolbar } from '../components/DevToolbar';
 import { ElectionNight } from './ElectionNight';
-import { ResultsRail } from './ResultsRail';
-import { EPISODES, HERO, HOSTS, OPINION, TOP_STORIES } from './homeContent';
+import { EPISODES, HOSTS, OPINION } from './homeContent';
 import { useElectionData } from '../state/useElectionData';
 
 const POLL_CLOSING_INTERVAL_MS = 900;
@@ -65,72 +69,35 @@ export function HomePage() {
       {/* Promo, ad slot, nav and masthead are one banner landmark — loose
           blocks above the fold otherwise sit outside every landmark. */}
       <header className="home-chrome">
-      <a className="home-promo" href="https://get.dailywire.com/">
-        <span className="home-promo-art" aria-hidden="true">
-          RUN HIDE FIGHT
-        </span>
-        <span className="home-promo-line">
-          <b>40% OFF</b> ANNUAL PLANS · NOW STREAMING
-        </span>
-        <span className="home-promo-cta">
-          Join The Fight <span aria-hidden="true">→</span>
-        </span>
-      </a>
+        <a className="home-promo" href="https://get.dailywire.com/">
+          <span className="home-promo-art" aria-hidden="true">
+            RUN HIDE FIGHT
+          </span>
+          <span className="home-promo-line">
+            <b>40% OFF</b> ANNUAL PLANS · NOW STREAMING
+          </span>
+          <span className="home-promo-cta">
+            Join The Fight <span aria-hidden="true">→</span>
+          </span>
+        </a>
 
-      <div className="home-ad" role="presentation">
-        <span>ADVERTISEMENT</span>
-      </div>
+        <div className="home-ad" role="presentation">
+          <span>ADVERTISEMENT</span>
+        </div>
 
-      <DWNav />
+        <DWNav />
 
-      <div className="home-masthead">
-        <span className="home-date">Tuesday, November 3, 2026</span>
-        <span className="home-wordmark">DAILYWIRE</span>
-        <span className="home-tagline">Unfiltered Honest News.</span>
-      </div>
+        <div className="home-masthead">
+          <span className="home-date">Tuesday, November 3, 2026</span>
+          <span className="home-wordmark">DAILYWIRE</span>
+          <span className="home-tagline">Unfiltered Honest News.</span>
+        </div>
       </header>
 
-      {/* THE TAKEOVER — first thing on the page, above the hero. */}
-      <ElectionNight />
+      {/* THE TAKEOVER — first thing on the page. */}
+      <ElectionNight state={state} />
 
       <main className="home-main">
-        <div className="home-col">
-        <section className="home-hero-row" aria-label="Featured">
-          <article className="home-hero">
-            <img className="home-hero-img" src={HERO.image} alt="" />
-            <span className="home-hero-kicker">{HERO.kicker}</span>
-            <div className="home-hero-body">
-              <h2 className="home-hero-title">{HERO.title}</h2>
-              <button type="button" className="home-hero-cta">
-                <span className="home-hero-play" aria-hidden="true" />
-                {HERO.cta}
-              </button>
-            </div>
-            <div className="home-hero-dots" aria-hidden="true">
-              {Array.from({ length: HERO.slides }, (_, i) => (
-                <span key={i} className={i === 0 ? 'is-on' : undefined} />
-              ))}
-            </div>
-          </article>
-
-          <section className="home-top" aria-label="Top Stories">
-            <h2 className="home-section-title">Top Stories</h2>
-            <ul className="home-top-list">
-              {TOP_STORIES.map((s) => (
-                <li key={s.title} className="home-top-item">
-                  <img src={s.image} alt="" />
-                  <div>
-                    <h3>{s.title}</h3>
-                    <p className="home-byline">
-                      {s.byline} <span aria-hidden="true">·</span> {s.read}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </section>
-
         {/* Opinion is set in the exclusive serif — commentary is never
             dressed as reporting (Coverage Feed rule, applied to the home). */}
         <section className="home-section" aria-label="Opinion Board">
@@ -174,9 +141,6 @@ export function HomePage() {
             ))}
           </div>
         </section>
-        </div>
-
-        <ResultsRail state={state} />
 
         {/* Race calls and cutover notices, announced politely. */}
         <div aria-live="polite" className="visually-hidden">
@@ -187,7 +151,7 @@ export function HomePage() {
       <SiteFooter />
 
       {/* Prototype chrome: the hub's own election-night simulator, so calling
-          a race here moves the widget exactly as it moves the full map. */}
+          a race here moves the band exactly as it moves the full map. */}
       <DevToolbar
         state={state}
         dispatch={dispatch}

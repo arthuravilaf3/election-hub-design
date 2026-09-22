@@ -16,43 +16,6 @@ export interface Story {
   image: string;
 }
 
-/** The right-hand column beside the hero. */
-export const TOP_STORIES: Story[] = [
-  {
-    title: 'JD Vance Makes Promise To Daily Wire After Bombshell Reporting',
-    byline: 'Drew Berkemeyer',
-    read: '3 min',
-    image: stillFor(0),
-  },
-  {
-    title: 'Trump Warns Iran Of Annihilation At U.N. As Tehran’s Rep Holds Blank Stare',
-    byline: 'Kassy Akiva',
-    read: '6 min',
-    image: stillFor(1),
-  },
-  {
-    title: 'EXCLUSIVE: Why Rick Scott Thinks Mamdani May Be Right ‘On One Thing’',
-    byline: 'Brecca Stoll',
-    read: '2 min',
-    image: stillFor(2),
-  },
-  {
-    title: 'Father Of Flight 93 Hero Lays Into Michigan’s Abdul El-Sayed',
-    byline: 'Amanda Prestigiacomo',
-    read: '2 min',
-    image: stillFor(3),
-  },
-];
-
-/** The hero carousel's current slide. */
-export const HERO = {
-  kicker: 'Live Now',
-  title: 'SHOCKING: This Is The Worst Example Of Covid Fraud And It’s Not Even Close',
-  cta: 'Watch Live Stream',
-  image: stillFor(4, 'wide'),
-  slides: 8,
-};
-
 /** Opinion Board — commentary, set in the exclusive serif (opinion ≠ reporting). */
 export const OPINION: Story[] = [
   {
