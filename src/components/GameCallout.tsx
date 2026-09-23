@@ -1,8 +1,7 @@
 // The game's call in the hero (option 1, Sep 21 2026): a compact cousin of
 // the plan banner, under the clock and flush with the foot of the dots, so
 // the game is offered before the map as well as after it. Same copy, same
-// tile (still the placeholder art), one button.
-import { track } from '../data/analytics';
+// tile (still the placeholder art). The button is out for now (Sep 23 2026).
 
 export function GameCallout() {
   return (
@@ -15,13 +14,6 @@ export function GameCallout() {
       <p className="game-callout-copy">
         <b>The nation speaks.</b> Can you predict their voices?
       </p>
-      <button
-        type="button"
-        className="btn-follow game-callout-btn"
-        onClick={() => track('plan_banner_cta_click', { cta: 'hero' })}
-      >
-        Play the game
-      </button>
     </aside>
   );
 }

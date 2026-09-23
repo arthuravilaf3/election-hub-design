@@ -35,8 +35,10 @@ export type Option = 1 | 2 | 3;
 export const OPTIONS_BUILD = built === 'options' || import.meta.env.DEV;
 const OPTION_KEY = 'dw-option';
 
+/* Sep 23 2026: the still-arc cut (2) left the switch too — the one link is
+   option 1. The other cuts stay in the code and the /creative/ build. */
 function parseOption(v: string | null): Option | null {
-  return v === '1' || v === '2' ? (Number(v) as Option) : null;
+  return v === '1' ? 1 : null;
 }
 
 function readOption(): Option {
@@ -46,9 +48,9 @@ function readOption(): Option {
       localStorage.setItem(OPTION_KEY, String(fromQuery));
       return fromQuery;
     }
-    return parseOption(localStorage.getItem(OPTION_KEY)) ?? 2;
+    return parseOption(localStorage.getItem(OPTION_KEY)) ?? 1;
   } catch {
-    return 2;
+    return 1;
   }
 }
 

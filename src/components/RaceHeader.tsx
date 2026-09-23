@@ -173,10 +173,13 @@ function SeatLine({
   forecast,
   results,
   chamber,
+  compact = IS_STILL_ARC,
 }: {
   forecast: ForecastData;
   results: ResultsData | null;
   chamber: Chamber;
+  /** The comp's terse form: "203 D", "Toss Ups: N" between the currents. */
+  compact?: boolean;
 }) {
   const total = forecast.dem + forecast.rep;
   const gap = forecast.tossupShare;
@@ -220,7 +223,7 @@ function SeatLine({
       <div className="seatline-ends">
         <span className="seatline-end seatline-end--dem">
           <b className="seatline-big">{pd}</b>
-          {IS_STILL_ARC ? (
+          {compact ? (
             <abbr className="seatline-label" title="Democrats">
               D
             </abbr>
@@ -232,7 +235,7 @@ function SeatLine({
           {majority} to win
         </span>
         <span className="seatline-end seatline-end--rep">
-          {IS_STILL_ARC ? (
+          {compact ? (
             <>
               <b className="seatline-big">{pr}</b>
               <abbr className="seatline-label" title="Republicans">
@@ -264,13 +267,13 @@ function SeatLine({
         {results ? (
           <>
             <span>{results.calledDem} called</span>
-            {IS_STILL_ARC && <span className="seatline-toss">{results.open} uncalled</span>}
+            {compact && <span className="seatline-toss">{results.open} uncalled</span>}
             <span>{results.calledRep} called</span>
           </>
         ) : (
           <>
             <span>{cur.dem} current</span>
-            {IS_STILL_ARC && <span className="seatline-toss">Toss Ups: {toss}</span>}
+            {compact && <span className="seatline-toss">Toss Ups: {toss}</span>}
             <span>{cur.rep} current</span>
           </>
         )}
@@ -662,7 +665,10 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
       </div>
 
       {/* The grid is one image to assistive tech — 435 list items would be
-          noise. The sentence is the seat bar's, unchanged. */}
+          noise. The sentence is the seat bar's, unchanged. Under it, the
+          seat line (Sep 23 2026, from the still-arc cut): the same split
+          as a bar with the majority marked. */}
+      <div className="dots-right">
       <div
         className={`dots-grid${arc ? ' dots-grid--arc' : ''}`}
         style={
@@ -729,6 +735,8 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
             />
           );
         })}
+      </div>
+      <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
       </div>
     </section>
   );

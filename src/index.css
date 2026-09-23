@@ -4768,10 +4768,12 @@ body {
 
 /* "203 D": the figure and the party's letter in one weight and size
    (Regular 24, −0.68px), both in ink; "Toss Ups: N" between the currents. */
+[data-option='1'] .seatline-end,
 [data-option='2'] .seatline-end {
   gap: 6px;
 }
 
+[data-option='1'] .seatline-big,
 [data-option='2'] .seatline-big {
   font-size: 24px;
   line-height: 34px;
@@ -4779,6 +4781,7 @@ body {
   letter-spacing: -0.68px;
 }
 
+[data-option='1'] .seatline-label,
 [data-option='2'] .seatline-label {
   font-size: 24px;
   line-height: 34px;
@@ -4788,14 +4791,17 @@ body {
   color: var(--ink);
 }
 
+[data-option='1'] .seatline-bar,
 [data-option='2'] .seatline-bar {
   gap: 4px;
 }
 
+[data-option='1'] .seatline-run,
 [data-option='2'] .seatline-run {
   border-radius: 200px;
 }
 
+[data-option='1'] .seatline-current,
 [data-option='2'] .seatline-current {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -4805,6 +4811,7 @@ body {
   color: var(--ink-subtle);
 }
 
+[data-option='1'] .seatline-current > :last-child,
 [data-option='2'] .seatline-current > :last-child {
   text-align: right;
 }
@@ -5737,4 +5744,26 @@ body {
   font-size: 18px;
   line-height: 1.25;
   font-weight: 500;
+}
+
+/* ---------- Option 1: the seat line under the arc (Sep 23 2026) ---------- */
+.dots-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* The line sits on the arc's rail; its labels in ink like the comp's. */
+[data-option='1'] .dots-right .seatline-label {
+  color: var(--ink);
+}
+
+[data-option='1'] .dots-right .seatline {
+  animation: none;
+}
+
+/* The game's call, without its button for now. */
+.game-callout-copy {
+  flex: 1;
 }

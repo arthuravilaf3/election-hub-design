@@ -11,13 +11,12 @@ import {
 } from '../data/edition';
 import { IS_PREVIEW_FRAME } from './MobilePreview';
 
-const OPTIONS: Array<{ id: Option; name: string }> = [
-  { id: 1, name: 'Base' },
-  { id: 2, name: 'Still arc' },
-];
+/* One option left (Sep 23 2026): the switch stays wired for the day a second
+   cut comes back, and renders nothing until then. */
+const OPTIONS: Array<{ id: Option; name: string }> = [{ id: 1, name: 'Base' }];
 
 export function OptionSwitcher() {
-  if (!OPTIONS_BUILD || IS_PREVIEW_FRAME) return null;
+  if (!OPTIONS_BUILD || IS_PREVIEW_FRAME || OPTIONS.length < 2) return null;
   return (
     /* A landmark of its own (axe "region"): prototype chrome outside the
        page's main. */

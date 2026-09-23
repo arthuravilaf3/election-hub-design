@@ -2,12 +2,12 @@
 // and the feed (replacing the old surface-color separation). Brand-family
 // background; buttons borrow the Follow button style for now ("mudamos ele
 // depois"). Copy is Arthur's line (Sep 17 2026); the supporting sentence and
-// the tile art are placeholders until the game's assets land.
+// the tile art are placeholders until the game's assets land. The CTAs are
+// out for now (Arthur, Sep 23 2026).
 //
 // Background is brand/600 (--brand-pressed), not brand/500: white body text
 // on #DB3D3B measures 4.24:1 (under AA) — same deviation precedent as the
 // nav's SIGN UP.
-import { track } from '../data/analytics';
 
 export function PlanBanner() {
   return (
@@ -22,22 +22,6 @@ export function PlanBanner() {
       <div className="plan-copy">
         <h2>The nation speaks, can you predict their voices?</h2>
         <p>Call all 29 races before the polls close and track your streak through election night.</p>
-      </div>
-      <div className="plan-actions">
-        <button
-          type="button"
-          className="btn-follow"
-          onClick={() => track('plan_banner_cta_click', { cta: 'primary' })}
-        >
-          Play the game
-        </button>
-        <button
-          type="button"
-          className="plan-btn-secondary"
-          onClick={() => track('plan_banner_cta_click', { cta: 'secondary' })}
-        >
-          How it works
-        </button>
       </div>
     </section>
   );
