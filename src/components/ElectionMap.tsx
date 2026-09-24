@@ -488,9 +488,18 @@ export function ElectionMap({
               handleActivate(shape.id);
             }
           }}
-          onPointerMove={(e) => showTooltipAt(shape.id, shape.name, e.clientX, e.clientY)}
+          /* A finger has no hover: a tap must open the state, not raise it
+             and park a tooltip on it (Sep 24 2026). Touch pointers are out,
+             and focus only speaks when it came from the keyboard. */
+          onPointerMove={(e) => {
+            if (e.pointerType === 'touch') return;
+            showTooltipAt(shape.id, shape.name, e.clientX, e.clientY);
+          }}
           onPointerLeave={() => setTooltip((t) => (t?.id === shape.id ? null : t))}
-          onFocus={(e) => showTooltipForElement(shape.id, shape.name, e.currentTarget)}
+          onFocus={(e) => {
+            if (!e.currentTarget.matches(':focus-visible')) return;
+            showTooltipForElement(shape.id, shape.name, e.currentTarget);
+          }}
           onBlur={() => setTooltip((t) => (t?.id === shape.id ? null : t))}
         />
         {race && isHatched(race) && (

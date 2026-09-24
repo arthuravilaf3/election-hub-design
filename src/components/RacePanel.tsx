@@ -28,9 +28,10 @@ import { SOURCES, sourceKind, sourceLabel } from '../data/sources';
 import { CHAMBER_LABEL } from '../data/summary';
 
 /** Long form for the panel title — the comp names the body, not the tab. */
+/* The tab says the body, not the country — the page is about one. */
 const CHAMBER_TITLE: Record<Chamber, string> = {
-  senate: 'U.S. Senate',
-  house: 'U.S. House',
+  senate: 'Senate',
+  house: 'House',
   governor: 'Governor',
 };
 

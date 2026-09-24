@@ -58,6 +58,12 @@ export function RaceHeader({
      source stays named where it lives: the SOURCE pill and the panel. */
   const headline = results ? results.headline : resultsMode ? `${called} of ${raceCount} races called` : forecast.headline;
   const updatedLine = results ? results.updatedLine : resultsMode ? 'Updating live' : `Updated ${forecast.updated}`;
+  /* The phone's byline has no room for the date: the same stamp, time only. */
+  const updatedShort = results
+    ? results.updatedShortLine
+    : resultsMode
+      ? 'Updating live'
+      : `Updated ${forecast.updatedShort}`;
 
   return (
     <>
@@ -88,7 +94,10 @@ export function RaceHeader({
                 <span className="hub-dot" aria-hidden="true">
                   •
                 </span>
-                <span className="hub-updated">{updatedLine}</span>
+                <span className="hub-updated">
+                  <span className="hub-updated-full">{updatedLine}</span>
+                  <span className="hub-updated-short">{updatedShort}</span>
+                </span>
               </>
             )}
           </p>

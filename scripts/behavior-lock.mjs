@@ -494,8 +494,9 @@ const tabs = await page.evaluate(() => ({
   related: !!document.querySelector('.related'),
 }));
 check('the panel has a tablist', tabs.role, 'tablist');
-check('tabs are the races on the ballot', tabs.labels.every((l) => ['U.S. House', 'U.S. Senate', 'Governor'].includes(l)) && tabs.labels.length >= 1, true);
-check('the map\'s chamber is the selected tab', tabs.selected, 'U.S. House');
+// The tabs name the body, not the country (Sep 24 2026: "U.S." dropped).
+check('tabs are the races on the ballot', tabs.labels.every((l) => ['House', 'Senate', 'Governor'].includes(l)) && tabs.labels.length >= 1, true);
+check('the map\'s chamber is the selected tab', tabs.selected, 'House');
 check('Sources compared is gone', tabs.sourcesCompared, false);
 check('no Related content view', tabs.related, false);
 check('the tab shows the candidate rows', tabs.data, true);
@@ -504,12 +505,12 @@ if (tabs.labels.length > 1) {
   await page.waitForTimeout(700);
   const sw = await page.evaluate(() => ({ pill: document.querySelector('.pill-value').textContent.trim(), sel: document.querySelector('.drawer-tab[aria-selected="true"]').textContent.trim(), open: !!document.querySelector('.drawer'), title: document.querySelector('.drawer-title').textContent.trim(), note: document.querySelector('.drawer-note')?.textContent }));
   check('a race tab switches the map\'s chamber (the pill follows)', sw.pill !== 'House', true);
-  check('the tab row moved', sw.sel !== 'U.S. House', true);
+  check('the tab row moved', sw.sel !== 'House', true);
   check('the panel shows that race', /Senate|Governor/.test(sw.note || ''), true);
   check('the panel stays open on the same state', sw.open && sw.title === 'Texas', true);
 }
 // After the race-tab switch above the panel sits on the second tab; the
-// tabpanel names it, and ArrowLeft walks back to the first (U.S. House).
+// tabpanel names it, and ArrowLeft walks back to the first (House).
 if ((await page.locator('.drawer-tab').count()) > 1) {
   const panel = await page.evaluate(() => ({
     labelledBy: document.querySelector('#drawer-tabpanel')?.getAttribute('aria-labelledby'),
@@ -524,7 +525,7 @@ if ((await page.locator('.drawer-tab').count()) > 1) {
   check(
     'ArrowLeft walks back to the first race',
     await page.evaluate(() => document.querySelector('.drawer-tab[aria-selected="true"]')?.textContent.trim()),
-    'U.S. House'
+    'House'
   );
 }
 await page.keyboard.press('Escape');

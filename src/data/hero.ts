@@ -34,6 +34,8 @@ export interface ForecastData {
   emphasis?: string;
   /** Clock time of the freshest read behind the statement, '' if none. */
   updated: string;
+  /** The same stamp without the date — the phone's byline has no room. */
+  updatedShort: string;
   dem: number;
   rep: number;
   seatsUp: number;
@@ -89,12 +91,14 @@ export function forecastFor(
   const projectedDem = Math.max(0, Math.min(current.total, current.dem - demHeldUp + demLeans + tossups / 2));
   // Date and time in the comp's form, pinned to Eastern (data/time.ts).
   const updated = newest ? formatDateET(newest) : '';
+  const updatedShort = newest ? formatET(newest) : '';
 
   return {
     title,
     headline,
     emphasis,
     updated,
+    updatedShort,
     dem: current.dem,
     rep: current.rep,
     seatsUp,
@@ -121,6 +125,8 @@ export interface ResultsData {
   headline: string;
   /** "Results by AP · updated 9:42 PM ET", or the delay notice. */
   updatedLine: string;
+  /** The same, without the words — the phone's byline. */
+  updatedShortLine: string;
   delayed: boolean;
   /** Seats already the party's: held (not up) + called. */
   demTotal: number;
@@ -173,9 +179,13 @@ export function resultsFor(
   const updatedLine = feed.delayed
     ? `Results delayed · last update ${stamp}`
     : `Results by ${resultsLabel(providerId)}${stamp ? ` · updated ${stamp}` : ''}`;
+  const updatedShortLine = feed.delayed
+    ? `Delayed · ${stamp}`
+    : `${resultsLabel(providerId)}${stamp ? ` · ${stamp}` : ''}`;
   return {
     headline,
     updatedLine,
+    updatedShortLine,
     delayed: feed.delayed,
     demTotal,
     repTotal,

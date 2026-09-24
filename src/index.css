@@ -5818,7 +5818,7 @@ body {
     z-index: 598;
     border: 0;
     padding: 0;
-    background: rgb(0 0 0 / 0.8);
+    background: rgb(0 0 0 / 0.5);
     backdrop-filter: blur(8px);
     animation: scrim-in 220ms ease-out;
   }
@@ -5843,14 +5843,56 @@ body {
     display: none;
   }
 
-  /* The card's top clears the nav when the sheet pushes the map up — and
-     the card rides ABOVE the scrim: the page goes dark and blurred behind
-     the sheet, but the state the reader just opened stays lit. */
+  /* The card's top clears the nav when the sheet pushes the map up. The
+     map stays UNDER the scrim (Arthur, Sep 24 2026): one plane going dark
+     behind the sheet, not a lit card floating on a dark page. */
   .map-card {
     scroll-margin-top: 72px;
   }
+}
 
-  .map-card.is-zoomed {
-    z-index: 599;
+/* ==================== PHONE PASS, SECOND ROUND (Sep 24 2026) ==================== */
+
+/* The byline's freshness: the full stamp where there is room, the clock
+   time alone on a phone. */
+.hub-updated-short {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .hub-updated-full {
+    display: none;
+  }
+
+  .hub-updated-short {
+    display: inline;
+  }
+
+  /* The masthead centres on a phone — the name with the campaign mark under
+     it, both on the page's axis. */
+  .hub-header {
+    align-items: center;
+    text-align: center;
+  }
+
+  .hub-brand {
+    align-items: center;
+  }
+
+  .hub-byline {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Prev/next sit a touch lower in their bar, and the sheet gives them the
+     room by keeping less for itself. */
+  .drawer {
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .drawer-nav {
+    align-items: flex-end;
+    padding-bottom: 10px;
+    height: 68px;
   }
 }
