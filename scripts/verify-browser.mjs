@@ -118,7 +118,7 @@ console.log(
         order,
         titleTag: document.querySelector('.hub-title')?.tagName,
         statementTag: document.querySelector('.dots-title')?.tagName,
-        seatInfo: document.querySelector('.dots-seats')?.textContent.replace(/\s+/g, ' ').trim(),
+        seatInfo: document.querySelector('.seatline-ends')?.textContent.replace(/\s+/g, ' ').trim(),
         dots: document.querySelectorAll('.dots-grid .dot').length,
         dotsByParty: ['rep', 'toss', 'dem'].map(
           (p) => `${p}:${document.querySelectorAll(`.dot--${p}`).length}`
@@ -157,7 +157,7 @@ await page.waitForTimeout(900);
 const postSwitch = await page.evaluate(() => ({
   statement: document.querySelector('.dots-title')?.textContent,
   byline: document.querySelector('.hub-byline')?.textContent,
-  seats: document.querySelector('.dots-seats')?.textContent.replace(/\s+/g, ' ').trim(),
+  seats: document.querySelector('.seatline-ends')?.textContent.replace(/\s+/g, ' ').trim(),
   dots: ['rep', 'toss', 'dem'].map((p) => `${p}:${document.querySelectorAll(`.dot--${p}`).length}`).join(' '),
   source: [...document.querySelectorAll('.pill-value')][1]?.textContent.trim(),
   syncWindow: {

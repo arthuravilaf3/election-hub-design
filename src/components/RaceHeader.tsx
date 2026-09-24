@@ -14,7 +14,7 @@
  * (dem / the neutral toss-up gap / rep) laid out as a grid instead of a
  * track, so a race switch recolours exactly what the bar used to resize.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { INTRO_AT, Letters, introDelay } from './Intro';
 
 import { Countdown } from './Countdown';
@@ -146,6 +146,14 @@ export function RaceHeader({
       /* Keyed on the RACE only: a race change rebuilds the grid and replays
           the entry sweep; a source change keeps the same dots and just
           recolours them in place (the background transition). */
+      <section className="dots" aria-label={`${CHAMBER_BODY[chamber]} forecast`}>
+        {/* THE SEAT LINE, first and across both columns. It lives OUT of the
+            keyed block below: a race switch re-deals the seats, but the bar
+            must GLIDE from the old split to the new one the way a source
+            switch does — a remount would snap it. */}
+        <div className="dots-seatline">
+          <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
+        </div>
       <Dots
         key={`${chamber}:${resultsMode ? 'results' : 'forecast'}:${dotsShape}`}
         forecast={forecast}
@@ -156,6 +164,7 @@ export function RaceHeader({
         resultsMode={resultsMode}
         called={called}
       />
+      </section>
       )}
     </>
   );
@@ -218,10 +227,20 @@ function SeatLine({
       ['keep-rep', keepR],
     ];
   }
+  /* ALWAYS the glide: the runs are laid at zero on the first frame and
+     take their widths on the next, so the bar assembles itself the way it
+     re-splits on a source or race switch (transition in index.css). */
+  const [laid, setLaid] = useState(false);
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => setLaid(true));
+    return () => window.cancelAnimationFrame(id);
+  }, []);
+
   return (
     <div className="seatline intro-rise" style={introDelay(INTRO_AT.statement + 120)}>
       <div className="seatline-ends">
         <span className="seatline-end seatline-end--dem">
+          <PartyMark party="dem" />
           <b className="seatline-big">{pd}</b>
           {compact ? (
             <abbr className="seatline-label" title="Democrats">
@@ -235,6 +254,7 @@ function SeatLine({
           {majority} to win
         </span>
         <span className="seatline-end seatline-end--rep">
+          <PartyMark party="rep" />
           {compact ? (
             <>
               <b className="seatline-big">{pr}</b>
@@ -260,7 +280,7 @@ function SeatLine({
         }
       >
         {runs.map(([k, n]) => (
-          <span key={k} className={`seatline-run seatline-run--${k}`} style={{ width: pct(n) }} />
+          <span key={k} className={`seatline-run seatline-run--${k}`} style={{ width: laid ? pct(n) : '0%' }} />
         ))}
       </div>
       <div className="seatline-current">
@@ -561,7 +581,6 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
   const tail = resultsMode
     ? `${called} called`
     : `${forecast.tossups} toss-up${forecast.tossups === 1 ? '' : 's'}`;
-  const body = chamber === 'governor' ? 'governorships' : chamber === 'house' ? 'House' : 'Senate';
 
   /* THE SEATS. Pre-election: the projection under the active source (dem,
      the toss-up gap, rep). Election night: the FEED's own split — seats the
@@ -621,13 +640,7 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
   }
 
   return (
-    <section className="dots" aria-label={`${body} forecast`}>
-      {/* THE SEAT LINE FIRST (Arthur, Sep 24 2026): the split as a bar across
-          the whole hero — "203 D · 218 to win · 224 R" — above the headline
-          and the seats; on the night, the feed's split. */}
-      <div className="dots-seatline">
-        <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
-      </div>
+    <>
       <div className="dots-left">
       {/* Keyed on the headline so a race switch crossfades the copy, the way
           the old statement did. */}
@@ -635,41 +648,6 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
         <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
           {headline}
         </h2>
-        {/* Chamber summary (PRD P1): current seats, seats up, toss-ups — one
-            line under the headline, with the freshness of the read below it. */}
-        <p className="dots-seats intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
-          <span className="dots-num">
-            <PartyMark party="dem" />
-            <b className="dots-party">D</b> {results ? results.demTotal : forecast.dem}
-          </span>
-          <span className="hub-dot" aria-hidden="true">
-            •
-          </span>
-          <span className="dots-num">
-            <PartyMark party="rep" />
-            <b className="dots-party">R</b> {results ? results.repTotal : forecast.rep}
-          </span>
-          <span className="hub-dot" aria-hidden="true">
-            •
-          </span>
-          {results ? (
-            <>
-              <span>{results.open} uncalled</span>
-              <span className="hub-dot" aria-hidden="true">
-                •
-              </span>
-              <span>{results.majority} to win</span>
-            </>
-          ) : (
-            <>
-              <span>{forecast.seatsUp} seats up</span>
-              <span className="hub-dot" aria-hidden="true">
-                •
-              </span>
-              <span>{tail}</span>
-            </>
-          )}
-        </p>
         {/* The Election Day clock as the copy's last line (Sep 21 2026):
             with the headline and the seats, not adrift above them. On the
             night, the provider and its last batch take that line. */}
@@ -765,6 +743,6 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           );
         })}
       </div>
-    </section>
+    </>
   );
 }

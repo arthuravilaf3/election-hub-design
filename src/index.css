@@ -1339,41 +1339,11 @@ button,
   color: var(--ink);
 }
 
-.dots-seats {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--ink);
-}
-
 /* Freshness of the read: in the byline, after the sponsor. */
 .hub-updated {
   font-size: 12px;
   line-height: 18px;
   color: var(--ink-subtlest);
-}
-
-/* The figures carry party colour on the LIGHT end of each ramp — the bar
-   tokens themselves land under AA as text on the page ground. */
-/* The figure stays in ink; only the party letter carries the colour. */
-.dots-num {
-  color: var(--ink);
-}
-
-.dots-party {
-  font-weight: 600;
-}
-
-.dots-party--dem {
-  color: var(--color-chart-dem-likely);
-}
-
-.dots-party--rep {
-  color: var(--color-chart-rep-safe);
 }
 
 /* Column count and gap come from the component per chamber (--dot-cols,
@@ -3859,7 +3829,7 @@ button,
     right: 0;
     bottom: 0;
     width: auto;
-    height: 78vh;
+    height: 72vh;
     border-radius: 20px 20px 0 0;
     border-left: 0;
     border-right: 0;
@@ -4064,14 +4034,6 @@ button,
    carry — the bar itself is unchanged, this is type only. */
 :root[data-theme='light'] .hub-logo {
   filter: brightness(0);
-}
-
-:root[data-theme='light'] .dots-num--dem {
-  color: var(--color-chart-dem-safe);
-}
-
-:root[data-theme='light'] .dots-num--rep {
-  color: var(--color-chart-rep-safe);
 }
 
 /* Theme toggle FAB — stacked above the mobile-preview toggle. */
@@ -5633,18 +5595,8 @@ body {
   font-size: clamp(32px, 3.6vw, 56px);
 }
 
-/* The seat counts read in ink; the party's colour moves into the mark
-   beside them (PLACEHOLDER art — see PartyMark.tsx). */
-.dots-num {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.dots-party {
-  color: var(--ink);
-}
-
+/* The party's mark, at each end of the seat line (PLACEHOLDER art — see
+   PartyMark.tsx). */
 .party-mark {
   flex: none;
   display: inline-flex;
@@ -5806,5 +5758,99 @@ body {
 
   .drawer-block {
     padding: 18px 6px;
+  }
+}
+
+/* ==================== THE SEAT LINE, THE SHEET (Sep 24 2026) ==================== */
+
+/* The ends carry the party's mark, then the figure and the letter. */
+.seatline-end {
+  align-items: center;
+}
+
+.seatline-end .seatline-big,
+.seatline-end .seatline-label {
+  line-height: 1;
+}
+
+/* The majority marker travels with the bar it marks. */
+.seatline-win {
+  transition: left 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seatline-run,
+  .seatline-win {
+    transition: none;
+  }
+}
+
+/* ---------- The state sheet on a phone ----------
+   A dark, blurred page behind it; the head puts the state's name under its
+   flag; the Follow button drops the state's name for want of room; and
+   prev/next swaps the body instead of flying the whole sheet in again. */
+.drawer-scrim {
+  display: none;
+}
+
+.drawer-scroll.is-swapping {
+  animation: drawer-swap 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes drawer-swap {
+  from {
+    opacity: 0.25;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-scroll.is-swapping {
+    animation: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .drawer-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 598;
+    border: 0;
+    padding: 0;
+    background: rgb(0 0 0 / 0.8);
+    backdrop-filter: blur(8px);
+    animation: scrim-in 220ms ease-out;
+  }
+
+  @keyframes scrim-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Flag and actions on the first row, the state's name under them. */
+  .drawer-headblock {
+    grid-template: 'flag actions' auto 'title title' auto / auto 1fr;
+    row-gap: 10px;
+  }
+
+  .drawer-headrow {
+    justify-content: flex-end;
+  }
+
+  .btn-follow-state {
+    display: none;
+  }
+
+  /* The card's top clears the nav when the sheet pushes the map up — and
+     the card rides ABOVE the scrim: the page goes dark and blurred behind
+     the sheet, but the state the reader just opened stays lit. */
+  .map-card {
+    scroll-margin-top: 72px;
+  }
+
+  .map-card.is-zoomed {
+    z-index: 599;
   }
 }

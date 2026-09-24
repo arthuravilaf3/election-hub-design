@@ -89,11 +89,20 @@ function measureTarget(svg: SVGSVGElement | null): { fitW: number; fitH: number;
   const inFlow = drawer && drawer.offsetParent === frame;
   const regionPx = inFlow ? Math.max(fr.width * 0.2, drawer.offsetLeft) : fr.width;
   const k = VIEW_W / sr.width; // px -> viewBox units
+  /* THE SHEET (phones): the drawer is fixed to the bottom of the screen, so
+     the region is not the card — it is the strip of card left ABOVE the
+     sheet. Measured from the sheet's height, not its rect, so the entry
+     animation does not move the target. */
+  let regionH = fr.height;
+  if (drawer && !inFlow) {
+    const sheetTop = window.innerHeight - drawer.offsetHeight;
+    regionH = Math.max(140, Math.min(fr.height, sheetTop - fr.top));
+  }
   return {
     fitW: regionPx * k,
-    fitH: fr.height * k,
+    fitH: regionH * k,
     cx: (regionPx / 2 - (sr.left - fr.left)) * k,
-    cy: (fr.height / 2 - (sr.top - fr.top)) * k,
+    cy: (regionH / 2 - (sr.top - fr.top)) * k,
   };
 }
 

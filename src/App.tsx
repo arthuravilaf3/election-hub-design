@@ -139,10 +139,19 @@ export default function App() {
     if (!state.zoomedId) return;
     const NAV_H = 64;
     const card = document.querySelector('.map-card');
-    if (!card || card.getBoundingClientRect().height > window.innerHeight - NAV_H) return;
+    if (!card) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // PHONES (Sep 24 2026): the panel is a sheet over the bottom 3/4 of the
+    // screen, so the map is pushed UP — the card's top to the top of the
+    // viewport — and the camera aims the open state at the strip left above
+    // the sheet (see measureTarget in ElectionMap).
+    if (window.matchMedia('(max-width: 700px)').matches) {
+      card.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+      return;
+    }
+    if (card.getBoundingClientRect().height > window.innerHeight - NAV_H) return;
     const r = card.getBoundingClientRect();
     if (r.top >= NAV_H - 1 && r.bottom <= window.innerHeight + 1) return;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     card.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
   }, [state.zoomedId]);
   const zoomedName = state.zoomedId
@@ -184,9 +193,10 @@ export default function App() {
       if (!stateId) return;
       if (chamber && chamber !== state.chamber) dispatch({ type: 'SET_CHAMBER', chamber });
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      document
-        .querySelector('.map-card')
-        ?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+      document.querySelector('.map-card')?.scrollIntoView({
+        behavior: reduced ? 'auto' : 'smooth',
+        block: window.matchMedia('(max-width: 700px)').matches ? 'start' : 'center',
+      });
       const open = () => {
         dispatch({ type: 'ZOOM_STATE', stateId });
         emitMapEvent('usmap-select', { stateId, chamber: chamber ?? state.chamber });
@@ -241,6 +251,21 @@ export default function App() {
       <div
         className={`app${devOpen ? ' app--dev-open' : ''}${zoomedRace ? ' app--zoomed' : ''}`}
       >
+        {/* PHONES: the sheet sits on a dark, blurred page (Sep 24 2026). It
+            lives OUT here, not in the panel: the panel is a descendant of
+            the map card, and a scrim inside the card would black out the
+            very state the reader just opened. Not in the tab order — the X
+            is the keyboard's way out — but a tap on it closes. */}
+        {zoomedRace && (
+          <button
+            type="button"
+            className="drawer-scrim"
+            tabIndex={-1}
+            aria-label={`Close ${zoomedName}`}
+            onClick={() => dispatch({ type: 'CLEAR_ZOOM' })}
+          />
+        )}
+
         <main className="app-main">
           {anyLive && (
             <div className="live-row">
@@ -306,7 +331,6 @@ export default function App() {
             panel={
               zoomedRace && prevState && nextState ? (
                 <RacePanel
-                  key={zoomedRace.id}
                   stateName={zoomedName}
                   race={zoomedRace}
                   sourceId={state.sourceId}

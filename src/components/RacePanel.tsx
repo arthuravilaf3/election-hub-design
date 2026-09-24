@@ -311,17 +311,41 @@ export function RacePanel({
      the tab row. Local to the panel — it starts on the map's source and
      changes only what this panel reads, never the map. */
   const [src, setSrcId] = useState(sourceId);
-  // Follow is per-visit prototype state (the panel is keyed by state id).
-  // PRD: anonymous follow first; a free account persists it — neither wired.
+  // Follow is per-visit prototype state. PRD: anonymous follow first; a free
+  // account persists it — neither wired.
   const [following, setFollowing] = useState(false);
+  const [compact, setCompact] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  /* PREV/NEXT IS A CONTENT SWAP, NOT A NEW PANEL (Sep 24 2026). The panel
+     used to be keyed by state id, so every step remounted it and the sheet
+     flew in again from the bottom. It stays mounted now; what belongs to
+     the state — the local source, Follow, the scroll position, the head's
+     compact state — is reset here, and the body crossfades. */
+  const mapSource = useRef(sourceId);
+  mapSource.current = sourceId;
+  const [swapping, setSwapping] = useState(false);
+  const firstRace = useRef(true);
+  useEffect(() => {
+    if (firstRace.current) {
+      firstRace.current = false;
+      return;
+    }
+    setSrcId(mapSource.current);
+    setFollowing(false);
+    setCompact(false);
+    scrollRef.current?.scrollTo({ top: 0 });
+    setSwapping(true);
+    const t = window.setTimeout(() => setSwapping(false), 260);
+    return () => window.clearTimeout(t);
+  }, [race.id]);
 
   /* The panel reads whatever source the map is painting — the provider
      toggle that used to live here is gone (Sep 2026). */
   const viewRead = readFor(shown, src);
   /* Head compacts once the title has scrolled under it. Hysteresis so a
      scroll position that sits right on the threshold does not flicker. */
-  const [compact, setCompact] = useState(false);
   const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const y = e.currentTarget.scrollTop;
     setCompact((c) => (c ? y > 12 : y > 56));
@@ -376,7 +400,7 @@ export function RacePanel({
       {/* Only the body scrolls; the head sticks to its top and compacts into
           one row once the reader has scrolled past the title (Sep 2026 —
           the top bar with the breadcrumb is gone, the X sits by share). */}
-      <div className="drawer-scroll" onScroll={onScroll}>
+      <div className={`drawer-scroll${swapping ? ' is-swapping' : ''}`} ref={scrollRef} onScroll={onScroll}>
         <header className="drawer-headblock">
           <img className="drawer-flag" src={asset(`flags/${shown.id}.png`)} alt="" aria-hidden="true" />
           <div className="drawer-titleblock">
@@ -391,9 +415,10 @@ export function RacePanel({
                 type="button"
                 className={`btn-follow${following ? ' is-following' : ''}`}
                 aria-pressed={following}
+                aria-label={following ? `Following ${stateName}` : `Follow ${stateName}`}
                 onClick={() => setFollowing((v) => !v)}
               >
-                {following ? 'Following' : `Follow ${stateName}`}
+                {following ? 'Following' : <>Follow <span className="btn-follow-state">{stateName}</span></>}
               </button>
             )}
             <button type="button" className="drawer-icon-btn" aria-label={`Share ${stateName} race`}>
@@ -465,7 +490,7 @@ export function RacePanel({
                     read={viewRead}
                     sourceId={src}
                   />
-                  <DistrictGrid districts={shown.districts} sourceId={src} />
+                  <DistrictGrid key={shown.id} districts={shown.districts} sourceId={src} />
                 </section>
               </>
             )}
