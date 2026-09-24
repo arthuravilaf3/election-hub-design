@@ -368,7 +368,13 @@ export function Hemicycle({ forecast, chamber, compact = false, still = false }:
         const c = circles.current[i];
         if (!c) return;
         const party = wv.start && s.t > waveFront ? wv.from[i] : s.party;
-        const cls = `r3-seat r3-seat--${party}`;
+        // Hovered (DS background/*/bold/hovered): the seats the lens gathers
+        // toward the pointer — same party, within reach.
+        const hovered =
+          hotParty !== null &&
+          s.party === hotParty &&
+          (L.px - s.ax) * (L.px - s.ax) + (L.py - s.ay) * (L.py - s.ay) < LENS_R * LENS_R;
+        const cls = `r3-seat r3-seat--${party}${hovered ? ' is-hovered' : ''}`;
         if (c.getAttribute('class') !== cls) c.setAttribute('class', cls);
         let x = s.ax;
         let y = s.ay;

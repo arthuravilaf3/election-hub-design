@@ -17,21 +17,21 @@ import type { Mode } from '../data/types';
 type Item = [string, string, string?];
 
 const RATING_ITEMS: Item[] = [
-  ['Safe D', 'var(--rating-safe-dem)', 'Democrats'],
-  ['Likely D', 'var(--rating-likely-dem)', 'Democrats'],
-  ['Lean D', 'var(--rating-lean-dem)', 'Democrats'],
-  ['Toss-up', 'var(--rating-tossup)'],
-  ['Lean R', 'var(--rating-lean-rep)', 'Republicans'],
-  ['Likely R', 'var(--rating-likely-rep)', 'Republicans'],
-  ['Safe R', 'var(--rating-safe-rep)', 'Republicans'],
-  ['Not on ballot', 'var(--not-on-ballot)'],
+  ['Safe D', 'var(--color-chart-dem-safe)', 'Democrats'],
+  ['Likely D', 'var(--color-chart-dem-likely)', 'Democrats'],
+  ['Lean D', 'var(--color-chart-dem-lean)', 'Democrats'],
+  ['Toss-up', 'var(--color-chart-tossup)'],
+  ['Lean R', 'var(--color-chart-rep-lean)', 'Republicans'],
+  ['Likely R', 'var(--color-chart-rep-likely)', 'Republicans'],
+  ['Safe R', 'var(--color-chart-rep-safe)', 'Republicans'],
+  ['Not on ballot', 'var(--color-chart-neutral-offballot)'],
 ];
 
 /* A source with nothing to say for a race is a designed state, not a blank:
    striped gray, same stripe the map paints. The comp has no swatch for it —
    the map can still paint it, and an unlabelled fill is worse than a ninth
    item. */
-const NO_DATA_ITEM: Item = ['No data from this source', 'var(--no-read)'];
+const NO_DATA_ITEM: Item = ['No data from this source', 'var(--color-chart-neutral-nodata)'];
 
 /* Results: the five reporting steps — hatched through step 3, plain at 4,
    called at 5 with an outline — and the two neutrals. */
@@ -39,13 +39,13 @@ const NO_DATA_ITEM: Item = ['No data from this source', 'var(--no-read)'];
    with a word, not only a colour; the leading steps carry the reporting
    band that sets their shade. */
 const RESULTS_ITEMS: Array<[string, string, ('hatched' | 'called')?]> = [
-  ['Too early to call', 'var(--uncalled)'],
-  ['Leading — <25% in', 'var(--rep-1)', 'hatched'],
-  ['Leading — <50% in', 'var(--rep-2)', 'hatched'],
-  ['Leading — <75% in', 'var(--rep-3)', 'hatched'],
-  ['Leading — 75%+ in', 'var(--rep-4)'],
-  ['✓ Called', 'var(--rep-5)', 'called'],
-  ['Not on ballot', 'var(--not-on-ballot)'],
+  ['Too early to call', 'var(--color-chart-neutral-unreported)'],
+  ['Leading — <25% in', 'var(--color-chart-rep-reporting-1)', 'hatched'],
+  ['Leading — <50% in', 'var(--color-chart-rep-reporting-2)', 'hatched'],
+  ['Leading — <75% in', 'var(--color-chart-rep-reporting-3)', 'hatched'],
+  ['Leading — 75%+ in', 'var(--color-chart-rep-reporting-4)'],
+  ['✓ Called', 'var(--color-chart-rep-reporting-5)', 'called'],
+  ['Not on ballot', 'var(--color-chart-neutral-offballot)'],
 ];
 
 /** "Safe R" -> "Safe <abbr title="Republicans">R</abbr>" */

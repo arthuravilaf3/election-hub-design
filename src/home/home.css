@@ -630,16 +630,16 @@
 /* Called and Leading happen to BOTH parties, so both swatches are split — a
    single red chip would read as "Republicans called". */
 .band-swatch--called {
-  background: linear-gradient(to right, var(--party-dem) 0 50%, var(--party-rep) 50% 100%);
-  outline: 1px solid var(--selection);
+  background: linear-gradient(to right, var(--color-chart-dem-safe) 0 50%, var(--color-chart-rep-safe) 50% 100%);
+  outline: 1px solid var(--color-chart-map-focus);
 }
 .band-swatch--leading {
   background:
-    repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 4px),
-    linear-gradient(to right, var(--dem-1) 0 50%, var(--rep-1) 50% 100%);
+    repeating-linear-gradient(45deg, var(--color-chart-overlay-hatch) 0 2px, transparent 2px 4px),
+    linear-gradient(to right, var(--color-chart-dem-reporting-1) 0 50%, var(--color-chart-rep-reporting-1) 50% 100%);
 }
 .band-swatch--early {
-  background: var(--uncalled);
+  background: var(--color-chart-neutral-unreported);
 }
 .band-full {
   font-size: 12px;
@@ -681,17 +681,17 @@
   height: 12px;
   border-radius: 2px;
   overflow: hidden;
-  background: var(--uncalled);
+  background: var(--color-chart-neutral-unreported);
 }
 .band-bar-seg {
   height: 100%;
 }
 .band-bar-seg--dem {
-  background: var(--bar-dem);
+  background: var(--color-chart-dem-safe);
 }
 .band-bar-seg--rep {
   margin-left: auto;
-  background: var(--bar-rep);
+  background: var(--color-chart-rep-safe);
 }
 .band-bar-mark {
   position: absolute;

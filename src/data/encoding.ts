@@ -121,17 +121,20 @@ export function leanOf(read: SourceRead): PredictionParty {
 export function fillFor(race: StateRace, sourceId: string): string {
   if (race.mode === 'prediction') {
     const read = readFor(race, sourceId);
-    if (!read) return 'var(--no-read)';
-    return `var(--rating-${ratingOf(read)})`;
+    if (!read) return 'var(--color-chart-neutral-nodata)';
+    const rating = ratingOf(read);
+    if (rating === 'tossup') return 'var(--color-chart-tossup)';
+    const [band, party] = rating.split('-'); // 'safe-dem' -> chart/dem/safe
+    return `var(--color-chart-${party}-${band})`;
   }
   const r = race.results;
-  if (!r || r.status === 'uncalled') return 'var(--uncalled)';
+  if (!r || r.status === 'uncalled') return 'var(--color-chart-neutral-unreported)';
   if (r.status === 'counting') {
-    if (!r.leader) return 'var(--uncalled)';
-    return `var(--${r.leader}-${countingStep(r.reporting)})`;
+    if (!r.leader) return 'var(--color-chart-neutral-unreported)';
+    return `var(--color-chart-${r.leader}-reporting-${countingStep(r.reporting)})`;
   }
   // called: the only path to full saturation.
-  return r.leader ? `var(--${r.leader}-5)` : 'var(--uncalled)';
+  return r.leader ? `var(--color-chart-${r.leader}-reporting-5)` : 'var(--color-chart-neutral-unreported)';
 }
 
 /**

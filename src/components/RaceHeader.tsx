@@ -488,7 +488,7 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           L.y[i] = 0;
           L.dots[i].style.transform = '';
           L.dots[i].style.zIndex = '';
-          L.dots[i].style.filter = '';
+          L.dots[i].classList.remove('is-hovered');
         }
         continue;
       }
@@ -498,9 +498,9 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
       L.y[i] = ny;
       L.dots[i].style.transform = `translate(${nx.toFixed(2)}px, ${ny.toFixed(2)}px) scale(${ns.toFixed(3)})`;
       L.dots[i].style.zIndex = ns > 1.02 ? '1' : '';
-      // The dots under the hand darken a little with their swell (Arthur,
-      // Sep 22 2026): full swell = 40% darker, easing back with it.
-      L.dots[i].style.filter = ns > 1.005 ? `brightness(${(1 - (0.4 * (ns - 1)) / A).toFixed(3)})` : '';
+      // The seats the lens swells wear the DS hovered colour
+      // (background/*/bold/hovered); the ones it pushes away do not.
+      L.dots[i].classList.toggle('is-hovered', ns > 1.02);
     }
     if (moving) L.raf = window.requestAnimationFrame(tick);
   };
@@ -524,6 +524,20 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
     L.px = -1e9;
     L.py = -1e9;
     wake();
+  };
+  // Pressed (DS background/*/bold/pressed): the seat under the pointer while
+  // the button is down; released on up or leave.
+  const pressed = useRef<HTMLElement | null>(null);
+  const release = () => {
+    pressed.current?.classList.remove('is-pressed');
+    pressed.current = null;
+  };
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const dot = (e.target as HTMLElement).closest('.dot') as HTMLElement | null;
+    release();
+    if (!dot) return;
+    dot.classList.add('is-pressed');
+    pressed.current = dot;
   };
   useEffect(() => {
     const L = lens.current;
@@ -687,7 +701,13 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
         }
         ref={gridRef}
         onPointerMove={onPointerMove}
-        onPointerLeave={onPointerLeave}
+        onPointerLeave={() => {
+          release();
+          onPointerLeave();
+        }}
+        onPointerDown={onPointerDown}
+        onPointerUp={release}
+        onPointerCancel={release}
       >
         {/* Entry stagger, row by row, top to bottom. The row is the delay's
             main term, but a whole row landing on one frame draws a hard bar

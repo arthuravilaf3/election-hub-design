@@ -109,7 +109,8 @@
   transition: fill 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.r3-seat--rep { fill: var(--bar-rep); }
+.r3-seat--rep { fill: var(--color-background-rep-bold-default); }
+.r3-seat--rep.is-hovered { fill: var(--color-background-rep-bold-hovered); }
 
 /* Once the arc is complete the toss-ups breathe: a slow rise and fall of
    brightness, the seats that decide it, alive. Off under reduced motion
@@ -127,8 +128,10 @@
     filter: brightness(1.22);
   }
 }
-.r3-seat--toss { fill: var(--rating-tossup); }
-.r3-seat--dem { fill: var(--bar-dem); }
+.r3-seat--toss { fill: var(--color-background-tossup-bold-default); }
+.r3-seat--toss.is-hovered { fill: var(--color-background-tossup-bold-hovered); }
+.r3-seat--dem { fill: var(--color-background-dem-bold-default); }
+.r3-seat--dem.is-hovered { fill: var(--color-background-dem-bold-hovered); }
 
 /* The numerals sit in a band along the bottom, on the page's ground so the
    arc's feet fade under them. R on the left; D takes over on the right. */

@@ -34,12 +34,12 @@ describe('results mode keeps the status encoding', () => {
       ...base,
       results: { status: 'counting' as const, reporting: 100, leader: 'rep' as const, providerId: 'ap' },
     };
-    expect(fillFor(counting, 'dw-poll-avg')).toBe('var(--rep-4)');
+    expect(fillFor(counting, 'dw-poll-avg')).toBe('var(--color-chart-rep-reporting-4)');
     const called = {
       ...base,
       results: { status: 'called' as const, reporting: 62, leader: 'rep' as const, providerId: 'ap' },
     };
-    expect(fillFor(called, 'dw-poll-avg')).toBe('var(--rep-5)');
+    expect(fillFor(called, 'dw-poll-avg')).toBe('var(--color-chart-rep-reporting-5)');
   });
 
   it('hatches counting races and nothing else', () => {
@@ -77,8 +77,8 @@ describe('categorical ratings: two band sets, never one', () => {
       read({ sourceId: 'dw-poll-avg', kind: 'poll', margin: -1.1 }),
       read({ sourceId: 'kalshi', kind: 'market', demOdds: 38 }),
     ]);
-    expect(fillFor(r, 'dw-poll-avg')).toBe('var(--rating-tossup)');
-    expect(fillFor(r, 'kalshi')).toBe('var(--rating-lean-rep)');
+    expect(fillFor(r, 'dw-poll-avg')).toBe('var(--color-chart-tossup)');
+    expect(fillFor(r, 'kalshi')).toBe('var(--color-chart-rep-lean)');
   });
 
   it('derives lean from the rating side', () => {
@@ -99,7 +99,7 @@ describe('categorical ratings: two band sets, never one', () => {
 
   it('falls back to an explicit not-rated state', () => {
     const r = race([read({ sourceId: 'dw-poll-avg', margin: 5 })]);
-    expect(fillFor(r, 'polymarket')).toBe('var(--no-read)');
+    expect(fillFor(r, 'polymarket')).toBe('var(--color-chart-neutral-nodata)');
     expect(statusLine(r, 'polymarket')).toContain('Not rated');
   });
 });

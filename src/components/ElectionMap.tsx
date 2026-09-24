@@ -374,7 +374,7 @@ export function ElectionMap({
             shape.id === liftId ? ' is-lift-source' : ''
           }${race && isCalled(race) ? ' is-called' : ''}`}
           style={{
-            fill: race ? fillFor(race, src) : 'var(--not-on-ballot)',
+            fill: race ? fillFor(race, src) : 'var(--color-chart-neutral-offballot)',
             transitionDelay: staggering && !reducedMotion ? `${index * STAGGER_STEP_MS}ms` : '0ms',
           }}
           role="button"
@@ -438,7 +438,7 @@ export function ElectionMap({
                 patternUnits="userSpaceOnUse"
                 patternTransform="rotate(45)"
               >
-                <line x1="0" y1="0" x2="0" y2="6" stroke="var(--hatch)" strokeWidth="2" />
+                <line x1="0" y1="0" x2="0" y2="6" stroke="var(--color-chart-overlay-hatch)" strokeWidth="2" />
               </pattern>
               {/* Wider, lighter stripes on the gray no-read fill — the
                   non-color channel for "this source has no data". */}

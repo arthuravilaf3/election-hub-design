@@ -191,16 +191,16 @@ button,
     /* third 1: rest (0–35 blue, 35–62 blend, 62–100 red) */
     #2a60f7 0%,
     #2a60f7 11.67%,
-    #fc002c 20.67%,
-    #fc002c 33.33%,
+    var(--color-crimson-500) 20.67%,
+    var(--color-crimson-500) 33.33%,
     /* third 2: red back to blue */
-    #fc002c 45%,
+    var(--color-crimson-500) 45%,
     #2a60f7 54%,
     #2a60f7 66.67%,
     /* third 3: rest again */
     #2a60f7 78.33%,
-    #fc002c 87.33%,
-    #fc002c 100%
+    var(--color-crimson-500) 87.33%,
+    var(--color-crimson-500) 100%
   );
   background-size: 300% 100%;
   background-position: 0% 50%;
@@ -493,7 +493,7 @@ button,
  * the same transition into a coordinated wave.
  */
 .state-shape {
-  stroke: var(--state-border);
+  stroke: var(--color-chart-map-border);
   stroke-width: 1;
   stroke-linejoin: round;
   cursor: pointer;
@@ -515,7 +515,7 @@ button,
 }
 
 .state-shape:focus-visible {
-  stroke: var(--selection);
+  stroke: var(--color-chart-map-focus);
   stroke-width: 2.5;
 }
 
@@ -551,7 +551,7 @@ button,
 
 /* The face: chart.overlay.lift-face, painted as a copy over the fill. */
 .lift-face {
-  fill: var(--lift-face);
+  fill: var(--color-chart-overlay-lift-face);
   pointer-events: none;
 }
 
@@ -584,7 +584,7 @@ button,
 
 .selection-outline {
   fill: none;
-  stroke: var(--selection);
+  stroke: var(--color-chart-map-focus);
   stroke-width: 2.5;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -1230,11 +1230,11 @@ button,
 }
 
 .seatline-end--dem .seatline-label {
-  color: var(--rating-safe-dem);
+  color: var(--color-chart-dem-safe);
 }
 
 .seatline-end--rep .seatline-label {
-  color: var(--rating-safe-rep);
+  color: var(--color-chart-rep-safe);
 }
 
 /* The majority, marked where it falls on the bar. */
@@ -1272,22 +1272,22 @@ button,
   transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.seatline-run--keep-dem { background: var(--rating-likely-dem); }
-.seatline-run--gain-dem { background: var(--rating-safe-dem); }
-.seatline-run--toss { background: var(--rating-tossup); }
-.seatline-run--gain-rep { background: var(--rating-safe-rep); }
-.seatline-run--keep-rep { background: var(--rating-likely-rep); }
+.seatline-run--keep-dem { background: var(--color-chart-dem-likely); }
+.seatline-run--gain-dem { background: var(--color-chart-dem-safe); }
+.seatline-run--toss { background: var(--color-chart-tossup); }
+.seatline-run--gain-rep { background: var(--color-chart-rep-safe); }
+.seatline-run--keep-rep { background: var(--color-chart-rep-likely); }
 
 /* Election night runs: called solid, leading hatched, too early gray. */
-.seatline-run--called-dem { background: var(--dem-5); }
+.seatline-run--called-dem { background: var(--color-chart-dem-reporting-5); }
 .seatline-run--lead-dem {
-  background: repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 5px), var(--dem-3);
+  background: repeating-linear-gradient(45deg, var(--color-chart-overlay-hatch) 0 2px, transparent 2px 5px), var(--color-chart-dem-reporting-3);
 }
-.seatline-run--early { background: var(--uncalled); }
+.seatline-run--early { background: var(--color-chart-neutral-unreported); }
 .seatline-run--lead-rep {
-  background: repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 5px), var(--rep-3);
+  background: repeating-linear-gradient(45deg, var(--color-chart-overlay-hatch) 0 2px, transparent 2px 5px), var(--color-chart-rep-reporting-3);
 }
-.seatline-run--called-rep { background: var(--rep-5); }
+.seatline-run--called-rep { background: var(--color-chart-rep-reporting-5); }
 
 .seatline-current {
   display: flex;
@@ -1369,11 +1369,11 @@ button,
 }
 
 .dots-party--dem {
-  color: var(--rating-likely-dem);
+  color: var(--color-chart-dem-likely);
 }
 
 .dots-party--rep {
-  color: var(--rating-safe-rep);
+  color: var(--color-chart-rep-safe);
 }
 
 /* Column count and gap come from the component per chamber (--dot-cols,
@@ -1441,29 +1441,39 @@ button,
    the data palette is frozen (decision Aug 2026), and these dots are the bar
    in another shape. */
 .dot--dem {
-  background: var(--bar-dem);
+  background: var(--color-background-dem-bold-default);
 }
 
 .dot--rep {
-  background: var(--bar-rep);
+  background: var(--color-background-rep-bold-default);
 }
 
 .dot--toss {
-  background: var(--rating-tossup);
+  background: var(--color-background-tossup-bold-default);
 }
+
+/* Under the hand (DS background · bold): hovered while the lens swells a
+   seat, pressed while the pointer is down on it. Toward the ground in both
+   themes — darker here, lighter in Light. */
+.dot--dem.is-hovered { background: var(--color-background-dem-bold-hovered); }
+.dot--rep.is-hovered { background: var(--color-background-rep-bold-hovered); }
+.dot--toss.is-hovered { background: var(--color-background-tossup-bold-hovered); }
+.dot--dem.is-pressed { background: var(--color-background-dem-bold-pressed); }
+.dot--rep.is-pressed { background: var(--color-background-rep-bold-pressed); }
+.dot--toss.is-pressed { background: var(--color-background-tossup-bold-pressed); }
 
 /* Election night: a lead is hatched (the map's own channel for "not a
    result yet"); too early to call is the map's uncalled gray. */
 .dot--dem-lead {
-  background: repeating-linear-gradient(45deg, var(--hatch) 0 1.5px, transparent 1.5px 4px), var(--dem-3);
+  background: repeating-linear-gradient(45deg, var(--color-chart-overlay-hatch) 0 1.5px, transparent 1.5px 4px), var(--color-chart-dem-reporting-3);
 }
 
 .dot--rep-lead {
-  background: repeating-linear-gradient(45deg, var(--hatch) 0 1.5px, transparent 1.5px 4px), var(--rep-3);
+  background: repeating-linear-gradient(45deg, var(--color-chart-overlay-hatch) 0 1.5px, transparent 1.5px 4px), var(--color-chart-rep-reporting-3);
 }
 
 .dot--uncalled {
-  background: var(--uncalled);
+  background: var(--color-chart-neutral-unreported);
 }
 
 /* The provider line where the clock was; the delay notice in warning. */
@@ -1536,7 +1546,7 @@ button,
 }
 
 .legend-swatch-hatched {
-  background-image: repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 4px);
+  background-image: repeating-linear-gradient(45deg, var(--color-chart-overlay-hatch) 0 2px, transparent 2px 4px);
 }
 
 /* Mirrors the map's no-data stripes (lighter, wider, opposite angle). */
@@ -2021,21 +2031,21 @@ button,
 /* 15% of the party colour, per the comp: present enough to compare lengths
    at a glance, faint enough that the name on top stays the loudest thing. */
 .bar-row--dem {
-  --bar-tint: color-mix(in srgb, var(--bar-dem) 15%, transparent);
+  --bar-tint: color-mix(in srgb, var(--color-chart-dem-safe) 15%, transparent);
 }
 
 .bar-row--rep {
-  --bar-tint: color-mix(in srgb, var(--bar-rep) 15%, transparent);
+  --bar-tint: color-mix(in srgb, var(--color-chart-rep-safe) 15%, transparent);
 }
 
 .bar-row--ind {
-  --bar-tint: color-mix(in srgb, var(--cand-ind) 15%, transparent);
+  --bar-tint: color-mix(in srgb, var(--color-chart-ind) 15%, transparent);
 }
 
 /* A district with no lean still gets a bar — neutral, so "too close" reads
    as a measured state and not as missing data. */
 .bar-row--tossup {
-  --bar-tint: color-mix(in srgb, var(--rating-tossup) 15%, transparent);
+  --bar-tint: color-mix(in srgb, var(--color-chart-tossup) 15%, transparent);
 }
 
 .bar-id {
@@ -2083,15 +2093,15 @@ button,
 }
 
 .bar-row--dem .cand-avatar {
-  background: var(--bar-dem);
+  background: var(--color-chart-dem-safe);
 }
 
 .bar-row--rep .cand-avatar {
-  background: var(--bar-rep);
+  background: var(--color-chart-rep-safe);
 }
 
 .bar-row--ind .cand-avatar {
-  background: var(--cand-ind);
+  background: var(--color-chart-ind);
 }
 
 /* Background-removed portrait over the party color: grayscale + LIGHTEN
@@ -2217,12 +2227,16 @@ button,
 }
 
 .state-label--light {
-  fill: var(--ink);
+  fill: var(--color-chart-text-on-dark);
+  /* chart.text.on-dark: the abbreviation with a 1px lift-side outline. */
+  paint-order: stroke;
+  stroke: var(--color-chart-overlay-lift-side);
+  stroke-width: 1px;
   opacity: 0.9;
 }
 
 .state-label--dark {
-  fill: var(--surface-dim);
+  fill: var(--color-chart-text-on-light);
   opacity: 0.85;
 }
 
@@ -3487,9 +3501,9 @@ button,
   background: var(--ink-soft);
 }
 
-.race-mini-fill--dem { background: var(--bar-dem); }
-.race-mini-fill--rep { background: var(--bar-rep); }
-.race-mini-fill--ind { background: var(--cand-ind); }
+.race-mini-fill--dem { background: var(--color-chart-dem-safe); }
+.race-mini-fill--rep { background: var(--color-chart-rep-safe); }
+.race-mini-fill--ind { background: var(--color-chart-ind); }
 
 /* Plan banner: the editorial boundary between map and feed. Brand/600 base
    (AA with white text; brand/500 measures 4.24:1 — the SIGN UP precedent). */
@@ -3968,17 +3982,62 @@ button,
   /* Both DS text tones collapse onto gray/500 in light mode. */
   --ink-subtle: #5c5c5c;
   --ink-subtlest: #5c5c5c;
-  /* chart.* light values (DS token sheet, Sep 16 2026) */
-  --state-border: #f0f0f0;  /* chart.map.border = gray/100 = card */
-  --not-on-ballot: #dfdfdf; /* chart.neutral.offballot = gray/200 */
-  --no-read: #5c5c5c;       /* chart.neutral.nodata = gray/500 */
-  --uncalled: #c4c4c4;      /* chart.neutral.unreported = gray/300 (light-mid, hex assumed) */
-  --tossup: #7c3aed;        /* chart.tossup = purple/600 */
-  --rating-tossup: #7c3aed;
-  --cand-ind: #059669;      /* chart.ind = green/600 */
-  --selection: #0a0909;     /* chart.map.focus = gray/900 */
-  --dim-k: 0.6;             /* chart.overlay.dim = black 40% */
-  --hatch: rgb(0 0 0 / 0.25); /* chart.overlay.hatch */
+  /* ---- DS tokens, Light mode (Semantics/Color · Light) ---- */
+  --color-chart-tossup: var(--color-purple-600);
+  --color-chart-ind: var(--color-green-600);
+  --color-chart-neutral-offballot: var(--color-gray-200);
+  --color-chart-neutral-unreported: var(--color-gray-300);
+  --color-chart-neutral-nodata: var(--color-gray-500);
+  --color-chart-map-border: var(--color-gray-100); /* = the light card */
+  --color-chart-map-focus: var(--color-gray-900);
+  --color-chart-overlay-dim: rgb(0 0 0 / 0.4);
+  --color-chart-overlay-hatch: rgb(0 0 0 / 0.25);
+  --dim-k: 0.6; /* chart.overlay.dim = black 40%, as a brightness filter */
+  /* background/* — hover and pressed go LIGHTER here (toward the ground),
+     selected darker. tossup/bold is the exception: 600 · 500 · 400 · 700. */
+  --color-background-rep-bold-hovered: var(--color-crimson-400);
+  --color-background-rep-bold-pressed: var(--color-crimson-300);
+  --color-background-rep-bold-selected: var(--color-crimson-600);
+  --color-background-rep-bold-disabled: var(--color-gray-200);
+  --color-background-rep-subtle-default: var(--color-crimson-300);
+  --color-background-rep-subtle-hovered: var(--color-crimson-200);
+  --color-background-rep-subtle-pressed: var(--color-crimson-100);
+  --color-background-rep-subtle-selected: var(--color-crimson-400);
+  --color-background-rep-subtle-disabled: var(--color-gray-200);
+  --color-background-rep-subtlest-default: var(--color-crimson-200);
+  --color-background-rep-subtlest-hovered: var(--color-crimson-100);
+  --color-background-rep-subtlest-pressed: var(--color-crimson-50);
+  --color-background-rep-subtlest-selected: var(--color-crimson-300);
+  --color-background-rep-subtlest-disabled: var(--color-gray-200);
+  --color-background-dem-bold-hovered: var(--color-indigo-400);
+  --color-background-dem-bold-pressed: var(--color-indigo-300);
+  --color-background-dem-bold-selected: var(--color-indigo-600);
+  --color-background-dem-bold-disabled: var(--color-gray-200);
+  --color-background-dem-subtle-default: var(--color-indigo-300);
+  --color-background-dem-subtle-hovered: var(--color-indigo-200);
+  --color-background-dem-subtle-pressed: var(--color-indigo-100);
+  --color-background-dem-subtle-selected: var(--color-indigo-400);
+  --color-background-dem-subtle-disabled: var(--color-gray-200);
+  --color-background-dem-subtlest-default: var(--color-indigo-200);
+  --color-background-dem-subtlest-hovered: var(--color-indigo-100);
+  --color-background-dem-subtlest-pressed: var(--color-indigo-50);
+  --color-background-dem-subtlest-selected: var(--color-indigo-300);
+  --color-background-dem-subtlest-disabled: var(--color-gray-200);
+  --color-background-tossup-bold-default: var(--color-purple-600);
+  --color-background-tossup-bold-hovered: var(--color-purple-500);
+  --color-background-tossup-bold-pressed: var(--color-purple-400);
+  --color-background-tossup-bold-selected: var(--color-purple-700);
+  --color-background-tossup-bold-disabled: var(--color-gray-200);
+  --color-background-tossup-subtle-default: var(--color-purple-300);
+  --color-background-tossup-subtle-hovered: var(--color-purple-200);
+  --color-background-tossup-subtle-pressed: var(--color-purple-100);
+  --color-background-tossup-subtle-selected: var(--color-purple-400);
+  --color-background-tossup-subtle-disabled: var(--color-gray-200);
+  --color-background-tossup-subtlest-default: var(--color-purple-200);
+  --color-background-tossup-subtlest-hovered: var(--color-purple-100);
+  --color-background-tossup-subtlest-pressed: var(--color-purple-50);
+  --color-background-tossup-subtlest-selected: var(--color-purple-300);
+  --color-background-tossup-subtlest-disabled: var(--color-gray-200);
 }
 
 /* Label tones swap roles: "dark ink on light fills" is now real ink, and
@@ -4008,11 +4067,11 @@ button,
 }
 
 :root[data-theme='light'] .dots-num--dem {
-  color: var(--rating-safe-dem);
+  color: var(--color-chart-dem-safe);
 }
 
 :root[data-theme='light'] .dots-num--rep {
-  color: var(--rating-safe-rep);
+  color: var(--color-chart-rep-safe);
 }
 
 /* Theme toggle FAB — stacked above the mobile-preview toggle. */

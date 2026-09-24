@@ -39,7 +39,7 @@
 }
 
 .nation-speaks-call {
-  color: #fc002c; /* crimson/500 */
+  color: var(--color-crimson-500);
 }
 
 @media (max-width: 700px) {

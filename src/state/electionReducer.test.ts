@@ -115,7 +115,7 @@ describe('trust picks (which read do you trust)', () => {
     const trusted = picksForChamber(s.trust, 'senate').WV;
     expect(trusted).toBe('kalshi');
     expect(readFor(s.ballot.senate.WV, trusted)).toBeUndefined();
-    expect(fillFor(s.ballot.senate.WV, trusted)).toBe('var(--no-read)');
+    expect(fillFor(s.ballot.senate.WV, trusted)).toBe('var(--color-chart-neutral-nodata)');
   });
 });
 
