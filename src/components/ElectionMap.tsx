@@ -67,6 +67,8 @@ const LABEL_NUDGE: Record<string, { dx: number; dy: number }> = {
 const [, , VIEW_W, VIEW_H] = MAP_VIEWBOX.split(' ').map(Number);
 const ZOOM_FILL = 0.78; // fraction of the region the state fills
 const MAX_ZOOM = 7;
+/** How far two fingers may take the map (phones, Sep 24 2026). */
+const MAX_PINCH = 5;
 
 /**
  * Where the zoomed state should land, in viewBox units: the centre of the
@@ -160,6 +162,9 @@ export function ElectionMap({
     const camera = cameraRef.current;
     if (!camera) return;
     stopGlide();
+    // The fly owns the camera: a reader's pinch does not survive it.
+    zoomRef.current = false;
+    setUserZoom(false);
     const from = { ...camRef.current };
     const to = { s: 1, x: 0, y: 0 };
     if (zoomedId) {
@@ -216,8 +221,63 @@ export function ElectionMap({
     };
   };
   const [dragging, setDragging] = useState(false);
+
+  /* PINCH TO ZOOM (Sep 24 2026, phones): two fingers scale the map about the
+     point between them, 1x to 5x, and one finger pans it once it is zoomed.
+     The map is small on a phone; this is how a reader gets into it.
+     `touch-action` (index.css) hands us the gesture: the page still scrolls
+     with one finger at rest, and only stops doing so once the reader has
+     zoomed in — with a Reset chip always on screen to give the map back.
+     The camera is the same one the open-state fly uses, so a state opened
+     while zoomed just flies from wherever the reader is. */
+  const [userZoom, setUserZoom] = useState(false);
+  const zoomRef = useRef(false);
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef({ on: false, d0: 0, s0: 1, cx: 0, cy: 0 });
+  const clampPinch = (c: { s: number; x: number; y: number }) => {
+    const s = Math.max(1, Math.min(MAX_PINCH, c.s));
+    // Never past the map's own edges: the drawing always covers the frame.
+    return {
+      s,
+      x: Math.min(0, Math.max(VIEW_W * (1 - s), c.x)),
+      y: Math.min(0, Math.max(VIEW_H * (1 - s), c.y)),
+    };
+  };
+  /** The fingers' midpoint, in the svg's own user space. */
+  const midOf = (svg: SVGSVGElement) => {
+    const [a, b] = [...pointers.current.values()];
+    const r = svg.getBoundingClientRect();
+    const k = VIEW_W / r.width;
+    return {
+      x: ((a.x + b.x) / 2 - r.left) * k,
+      y: ((a.y + b.y) / 2 - r.top) * k,
+      d: Math.hypot(a.x - b.x, a.y - b.y),
+    };
+  };
+  const resetZoom = () => {
+    pinch.current.on = false;
+    zoomRef.current = false;
+    setUserZoom(false);
+    const camera = cameraRef.current;
+    if (camera) applyCamera(camera, { s: 1, x: 0, y: 0 });
+  };
+
   const onSvgPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (!zoomedId || e.button !== 0) return;
+    if (e.pointerType === 'touch') {
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.current.size === 2) {
+        // A pinch starts: whatever drag was in flight is over.
+        const m = midOf(e.currentTarget);
+        const c = camRef.current;
+        pinch.current = { on: true, d0: m.d, s0: c.s, cx: (m.x - c.x) / c.s, cy: (m.y - c.y) / c.s };
+        drag.current.on = false;
+        drag.current.moved = true; // the tap that follows must not open a state
+        setDragging(false);
+        stopGlide();
+        return;
+      }
+    }
+    if ((!zoomedId && !zoomRef.current) || e.button !== 0) return;
     const d = drag.current;
     d.on = true;
     d.id = e.pointerId;
@@ -237,6 +297,23 @@ export function ElectionMap({
     // once the press has become a drag (below).
   };
   const onSvgPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType === 'touch' && pointers.current.has(e.pointerId)) {
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pinch.current.on && pointers.current.size === 2) {
+        const m = midOf(e.currentTarget);
+        const p = pinch.current;
+        const s = Math.max(1, Math.min(MAX_PINCH, (p.s0 * m.d) / Math.max(1, p.d0)));
+        // The point the fingers grabbed stays under the fingers.
+        const next = clampPinch({ s, x: m.x - p.cx * s, y: m.y - p.cy * s });
+        if (cameraRef.current) applyCamera(cameraRef.current, next);
+        const on = next.s > 1.01;
+        if (on !== zoomRef.current) {
+          zoomRef.current = on;
+          setUserZoom(on);
+        }
+        return;
+      }
+    }
     const d = drag.current;
     if (!d.on || e.pointerId !== d.id) return;
     const dxPx = e.clientX - d.x0;
@@ -259,9 +336,19 @@ export function ElectionMap({
     d.t = now;
     d.lx = e.clientX;
     d.ly = e.clientY;
-    if (cameraRef.current) applyCamera(cameraRef.current, clampCam({ s: c.s, x: d.cx + dxPx * k, y: d.cy + dyPx * k }));
+    const panned = { s: c.s, x: d.cx + dxPx * k, y: d.cy + dyPx * k };
+    if (cameraRef.current) applyCamera(cameraRef.current, zoomedId ? clampCam(panned) : clampPinch(panned));
   };
   const onSvgPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType === 'touch') {
+      pointers.current.delete(e.pointerId);
+      if (pointers.current.size < 2 && pinch.current.on) {
+        pinch.current.on = false;
+        // A pinch that ended back at 1x hands the page its scroll back.
+        if (camRef.current.s <= 1.01) resetZoom();
+        return;
+      }
+    }
     const d = drag.current;
     if (!d.on || e.pointerId !== d.id) return;
     d.on = false;
@@ -282,7 +369,9 @@ export function ElectionMap({
       const dt = now - last;
       last = now;
       const c = camRef.current;
-      const next = clampCam({ s: c.s, x: c.x + vx * dt, y: c.y + vy * dt });
+      const next = zoomedId
+        ? clampCam({ s: c.s, x: c.x + vx * dt, y: c.y + vy * dt })
+        : clampPinch({ s: c.s, x: c.x + vx * dt, y: c.y + vy * dt });
       if (cameraRef.current) applyCamera(cameraRef.current, next);
       const decay = Math.exp(-dt / 250);
       vx *= decay;
@@ -415,7 +504,11 @@ export function ElectionMap({
   const selectedShape = selectedId ? STATE_SHAPES.find((s) => s.id === selectedId) : undefined;
 
   return (
-    <div className={`map-wrap${zoomedId ? ' is-zoomed' : ''}${dragging ? ' is-dragging' : ''}`}>
+    <div
+      className={`map-wrap${zoomedId ? ' is-zoomed' : ''}${dragging ? ' is-dragging' : ''}${
+        userZoom ? ' is-userzoom' : ''
+      }`}
+    >
       {/* Flat rendering on purpose: any 3D transform on an SVG ancestor makes
           the compositor rasterize + resample it, pixelating the borders. */}
           <svg
@@ -572,6 +665,13 @@ export function ElectionMap({
               )}
             </g>
           </svg>
+
+      {/* The way back: without it a zoomed reader has no scroll and no map. */}
+      {userZoom && (
+        <button type="button" className="map-zoom-reset" onClick={resetZoom}>
+          Reset zoom
+        </button>
+      )}
 
       {tooltip && (
         <MapTooltip

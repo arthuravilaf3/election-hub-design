@@ -5228,12 +5228,6 @@ body {
 
 /* ---------- Option 1: the left column ---------- */
 
-/* The copy column stretches to the dots' height so the call can sit on
-   their baseline. */
-.dots {
-  align-items: stretch;
-}
-
 .dots-left {
   display: flex;
   flex-direction: column;
@@ -5623,4 +5617,194 @@ body {
 
 [data-option='1'] .dots-seatline .seatline {
   animation: none;
+}
+
+/* ==================== HERO AND PHONE PASS (Sep 24 2026) ==================== */
+
+/* THE ARC KEEPS ITS SHAPE. Its box carries the drawing's own aspect ratio
+   (set inline from the layout), so the row may never stretch it — the
+   headline shrinks with the window instead of wrapping into four lines and
+   pulling the arc tall. */
+.dots {
+  align-items: start;
+}
+
+[data-option='1'] .dots-title {
+  font-size: clamp(32px, 3.6vw, 56px);
+}
+
+/* The seat counts read in ink; the party's colour moves into the mark
+   beside them (PLACEHOLDER art — see PartyMark.tsx). */
+.dots-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dots-party {
+  color: var(--ink);
+}
+
+.party-mark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  color: var(--color-chart-text-on-dark);
+}
+
+.party-mark svg {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+.party-mark--dem {
+  background: var(--color-chart-dem-safe);
+}
+
+.party-mark--rep {
+  background: var(--color-chart-rep-safe);
+}
+
+/* The night's start button is parked while the phone experience is being
+   read (Sep 24 2026); ?night=HH:MM still opens the clock. */
+.night-clock--off {
+  display: none;
+}
+
+/* ---------- The map takes a hand ----------
+   Two fingers zoom the map, one pans it once zoomed. Until then the page
+   keeps its scroll over the map (touch-action), and the Reset chip is the
+   way back out. */
+.map-wrap {
+  position: relative;
+}
+
+.election-map {
+  touch-action: pan-y;
+}
+
+.map-wrap.is-userzoom .election-map {
+  touch-action: none;
+  cursor: grab;
+}
+
+.map-zoom-reset {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 4;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-dim) 88%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.map-zoom-reset:hover {
+  background: var(--surface-2);
+}
+
+@media (max-width: 700px) {
+  /* THE MAP, TALLER. A phone gives the map a third of its width in height;
+     the box gets the room the zoom needs, and the hint stops sitting on
+     the coastline. */
+  .map-wrap {
+    padding: 48px 4px 16px;
+    min-height: 44vh;
+    display: flex;
+    align-items: center;
+  }
+
+  .map-hint {
+    top: 18px;
+  }
+
+  /* THE CONTROLS: one row — race first, the source beside it — and lower,
+     closer to the thumb. */
+  [data-option='1'] .map-card .map-selectors {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    bottom: calc(var(--ticker-h) + 12px);
+  }
+
+  [data-option='1'] .map-card .map-selectors .race-seg {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 2px;
+    padding: 3px;
+    width: auto;
+  }
+
+  [data-option='1'] .map-card .race-seg-option {
+    flex: 1;
+    padding: 10px 2px;
+    font-size: 12px;
+    line-height: 14px;
+  }
+
+  [data-option='1'] .map-card .map-selectors .pill-wrap {
+    flex: none;
+  }
+
+  [data-option='1'] .map-card .pill {
+    gap: 6px;
+    padding: 8px 10px 8px 12px;
+  }
+
+  [data-option='1'] .map-card .pill-label {
+    font-size: 9px;
+  }
+
+  [data-option='1'] .map-card .pill-value {
+    font-size: 13px;
+  }
+
+  /* The pill sits at the right edge now: its menu opens from that edge. */
+  .map-card .map-selectors .pill-menu {
+    left: auto;
+    right: 0;
+  }
+
+  /* THE FEED'S FILTERS scroll sideways instead of running off the screen.
+     Browse mode only — the selected mode carries a dropdown that an
+     overflow container would clip. */
+  .filter-bar--browse {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .filter-bar--browse::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-bar--browse > * {
+    flex: none;
+  }
+
+  /* THE STATE SHEET: the phone's own gutter is the sheet's gutter. */
+  .drawer {
+    padding: 14px 10px calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .drawer-scroll {
+    margin: 0 -10px;
+    padding: 0 10px 8px;
+  }
+
+  .drawer-block {
+    padding: 18px 6px;
+  }
 }

@@ -18,6 +18,7 @@ import { useEffect, useRef } from 'react';
 import { INTRO_AT, Letters, introDelay } from './Intro';
 
 import { Countdown } from './Countdown';
+import { PartyMark } from './PartyMark';
 import { asset } from '../data/assets';
 import { IS_CREATIVE, IS_STILL_ARC, type DotsShape } from '../data/edition';
 import { CURRENT_SEATS } from '../data/summary';
@@ -638,13 +639,15 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
             line under the headline, with the freshness of the read below it. */}
         <p className="dots-seats intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
           <span className="dots-num">
-            <b className="dots-party dots-party--dem">D</b> {results ? results.demTotal : forecast.dem}
+            <PartyMark party="dem" />
+            <b className="dots-party">D</b> {results ? results.demTotal : forecast.dem}
           </span>
           <span className="hub-dot" aria-hidden="true">
             •
           </span>
           <span className="dots-num">
-            <b className="dots-party dots-party--rep">R</b> {results ? results.repTotal : forecast.rep}
+            <PartyMark party="rep" />
+            <b className="dots-party">R</b> {results ? results.repTotal : forecast.rep}
           </span>
           <span className="hub-dot" aria-hidden="true">
             •
@@ -719,8 +722,15 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
             the grid re-forming, not as the page opening again. */}
         {arc
           ? arc.pts.map(([x, y, row], i) => {
+              /* The arc fills ALONG ITS SWEEP (Sep 24 2026), left tip to
+                 right — the big arc's own choreography — instead of the
+                 grid's row-by-row deal, which read as noise on a curve.
+                 The row offset keeps the rows from landing as one hard
+                 front, and the jitter breaks the line. */
               const jitter = ((i * 2654435761) % 1000) / 1000;
-              const delay = firstDeal ? INTRO_AT.dots + row * 30 + x * 40 + jitter * 26 : row * 12 + jitter * 90;
+              const delay = firstDeal
+                ? INTRO_AT.dots + x * 420 + row * 9 + jitter * 22
+                : x * 260 + row * 7 + jitter * 16;
               return (
                 <span
                   key={i}
