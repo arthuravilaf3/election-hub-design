@@ -3493,98 +3493,19 @@ button,
 
 /* Plan banner: the editorial boundary between map and feed. Brand/600 base
    (AA with white text; brand/500 measures 4.24:1 — the SIGN UP precedent). */
-.plan-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 40px;
-  flex-wrap: wrap;
-  margin-top: 72px;
-  padding: 40px;
-  border-radius: 8px;
-  background: linear-gradient(
-    120deg,
-    var(--brand-pressed) 0%,
-    color-mix(in srgb, var(--brand-pressed) 72%, var(--surface-dim)) 100%
-  );
-}
 
-.plan-mark {
-  flex: none;
-  width: 81px;
-  height: 81px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  /* The comp's #8f201e — brand/600 taken down, not a new brand value. */
-  background: color-mix(in srgb, var(--brand-pressed) 78%, #000);
-  color: var(--ink);
-}
 
-/* The mark and the copy travel together; the buttons sit opposite them. */
-.plan-copy {
-  flex: 1;
-  min-width: 320px;
-}
 
-.plan-copy h2 {
-  margin: 0;
-  font-size: 32px;
-  line-height: 38px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-}
 
-.plan-copy p {
-  margin: 8px 0 0;
-  max-width: 56ch;
-  font-size: 14px;
-  line-height: 21px;
-  color: color-mix(in srgb, var(--ink) 88%, transparent);
-}
 
-.plan-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
 
 /* The primary button borrows .btn-follow's shape, but NOT its size — that one
    is the drawer's Follow control and keeps its own 36px spec — and not its
    theme inversion either: this sits on the brand gradient, which does not
    flip, so the button stays light in both themes. */
-.plan-actions .btn-follow {
-  height: 46px;
-  padding: 0 32px;
-  border-radius: 4px;
-  font-size: 14px;
-  background: #fafafa;
-  color: #0a0909;
-}
 
-.plan-actions .btn-follow:hover {
-  background: #e5e5e5;
-}
 
-.plan-btn-secondary {
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  height: 46px;
-  padding: 0 32px;
-  border: 1px solid color-mix(in srgb, var(--ink) 45%, transparent);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  transition: background 140ms ease-out;
-}
 
-.plan-btn-secondary:hover {
-  background: color-mix(in srgb, var(--ink) 10%, transparent);
-}
 
 @media (prefers-reduced-motion: reduce) {
   .race-hovercard {
@@ -3937,75 +3858,6 @@ button,
   .drawer-scroll {
     margin: 0 -18px;
     padding: 0 18px 8px;
-  }
-
-  .plan-banner {
-    margin-top: 56px;
-    padding: 24px 20px;
-  }
-
-  .plan-copy h2 {
-    font-size: 22px;
-  }
-
-  .feed-section {
-    margin-top: 40px;
-    padding: 32px 0 48px;
-  }
-
-  .feed-rail {
-    padding: 0 16px;
-  }
-
-  .feed-head h2 {
-    font-size: 24px;
-  }
-
-  /* Filter bar wraps (the JS already swaps instantly at this width). */
-  .filter-bar {
-    height: auto;
-    min-height: 44px;
-    flex-wrap: wrap;
-    row-gap: 8px;
-  }
-
-  .feed-filter {
-    height: 44px;
-    padding: 0 14px;
-    font-size: 13px;
-  }
-
-  .filter-x,
-  .filter-x-circle {
-    width: 44px;
-    height: 44px;
-  }
-
-  .host-trigger {
-    height: 44px;
-    font-size: 13px;
-  }
-
-  .host-avatar--lg {
-    width: 30px;
-    height: 30px;
-    font-size: 11px;
-  }
-
-  /* Feed rows: the DS card's Mobile breakpoint is declared above this
-     block (32px mark, 16px title); only the skeleton needs a hand. */
-  .feed-skeleton {
-    grid-template-columns: 32px minmax(0, 1fr);
-    gap: 12px;
-    padding: 0;
-  }
-
-  .feed-meta {
-    font-size: 12px;
-  }
-
-  .feed-date {
-    margin: 36px 0 10px;
   }
 }
 
@@ -4822,12 +4674,6 @@ body {
   border-radius: 16px;
 }
 
-[data-option='2'] .map-section .plan-banner {
-  width: 100%;
-  max-width: 1100px;
-  margin-inline: auto;
-}
-
 /* ---------- The controls block (Figma 11613:230736) ----------
    The Election Day clock in a capsule, and under it the race as a segmented
    control beside the source chip — pinned together where the pills were.
@@ -5321,7 +5167,7 @@ body {
   }
 }
 
-/* ---------- Option 1: the left column and the game's call ---------- */
+/* ---------- Option 1: the left column ---------- */
 
 /* The copy column stretches to the dots' height so the call can sit on
    their baseline. */
@@ -5335,52 +5181,11 @@ body {
   min-width: 0;
 }
 
-.game-callout {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: auto;
-  padding: 14px 16px;
-  border-radius: 8px;
-  background: linear-gradient(
-    120deg,
-    var(--brand-pressed) 0%,
-    color-mix(in srgb, var(--brand-pressed) 72%, var(--surface-dim)) 100%
-  );
-  color: #fff;
-}
 
-/* Never closer than this to the clock, however short the copy runs. */
-.dots-left .dots-copy {
-  margin-bottom: 24px;
-}
 
-.game-callout-mark {
-  width: 44px;
-  height: 44px;
-  border-radius: 6px;
-}
 
-.game-callout-copy {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.3;
-  color: rgba(255, 255, 255, 0.88);
-}
 
-.game-callout-copy b {
-  color: #fff;
-}
 
-.game-callout-btn {
-  flex: none;
-  height: 38px;
-  padding: 0 14px;
-  font-size: 13px;
-  white-space: nowrap;
-}
 
 /* Option 1's race segments beside the source pill: same height. */
 .map-selectors > .race-seg {
@@ -5388,11 +5193,6 @@ body {
 }
 
 @media (max-width: 700px) {
-  .game-callout {
-    margin-top: 20px;
-    flex-wrap: wrap;
-  }
-
   /* The segments take the row; the source pill goes under them. */
   [data-option='1'] .map-card .map-selectors {
     grid-template-columns: 1fr;
@@ -5402,7 +5202,6 @@ body {
     width: 100%;
   }
 }
-
 
 /* ==================== THE NIGHT CLOCK (election night, Sep 2026) ==================== */
 
@@ -5746,24 +5545,23 @@ body {
   font-weight: 500;
 }
 
-/* ---------- Option 1: the seat line under the arc (Sep 23 2026) ---------- */
-.dots-right {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 0;
-}
+/* ---------- Option 1: the seat line above the hero (Sep 24 2026) ---------- */
 
 /* The line sits on the arc's rail; its labels in ink like the comp's. */
-[data-option='1'] .dots-right .seatline-label {
+
+
+/* The game's call, without its button for now. */
+
+/* The seat line across the whole hero, first: both columns of the grid. */
+.dots-seatline {
+  grid-column: 1 / -1;
+  margin-bottom: 8px;
+}
+
+[data-option='1'] .dots-seatline .seatline-label {
   color: var(--ink);
 }
 
-[data-option='1'] .dots-right .seatline {
+[data-option='1'] .dots-seatline .seatline {
   animation: none;
-}
-
-/* The game's call, without its button for now. */
-.game-callout-copy {
-  flex: 1;
 }

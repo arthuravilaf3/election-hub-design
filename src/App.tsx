@@ -7,7 +7,6 @@ import { IS_PREVIEW_FRAME } from './components/MobilePreview';
 import { ThemeToggle } from './components/ThemeToggle';
 import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed, type FeedCall } from './components/CoverageFeed';
-import { PlanBanner } from './components/PlanBanner';
 import { Hemicycle } from './components/Hemicycle';
 import { HouseColors } from './components/HouseColors';
 import { NationSpeaks } from './components/NationSpeaks';
@@ -340,10 +339,6 @@ export default function App() {
             <Hemicycle forecast={painted} chamber={state.chamber} />
           )}
 
-          {/* OPTION 3: the banner belongs to the section, so the pinned
-              timer and controls stay through it (the gate watches the
-              section). */}
-          {IS_STILL_ARC && <PlanBanner />}
           </section>
 
           {/* CREATIVE EDITION (option 2): the Cosmos Waveform and "The
@@ -354,9 +349,6 @@ export default function App() {
           {IS_STILL_ARC && <ChapterRail option={2} />}
           {isCreativeFull && <ChapterRail option={3} />}
 
-          {/* The boundary between map and feed is now editorial, not chromatic:
-              the plan banner sits where the surface-step used to be. */}
-          {!IS_STILL_ARC && <PlanBanner />}
 
           <CoverageFeed calls={feedCalls} />
 

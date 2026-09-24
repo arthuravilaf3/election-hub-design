@@ -18,7 +18,6 @@ import { useEffect, useRef } from 'react';
 import { INTRO_AT, Letters, introDelay } from './Intro';
 
 import { Countdown } from './Countdown';
-import { GameCallout } from './GameCallout';
 import { asset } from '../data/assets';
 import { IS_CREATIVE, IS_STILL_ARC, type DotsShape } from '../data/edition';
 import { CURRENT_SEATS } from '../data/summary';
@@ -608,6 +607,12 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
 
   return (
     <section className="dots" aria-label={`${body} forecast`}>
+      {/* THE SEAT LINE FIRST (Arthur, Sep 24 2026): the split as a bar across
+          the whole hero — "203 D · 218 to win · 224 R" — above the headline
+          and the seats; on the night, the feed's split. */}
+      <div className="dots-seatline">
+        <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
+      </div>
       <div className="dots-left">
       {/* Keyed on the headline so a race switch crossfades the copy, the way
           the old statement did. */}
@@ -659,16 +664,10 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           <Countdown compact />
         )}
       </div>
-      {/* The game's call, pushed to the foot of the column so it lines up
-          with the bottom of the dots. */}
-      <GameCallout />
       </div>
 
       {/* The grid is one image to assistive tech — 435 list items would be
-          noise. The sentence is the seat bar's, unchanged. Under it, the
-          seat line (Sep 23 2026, from the still-arc cut): the same split
-          as a bar with the majority marked. */}
-      <div className="dots-right">
+          noise. The sentence is the seat bar's, unchanged. */}
       <div
         className={`dots-grid${arc ? ' dots-grid--arc' : ''}`}
         style={
@@ -735,8 +734,6 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
             />
           );
         })}
-      </div>
-      <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
       </div>
     </section>
   );
