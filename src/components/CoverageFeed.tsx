@@ -1257,22 +1257,22 @@ export function CoverageFeed({ calls = [] }: { calls?: FeedCall[] }) {
           both would double it. Ad-free tiers get neither (PRD tenet 4). */}
       {/* Two rails, one per side (Sep 2026). Each is its own landmark. */}
       {!IS_AD_FREE && (
-        <aside className="feed-ad-rail feed-ad-rail--left" aria-label="Advertisement, left">
+        <div className="feed-ad-rail feed-ad-rail--left" role="group" aria-label="Advertisement, left">
           <div className="feed-ad-rail-inner">
             <p className="feed-ad-rail-label">ADVERTISEMENT</p>
             <div className="feed-ad-rail-slot" data-impression="ad-rail-left" />
           </div>
-        </aside>
+        </div>
       )}
       {!IS_AD_FREE && (
-        <aside className="feed-ad-rail feed-ad-rail--right" aria-label="Advertisement, right">
+        <div className="feed-ad-rail feed-ad-rail--right" role="group" aria-label="Advertisement, right">
           {/* The column stretches so its left rule runs the full height of
               the stream; only this inner block sticks. */}
           <div className="feed-ad-rail-inner">
             <p className="feed-ad-rail-label">ADVERTISEMENT</p>
             <div className="feed-ad-rail-slot" data-impression="ad-rail" />
           </div>
-        </aside>
+        </div>
       )}
     </section>
   );

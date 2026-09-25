@@ -588,11 +588,13 @@ const night = await page.evaluate(() => ({
   // the block at the FOOT of the column, where the countdown sits before
   // the election: an eyebrow, then the stamp. The provider's NAME came off
   // the hero at the same time — it is still on the page, beside the source
-  // control, which `attribution` below holds to.
+  // control — which came off the page entirely on Sep 25 2026.
   // The stamp's spaces are HARD spaces — each character is its own flex
   // item and a plain space would collapse — so normalise before matching.
   updated: `${document.querySelector('.hero-clock-eyebrow')?.textContent ?? ''} · ${(document.querySelector('.hero-clock-stamp')?.textContent ?? '').replace(/\u00a0/g, ' ')}`,
-  attribution: document.querySelector('.source-byline.seg-results')?.textContent ?? '',
+  // The provider is no longer named in the page's chrome (Sep 25 2026):
+  // nothing outside a race's own detail should carry it.
+  chromeNamesProvider: /Results by AP/.test(document.body.innerText),
   bands: ['dot--rep', 'dot--rep-lead', 'dot--uncalled', 'dot--dem-lead', 'dot--dem'].map(
     (c) => document.querySelectorAll('.' + c).length
   ),
@@ -608,7 +610,7 @@ check(
   true
 );
 check('night: the hero names the batch', /Last update · 9:40 PM ET/.test(night.updated), true);
-check('night: the provider is still named on the page', /Results by AP/.test(night.attribution), true);
+check('night: the provider is not named in the page chrome', night.chromeNamesProvider, false);
 check('night: the dots paint the feed (called, leading and early bands all present)', night.bands.every((n) => n > 0), true);
 check('night: no countdown on the night', night.countdown, false);
 check('night: the headline counts calls', /of \d+ races called|keep|take|hold/.test(night.headline ?? ''), true);

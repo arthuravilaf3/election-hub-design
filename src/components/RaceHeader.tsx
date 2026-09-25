@@ -288,6 +288,7 @@ function SeatLine({
     return () => window.clearTimeout(t);
   }, [delay]);
 
+
   return (
     <div className="seatline" style={{ '--seat-at': `${delay}ms` } as React.CSSProperties}>
       <div className="seatline-ends">
@@ -749,12 +750,16 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           of gliding to the new split. */}
       {stacked && (
         <div className="hero-seatline">
+          {/* The block remounts with Dots on a race change, so it re-enters
+              from nothing either way — the offset is the only difference:
+              its slot in the page's entrance, or its slot in the shorter
+              cascade a race change runs (headline, line, clock, seats). */}
           <SeatLine
             forecast={forecast}
             results={results}
             chamber={chamber}
             compact
-            delay={INTRO_AT.seatlineStacked}
+            delay={firstDeal ? INTRO_AT.seatlineStacked : REDEAL_AT.seatline}
           />
         </div>
       )}
@@ -764,7 +769,12 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           the countdown; on the night the provider and its last batch take
           the same block, instead of a line tucked under the headline
           (Sep 25 2026), and the stamp's digits roll like the clock's. */}
-      <div className={`hero-clock${results ? ' hero-clock--night' : ''}${results?.delayed ? ' is-delayed' : ''}`}>
+      <div
+        className={`hero-clock${results ? ' hero-clock--night' : ''}${results?.delayed ? ' is-delayed' : ''}${
+          firstDeal ? '' : ' intro-rise'
+        }`}
+        style={firstDeal ? undefined : introDelay(REDEAL_AT.clock)}
+      >
         <p className="hero-clock-eyebrow">{results ? results.eyebrow : 'Time to Election Day'}</p>
         {results ? (
           <p className="hero-clock-stamp">

@@ -5,7 +5,6 @@ import { MapCard } from './components/MapCard';
 import { DevToolbar } from './components/DevToolbar';
 import { IS_PREVIEW_FRAME } from './components/MobilePreview';
 import { ThemeToggle } from './components/ThemeToggle';
-import { CutoverBanner } from './components/CutoverBanner';
 import { CoverageFeed, type FeedCall } from './components/CoverageFeed';
 import { Hemicycle } from './components/Hemicycle';
 import { HouseColors } from './components/HouseColors';
@@ -13,6 +12,7 @@ import { NationSpeaks } from './components/NationSpeaks';
 import { ChapterRail } from './components/ChapterRail';
 import { OptionSwitcher } from './components/OptionSwitcher';
 import { WinPromo } from './components/WinPromo';
+import { MiniPlayer } from './components/MiniPlayer';
 import {
   IS_CREATIVE,
   IS_STILL_ARC,
@@ -85,7 +85,6 @@ export default function App() {
   // Whoever the certified feed is, once results are live.
   const resultsProvider =
     Object.values(races).find((r) => r.results?.providerId)?.results?.providerId ?? DEFAULT_RESULTS_PROVIDER;
-  const resultsSource = anyResults ? resultsLabel(resultsProvider) : undefined;
   /* The results statement: the feed's counts, the clock's freshness. When
      the manual simulator (no clock) is driving, there is no batch time. */
   const results = useMemo(
@@ -283,14 +282,6 @@ export default function App() {
             </div>
           )}
 
-          {state.banner && (
-            <CutoverBanner
-              text={state.banner}
-              tone={state.bannerTone}
-              onDismiss={() => dispatch({ type: 'CLEAR_BANNER' })}
-            />
-          )}
-
           {/* THE MAP SECTION: tabs, the headline they drive and the seat
               bar, then the card — which owns the map and the source that
               paints it. */}
@@ -324,7 +315,6 @@ export default function App() {
             staggering={state.staggering}
             flash={state.flash}
             resultsMode={anyResults}
-            resultsSource={resultsSource}
             onChamber={(chamber) => selectChamber(chamber, 'header')}
             onSource={(sourceId) => dispatch({ type: 'SET_SOURCE', sourceId })}
             onSelect={handleSelect}
@@ -398,6 +388,7 @@ export default function App() {
           />
         )}
         <OptionSwitcher />
+        <MiniPlayer />
         {features.results && <NightClock night={state.night} dispatch={dispatch} />}
         <ThemeToggle />
       </div>

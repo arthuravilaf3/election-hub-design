@@ -35,6 +35,12 @@ export const INTRO_AT = {
  */
 export const REDEAL_AT = {
   statement: 0,
+  /* The column reads top to bottom on a race change the way it does on the
+     page's entrance — headline, the seat line under it, the block at the
+     foot, then the seats. They overlap; only the order matters, and without
+     one the eye has nowhere to start. */
+  seatline: 80,
+  clock: 180,
   dots: 300,
 } as const;
 

@@ -27,7 +27,6 @@ interface MapCardProps {
   staggering: boolean;
   flash: { stateId: string; nonce: number } | null;
   resultsMode: boolean;
-  resultsSource?: string;
   /** Phase gate: the county choropleth is depth, not the base map. */
   /** The state detail panel, injected so the card owns no app state. */
   panel?: React.ReactNode;
@@ -48,7 +47,6 @@ export function MapCard({
   staggering,
   flash,
   resultsMode,
-  resultsSource,
   panel,
   onChamber,
   onSource,
@@ -80,7 +78,6 @@ export function MapCard({
         chamber={chamber}
         sourceId={sourceId}
         resultsMode={resultsMode}
-        resultsSource={resultsSource}
         onChamber={onChamber}
         onSource={onSource}
       />

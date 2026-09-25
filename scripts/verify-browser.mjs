@@ -404,9 +404,17 @@ if (await page.locator('.dev-toolbar--collapsed').count()) {
 }
 await page.getByRole('button', { name: 'Results', exact: true }).click();
 await page.waitForTimeout(1600);
+/* The provider's name came off the page chrome on Sep 25 2026: in results
+   mode the source control is simply gone, and the attribution rides with
+   the numbers instead — the tooltip and the race panel. Check both ends. */
 console.log(
-  'results byline (static attribution):',
-  JSON.stringify(await page.locator('.source-byline').innerText())
+  'results chrome (no source control, no provider name):',
+  JSON.stringify(
+    await page.evaluate(() => ({
+      sourceControl: document.querySelectorAll('.map-selectors .pill-wrap, .source-byline').length,
+      chromeNamesProvider: /Results by AP/.test(document.body.innerText),
+    }))
+  )
 );
 await page.screenshot({ path: SHOT('6-results') });
 await page.locator('#dev-state-select').selectOption('GA');
@@ -546,9 +554,29 @@ console.log('night drawer:', JSON.stringify(nightDrawer));
 await page.screenshot({ path: SHOT('night-drawer'), fullPage: false });
 await page.waitForTimeout(1200); // let axe run on the night
 
+/* @axe-core/react logs through console groups, and the useful half of the
+   message lives in arguments the console text drops — a run that says "New
+   axe issues" and nothing else is not actionable. Run axe here too, on the
+   same page, and NAME the nodes. */
+let axeNodes = '(axe-core did not load)';
+try {
+  await page.addScriptTag({ url: 'https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js' });
+  axeNodes = JSON.stringify(
+    await page.evaluate(async () => {
+      const res = await window.axe.run(document);
+      return res.violations.flatMap((v) =>
+        v.nodes.map((n) => ({ rule: v.id, target: n.target, why: (n.any?.[0]?.message ?? n.all?.[0]?.message ?? '').slice(0, 140) }))
+      );
+    })
+  );
+} catch (err) {
+  axeNodes = `(axe run failed: ${err.message})`;
+}
 const axeLines = consoleLines.filter((l) => /axe|violation/i.test(l));
 console.log('--- axe console output ---');
 console.log(axeLines.length ? axeLines.join('\n') : '(no axe violations logged)');
+console.log('--- axe nodes (this page) ---');
+console.log(axeNodes);
 
 await browser.close();
 console.log('DONE');

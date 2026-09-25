@@ -251,8 +251,6 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
       if (feed.delayed && !state.night.delayed) {
         announcement = DELAYED_BANNER;
       } else if (!feed.delayed && state.night.delayed) {
-        banner = RESUMED_BANNER;
-        bannerTone = 'info';
         announcement = RESUMED_BANNER;
       }
       return {
@@ -339,7 +337,11 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
       return {
         ...state,
         ballot: mapEveryRace(state.ballot, cutoverRace),
-        banner: CUTOVER_BANNER,
+        // NO BAR (Sep 25 2026, by request): the white notice that sat on
+        // top of the page for six seconds is gone. The cutover is still
+        // announced for a screen reader, and the page says it out loud in
+        // every other way — the LIVE row, the headline, the whole hero.
+        banner: null,
         bannerTone: 'info',
         staggering: true,
         announcement: CUTOVER_BANNER,
@@ -356,7 +358,7 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
       return {
         ...state,
         ballot: mapStateAcrossChambers(state.ballot, action.stateId, cutoverRace),
-        banner: firstCutover ? CUTOVER_BANNER : state.banner,
+        banner: null,
         bannerTone: firstCutover ? 'info' : state.bannerTone,
         announcement: `${nameOf(action.stateId)}: polls closed, live results replacing prediction.`,
       };

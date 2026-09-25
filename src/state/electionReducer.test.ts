@@ -146,13 +146,13 @@ describe('chamber and source switching', () => {
 });
 
 describe('cutover', () => {
-  it('global cutover flips every race in every chamber and shows the banner', () => {
+  it('global cutover flips every race in every chamber and announces it', () => {
     let s = electionReducer(initialElectionState(), { type: 'SET_CHAMBER', chamber: 'senate' });
     s = electionReducer(s, { type: 'SET_GLOBAL_MODE', mode: 'results' });
     for (const chamber of ['senate', 'house', 'governor'] as const) {
       expect(Object.values(s.ballot[chamber]).every((r) => r.mode === 'results')).toBe(true);
     }
-    expect(s.banner).toBe(CUTOVER_BANNER);
+    expect(s.banner).toBeNull();
     expect(s.staggering).toBe(true);
     expect(s.announcement).toBe(CUTOVER_BANNER);
   });
@@ -163,7 +163,10 @@ describe('cutover', () => {
     expect(s.ballot.senate.GA.mode).toBe('results');
     expect(s.ballot.governor.GA.mode).toBe('results'); // polls close for the whole state
     expect(s.ballot.senate.TX.mode).toBe('prediction');
-    expect(s.banner).toBe(CUTOVER_BANNER);
+    // No bar, here either — only the announcement, which for one state
+    // names the state rather than using the global wording.
+    expect(s.banner).toBeNull();
+    expect(s.announcement).toBe('Georgia: polls closed, live results replacing prediction.');
   });
 
   it('cutover initializes an empty count for a race with no results yet', () => {
@@ -302,7 +305,7 @@ describe('the night clock', () => {
     expect(s.night.calls.every((c) => c.at <= at('2026-11-03T19:30:00-05:00'))).toBe(true);
   });
 
-  it('marks the provider outage on the feed, announces it without a banner, and notes the feed coming back', () => {
+  it('marks the provider outage on the feed and announces it, and the feed coming back, with no bar either way', () => {
     let s = nightState('2026-11-03T22:00:00-05:00');
     s = electionReducer(s, { type: 'NIGHT_TICK', at: at('2026-11-03T22:20:00-05:00') });
     expect(s.night.delayed).toBe(true);
@@ -316,8 +319,9 @@ describe('the night clock', () => {
     // The feed coming back IS news, and that note goes away on its own.
     s = electionReducer(s, { type: 'NIGHT_TICK', at: at('2026-11-03T22:40:00-05:00') });
     expect(s.night.delayed).toBe(false);
-    expect(s.banner).toBe(RESUMED_BANNER);
-    expect(s.bannerTone).toBe('info');
+    // The feed coming back is announced too, and shows no bar either.
+    expect(s.banner).toBeNull();
+    expect(s.announcement).toBe(RESUMED_BANNER);
   });
 
   it('ignores the manual simulator while the clock is engaged', () => {

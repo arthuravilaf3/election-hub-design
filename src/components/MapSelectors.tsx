@@ -212,7 +212,6 @@ interface MapSelectorsProps {
   sourceId: string;
   /** True once results are live — the source stops being a choice. */
   resultsMode: boolean;
-  resultsSource?: string;
   onChamber: (chamber: Chamber) => void;
   onSource: (sourceId: string) => void;
 }
@@ -221,7 +220,6 @@ export function MapSelectors({
   chamber,
   sourceId,
   resultsMode,
-  resultsSource,
   onChamber,
   onSource,
 }: MapSelectorsProps) {
@@ -278,9 +276,7 @@ export function MapSelectors({
         </div>
         <div className="map-controls-row">
           <RaceSegments chamber={chamber} onChamber={onChamber} />
-          {resultsMode ? (
-            <p className="source-byline seg-results">Results by {resultsSource ?? 'the certified feed'}</p>
-          ) : (
+          {resultsMode ? null : (
             <PillSelect
               chip
               label="Source"
@@ -312,10 +308,13 @@ export function MapSelectors({
         />
       )}
 
-      {resultsMode ? (
-        /* No choice on election night: one certified feed, named. */
-        <p className="source-byline seg-results">Results by {resultsSource ?? 'the certified feed'}</p>
-      ) : (
+      {/* NO SOURCE CONTROL ON THE NIGHT, and no byline in its place
+          (Sep 25 2026, by request): the provider's name came off the page
+          chrome entirely. There is nothing to pick — one certified feed —
+          and the provenance the PRD asks for rides with the numbers it
+          belongs to: the tooltip and the race panel both name the provider
+          on every race, and the panel dates its last batch. */}
+      {resultsMode ? null : (
         <PillSelect
           label="Source"
           value={sourceId}

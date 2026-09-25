@@ -6291,6 +6291,8 @@ body {
   height: auto;
 }
 
+/* Crimson 300, not the rating's lean step: chart/rep/lean is crimson 700,
+   a dark red that all but disappears on this ground. */
 .win-promo-eyebrow {
   margin: 0;
   font-size: 11px;
@@ -6298,7 +6300,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-chart-rep-lean);
+  color: var(--color-crimson-300);
 }
 
 .win-promo-title {
@@ -6330,13 +6332,18 @@ body {
   color: var(--ink);
 }
 
+/* The ground is the DS's HOVERED step, not its default one, and that is
+   deliberate: white on background/rep/bold/default (crimson 500) measures
+   4.05:1, under AA for 15px text. One step down (crimson 600) is 5.8:1 and
+   reads the same. Flagged for the DS — a bold button wants an "on bold"
+   pair that holds. */
 .win-promo-cta {
   display: inline-flex;
   align-items: center;
   height: 44px;
   padding: 0 22px;
   border-radius: 999px;
-  background: var(--color-background-rep-bold-default);
+  background: var(--color-background-rep-bold-hovered);
   color: var(--color-chart-text-on-dark);
   font-size: 15px;
   font-weight: 600;
@@ -6345,10 +6352,7 @@ body {
   transition: background 150ms ease;
 }
 
-.win-promo-cta:hover {
-  background: var(--color-background-rep-bold-hovered);
-}
-
+.win-promo-cta:hover,
 .win-promo-cta:active {
   background: var(--color-background-rep-bold-pressed);
 }
@@ -6391,5 +6395,205 @@ body {
     flex: 1;
     max-width: 220px;
     justify-content: center;
+  }
+}
+
+/* ==================== THE MINI PLAYER (Sep 25 2026) ====================
+   The episode still running, parked in the bottom right while the reader
+   goes on reading. It stacks ABOVE the theme toggle and clears the map's
+   fixed pills, which own the bottom centre. */
+.mini-player {
+  position: fixed;
+  right: 24px;
+  /* Clear of the theme toggle, which owns this corner at bottom:128px and
+     is 44px tall — 128 + 44 + 16 of air. */
+  bottom: 188px;
+  z-index: 620;
+  width: 320px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-gray-700);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.55);
+  animation: rise-in 420ms var(--intro-ease) both;
+}
+
+.mini-player-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--color-gray-900);
+}
+
+.mini-player-still {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A scrim, so the white controls and the figures hold on any still. */
+.mini-player-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(0 0 0 / 0.45) 0%,
+    rgb(0 0 0 / 0.1) 38%,
+    rgb(0 0 0 / 0.62) 100%
+  );
+}
+
+/* Every control on the still is WHITE in both themes: it sits over a video
+   frame, which is dark whatever the page is doing. */
+.mini-player-play,
+.mini-player-pip,
+.mini-player-close {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.mini-player-play {
+  inset: 0;
+  margin: auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.45);
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.mini-player-play:hover {
+  background: rgb(0 0 0 / 0.65);
+  transform: scale(1.04);
+}
+
+.mini-player-pip {
+  top: 8px;
+  left: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.mini-player-close {
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.mini-player-pip:hover,
+.mini-player-close:hover {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.mini-player-play:focus-visible,
+.mini-player-pip:focus-visible,
+.mini-player-close:focus-visible {
+  outline: 2px solid var(--color-focus-info-bold-default);
+  outline-offset: 2px;
+}
+
+.mini-player-time {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
+}
+
+.mini-player-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgb(255 255 255 / 0.28);
+}
+
+.mini-player-played {
+  display: block;
+  height: 100%;
+  background: var(--color-chart-rep-safe);
+}
+
+.mini-player-copy {
+  padding: 12px 14px 14px;
+}
+
+.mini-player-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--color-gray-25);
+}
+
+.mini-player-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--color-gray-300);
+}
+
+/* Same reason as the promo's button: white on crimson 500 is 4.05:1, and
+   this mark is 9px. Crimson 600 carries it at 5.8:1. */
+.mini-player-badge {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--color-crimson-600);
+  color: var(--color-chart-text-on-dark);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-player {
+    animation: none;
+  }
+
+  .mini-player-play {
+    transition: none;
+  }
+}
+
+@media (max-width: 700px) {
+  /* On a phone it takes the width it can and sits above the race tabs, so
+     it never lands on them or on the map. */
+  .mini-player {
+    right: 12px;
+    left: auto;
+    bottom: 188px;
+    width: 232px;
+    border-radius: 12px;
+  }
+
+  .mini-player-play {
+    width: 44px;
+    height: 44px;
+  }
+
+  .mini-player-copy {
+    padding: 10px 12px 12px;
   }
 }
