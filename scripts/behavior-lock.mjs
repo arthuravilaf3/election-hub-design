@@ -382,8 +382,16 @@ const entry = await page.evaluate(() => {
   return { kept: document.querySelectorAll('.dot[data-keep]').length, anim: cs(0).animationName, fill: cs(0).animationFillMode, d0: cs(0).animationDelay, d100: cs(Math.min(30, d.length - 1)).animationDelay, goo: getComputedStyle(document.querySelector('.dots-grid')).filter };
 });
 check('a race change rebuilds the dots', entry.kept, 0);
-check('dots replay an entry animation on race change', entry.anim, 'dot-in');
-check('entry animation releases scale when done (backwards, not both)', entry.fill, 'backwards');
+// Two animations now: the rise/scale and, riding a shorter clock of its own,
+// the blur the seats resolve out of (Sep 24 2026). Both must still be
+// `backwards` so neither holds on to transform or filter once it ends.
+check('dots replay an entry animation on race change', entry.anim.split(', ')[0], 'dot-in');
+check('the seats resolve out of a blur', entry.anim.includes('dot-blur'), true);
+check(
+  'entry animation releases scale when done (backwards, not both)',
+  entry.fill.split(', ').every((f) => f === 'backwards'),
+  true
+);
 check('entry is staggered across the grid', entry.d0 !== entry.d100, true);
 check('the grid has no filter at rest (perfect circles)', entry.goo, 'none');
 await page.waitForTimeout(1200);

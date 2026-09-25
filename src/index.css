@@ -866,7 +866,9 @@ button,
    left to scale. Delays come inline from components/Intro.tsx. */
 :root {
   --intro-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --dot-ease: cubic-bezier(0.32, 1.5, 0.5, 1);
+  /* Was a springy overshoot; the seats now arrive on the entrance's own
+     curve, so the arc resolves as one thing. */
+  --dot-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .hub-title-text {
@@ -896,13 +898,18 @@ button,
   }
 }
 
+/* Everything that rises does it out of a blur now (Sep 24 2026), the way
+   the name's letters do — the radius in em, so the bigger the type the
+   softer it starts. */
 @keyframes rise-in {
   from {
     opacity: 0;
+    filter: blur(0.12em);
     transform: translateY(0.42em);
   }
   to {
     opacity: 1;
+    filter: blur(0);
     transform: none;
   }
 }
@@ -1372,7 +1379,7 @@ button,
      reading order (--i is the dot's index). `backwards`, not `both`, so
      the animation lets go of `scale` when it ends and the hover transform
      below is free to run. Same easing family as the map's fill transition. */
-  animation: dot-in 520ms var(--dot-ease) backwards;
+  animation: dot-in 520ms var(--dot-ease) backwards, dot-blur 200ms var(--intro-ease) backwards;
   animation-delay: var(--dot-delay, 0ms);
   /* Colour only: the hover lens sets transform per frame from JS. */
   transition: background 300ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -1384,7 +1391,7 @@ button,
 @keyframes dot-in {
   from {
     opacity: 0;
-    transform: translateY(-5px) scale(0.3);
+    transform: translateY(-4px) scale(0.72);
   }
   60% {
     opacity: 1;
@@ -1395,9 +1402,22 @@ button,
   }
 }
 
+/* The blur rides a SHORTER animation of its own: a filter costs the
+   compositor for as long as it is animating, and 435 seats resolving at
+   once is a lot of filters. A quarter of a second each keeps the count
+   down and still reads as the arc coming out of a blur. */
+@keyframes dot-blur {
+  from {
+    filter: blur(2px);
+  }
+  to {
+    filter: blur(0);
+  }
+}
+
 /* A re-deal (race change) is the same wave, short and flat. */
 .dot--redeal {
-  animation-duration: 300ms;
+  animation-duration: 300ms, 160ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
