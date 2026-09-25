@@ -626,16 +626,16 @@ button,
    under it, the provenance last. */
 .map-tooltip {
   position: fixed;
-  transform: translateY(calc(-100% - 12px));
+  transform: translateY(calc(-100% - 10px));
   background: var(--color-gray-700);
   color: var(--color-gray-200);
-  border-radius: 12px;
-  padding: 18px 20px 16px;
-  box-shadow: 0 16px 40px rgb(0 0 0 / 0.5);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.5);
   pointer-events: none;
   z-index: 20;
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 /* No blanket `p { margin: 0 }` here: it outranks the single-class rules
@@ -643,7 +643,8 @@ button,
    tooltip's margins were silently dead. Each line sets its own. */
 .map-tooltip-eyebrow {
   margin: 0;
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 1.4;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -651,21 +652,22 @@ button,
 }
 
 .map-tooltip-name {
-  margin: 6px 0 0;
+  margin: 2px 0 0;
   font-weight: 700;
-  font-size: 20px;
-  line-height: 1.2;
+  font-size: 15px;
+  line-height: 1.25;
   letter-spacing: -0.01em;
   color: var(--color-gray-25);
 }
 
 .map-tooltip-value {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
 }
 
 .map-tooltip-source {
-  margin: 10px 0 0;
-  font-size: 12px;
+  margin: 5px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
   color: var(--color-gray-300);
 }
 
@@ -4777,12 +4779,10 @@ body {
 
 /* "203 D": the figure and the party's letter in one weight and size
    (Regular 24, −0.68px), both in ink; "Toss Ups: N" between the currents. */
-[data-option='1'] .seatline-end,
 [data-option='2'] .seatline-end {
   gap: 6px;
 }
 
-[data-option='1'] .seatline-big,
 [data-option='2'] .seatline-big {
   font-size: 24px;
   line-height: 34px;
@@ -4790,7 +4790,6 @@ body {
   letter-spacing: -0.68px;
 }
 
-[data-option='1'] .seatline-label,
 [data-option='2'] .seatline-label {
   font-size: 24px;
   line-height: 34px;
@@ -4800,17 +4799,14 @@ body {
   color: var(--ink);
 }
 
-[data-option='1'] .seatline-bar,
 [data-option='2'] .seatline-bar {
   gap: 4px;
 }
 
-[data-option='1'] .seatline-run,
 [data-option='2'] .seatline-run {
   border-radius: 200px;
 }
 
-[data-option='1'] .seatline-current,
 [data-option='2'] .seatline-current {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -4820,7 +4816,6 @@ body {
   color: var(--ink-subtle);
 }
 
-[data-option='1'] .seatline-current > :last-child,
 [data-option='2'] .seatline-current > :last-child {
   text-align: right;
 }
@@ -5018,7 +5013,6 @@ body {
   }
 
   /* The headline wraps on a phone; the comp's one line is a desktop fact. */
-  [data-option='1'] .dots.dots--creative .dots-title,
   [data-option='2'] .dots.dots--creative .dots-title {
     white-space: normal;
     text-wrap: balance;
@@ -5155,7 +5149,6 @@ body {
 /* ==================== OPTIONS 1 AND 2 (Sep 21 2026, second round) ==================== */
 
 /* Both: the headline in Regular. */
-[data-option='1'] .dots-title,
 [data-option='2'] .dots-title,
 [data-option='3'] .dots-title {
   font-weight: 400;
@@ -5163,35 +5156,28 @@ body {
 
 /* Option 1: the pills back on the page's ground (dark on dark, hairline),
    the way option 3's controls sit — not inverted. */
-[data-option='1'] .pill-wrap,
 [data-option='2'] .pill-wrap {
   --pill-bg: color-mix(in srgb, var(--surface-dim) 80%, transparent);
   --pill-ink: var(--ink);
   --pill-ink-soft: var(--ink-subtlest);
 }
 
-[data-option='1'] .pill,
 [data-option='2'] .pill {
   border-color: var(--border);
   backdrop-filter: blur(10px);
 }
 
-[data-option='1'] .pill:hover,
-[data-option='1'] .pill.is-open,
 [data-option='2'] .pill:hover,
 [data-option='2'] .pill.is-open {
   background: color-mix(in srgb, var(--surface-2) 80%, transparent);
   border-color: var(--border);
 }
 
-[data-option='1'] .pill-menu,
 [data-option='2'] .pill-menu {
   border-color: var(--border);
   background: var(--surface);
 }
 
-[data-option='1'] .pill-option:hover,
-[data-option='1'] .pill-option:focus-visible,
 [data-option='2'] .pill-option:hover,
 [data-option='2'] .pill-option:focus-visible {
   background: var(--surface-2);
@@ -5199,7 +5185,6 @@ body {
 
 /* The caption is the eyebrow's job in option 2, and neither belongs where
    the hairline already sets the clock apart (option 1). */
-[data-option='1'] .countdown-caption,
 [data-option='2'] .countdown-caption,
 [data-option='3'] .countdown-caption {
   display: none;
@@ -5343,11 +5328,11 @@ body {
 
 @media (max-width: 700px) {
   /* The segments take the row; the source pill goes under them. */
-  [data-option='1'] .map-card .map-selectors {
+  [data-option='2'] .map-card .map-selectors {
     grid-template-columns: 1fr;
   }
 
-  [data-option='1'] .map-card .map-selectors .race-seg {
+  [data-option='2'] .map-card .map-selectors .race-seg {
     width: 100%;
   }
 }
@@ -5715,7 +5700,6 @@ body {
   margin-bottom: 8px;
 }
 
-[data-option='1'] .dots-seatline .seatline-label,
 [data-option='2'] .dots-seatline .seatline-label {
   color: var(--ink);
 }
@@ -5731,7 +5715,6 @@ body {
   align-items: start;
 }
 
-[data-option='1'] .dots-title,
 [data-option='2'] .dots-title {
   font-size: clamp(32px, 3.6vw, 56px);
 }
@@ -5849,14 +5832,14 @@ body {
 
   /* THE CONTROLS: one row — race first, the source beside it — and lower,
      closer to the thumb. */
-  [data-option='1'] .map-card .map-selectors {
+  [data-option='2'] .map-card .map-selectors {
     display: flex;
     align-items: stretch;
     gap: 6px;
     bottom: calc(var(--ticker-h) + 12px);
   }
 
-  [data-option='1'] .map-card .map-selectors .race-seg {
+  [data-option='2'] .map-card .map-selectors .race-seg {
     flex: 1 1 auto;
     min-width: 0;
     gap: 2px;
@@ -5864,27 +5847,27 @@ body {
     width: auto;
   }
 
-  [data-option='1'] .map-card .race-seg-option {
+  [data-option='2'] .map-card .race-seg-option {
     flex: 1;
     padding: 10px 2px;
     font-size: 12px;
     line-height: 14px;
   }
 
-  [data-option='1'] .map-card .map-selectors .pill-wrap {
+  [data-option='2'] .map-card .map-selectors .pill-wrap {
     flex: none;
   }
 
-  [data-option='1'] .map-card .pill {
+  [data-option='2'] .map-card .pill {
     gap: 6px;
     padding: 8px 10px 8px 12px;
   }
 
-  [data-option='1'] .map-card .pill-label {
+  [data-option='2'] .map-card .pill-label {
     font-size: 9px;
   }
 
-  [data-option='1'] .map-card .pill-value {
+  [data-option='2'] .map-card .pill-value {
     font-size: 13px;
   }
 
@@ -6207,59 +6190,49 @@ body {
      into the stacked slot; these are the same values as the option-2
      block above, written with the option prefixes because the unscoped
      rules would lose to it in the cascade. */
-  [data-option='1'] .hero-seatline,
   [data-option='2'] .hero-seatline {
     align-self: stretch;
     width: 100%;
     margin-top: 4px;
   }
 
-  [data-option='1'] .seatline-bar,
   [data-option='2'] .seatline-bar {
     height: 4px;
     gap: 3px;
   }
 
-  [data-option='1'] .seatline-ends,
   [data-option='2'] .seatline-ends {
     margin-bottom: 10px;
   }
 
-  [data-option='1'] .seatline-big,
-  [data-option='1'] .seatline-label,
   [data-option='2'] .seatline-big,
   [data-option='2'] .seatline-label {
     font-size: 20px;
     line-height: 28px;
   }
 
-  [data-option='1'] .party-mark,
   [data-option='2'] .party-mark {
     width: 18px;
     height: 18px;
     border-radius: 4px;
   }
 
-  [data-option='1'] .party-mark svg,
   [data-option='2'] .party-mark svg {
     width: 12px;
     height: 12px;
   }
 
-  [data-option='1'] .seatline-win,
   [data-option='2'] .seatline-win {
     font-size: 12px;
     font-weight: 600;
     padding-bottom: 8px;
   }
 
-  [data-option='1'] .seatline-win::after,
   [data-option='2'] .seatline-win::after {
     height: 6px;
     background: color-mix(in srgb, var(--ink) 55%, transparent);
   }
 
-  [data-option='1'] .seatline-current,
   [data-option='2'] .seatline-current {
     margin-top: 8px;
     font-size: 13px;

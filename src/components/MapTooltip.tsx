@@ -17,7 +17,7 @@ interface MapTooltipProps {
   y: number;
 }
 
-const WIDTH = 284;
+const WIDTH = 260;
 
 export function MapTooltip({ name, race, chamber, sourceId, trusted, x, y }: MapTooltipProps) {
   // Clamp horizontally, flip above the cursor; keep it dumb — Floating UI

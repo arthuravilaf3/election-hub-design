@@ -241,11 +241,14 @@ export function electionReducer(state: ElectionState, action: ElectionAction): E
         // Scrubbing back: the log is the night up to here, nothing more.
         calls = calls.filter((c) => c.at <= at);
       }
-      // The outage, both ways: it starts (a warning that stays up until the
-      // feed is back) and it ends (a note that goes on its own).
+      /* The outage, both ways. NO BANNER for the delay itself (Sep 25 2026,
+         by request): the bar across the top of the page was the third place
+         saying the same thing, after the chip in the live row and the block
+         at the foot of the hero, which turns warning and names the last
+         batch. It is still ANNOUNCED — a screen reader has no hero to look
+         at — and the feed coming back still gets its note, because that one
+         is news and goes away on its own. */
       if (feed.delayed && !state.night.delayed) {
-        banner = DELAYED_BANNER;
-        bannerTone = 'warning';
         announcement = DELAYED_BANNER;
       } else if (!feed.delayed && state.night.delayed) {
         banner = RESUMED_BANNER;

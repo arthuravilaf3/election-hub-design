@@ -302,13 +302,18 @@ describe('the night clock', () => {
     expect(s.night.calls.every((c) => c.at <= at('2026-11-03T19:30:00-05:00'))).toBe(true);
   });
 
-  it('marks the provider outage on the feed, raises a warning, and clears it when the feed is back', () => {
+  it('marks the provider outage on the feed, announces it without a banner, and notes the feed coming back', () => {
     let s = nightState('2026-11-03T22:00:00-05:00');
     s = electionReducer(s, { type: 'NIGHT_TICK', at: at('2026-11-03T22:20:00-05:00') });
     expect(s.night.delayed).toBe(true);
     expect(s.night.feedAsOf).toBe(new Date(at('2026-11-03T22:10:00-05:00')).toISOString());
-    expect(s.banner).toBe(DELAYED_BANNER);
-    expect(s.bannerTone).toBe('warning');
+    // NO BANNER for the delay (Sep 25 2026, by request): the bar across the
+    // top was the third place saying it, after the chip in the live row and
+    // the hero's foot block. It is still announced, for a reader who has no
+    // hero to look at.
+    expect(s.banner).toBeNull();
+    expect(s.announcement).toBe(DELAYED_BANNER);
+    // The feed coming back IS news, and that note goes away on its own.
     s = electionReducer(s, { type: 'NIGHT_TICK', at: at('2026-11-03T22:40:00-05:00') });
     expect(s.night.delayed).toBe(false);
     expect(s.banner).toBe(RESUMED_BANNER);

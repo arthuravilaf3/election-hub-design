@@ -20,47 +20,29 @@ function fromUrl(): Edition | null {
 
 const built = import.meta.env.VITE_EDITION;
 
-/* THE OPTIONS BUILD (Sep 21 2026; renumbered Sep 24): one link, two cuts of
-   the SAME page — the hub, with two readings of the hero:
-     1  the seat line on top, the clock under a hairline
-     2  the seat line UNDER the headline instead of across the top, its bars
-        thinner, and the clock at the foot of the column — a hairline, a
-        "TIME TO ELECTION DAY" eyebrow — landing level with the arc's end
+/* THE CUTS OF THE HERO (Sep 21 2026; renumbered Sep 24; the bar-on-top cut
+   dropped Sep 25 2026 — "a 2 ta melhor"):
+     2  the seat line UNDER the headline, its bars thinner, and the block at
+        the foot of the column — a hairline, an eyebrow, the figures —
+        landing level with the arc's end. THE HUB, now: what the base build
+        and the options link both show.
      3  the full creative edition (Capitol strip, arc on scroll, The Nation
-        Speaks) — not on the switch; it lives on as the /creative/ build
-   Only VITE_EDITION=options reads the choice (?option= first, then the
-   stored one; default 1). The other builds are fixed at their edition. The
-   switch reloads the page: the edition is a module-level constant, read
-   once, everywhere. */
-export type Option = 1 | 2 | 3;
-// Dev serves the options build too, so all three can be checked on one port.
+        Speaks) — never on the switch; it lives on as the /creative/ build
+   Option 1 ran the seat line across the top of the hero with the clock
+   under a hairline. It is gone: nothing reads ?option=1 any more, and a
+   stored '1' from an earlier visit is ignored rather than honoured. With
+   one cut left the switch renders nothing (see OptionSwitcher). */
+export type Option = 2 | 3;
+// Dev serves the options build too, so both can be checked on one port.
 export const OPTIONS_BUILD = built === 'options' || import.meta.env.DEV;
-const OPTION_KEY = 'dw-option';
 
-function parseOption(v: string | null): Option | null {
-  return v === '1' || v === '2' ? (Number(v) as Option) : null;
-}
-
-function readOption(): Option {
-  try {
-    const fromQuery = parseOption(new URLSearchParams(window.location.search).get('option'));
-    if (fromQuery) {
-      localStorage.setItem(OPTION_KEY, String(fromQuery));
-      return fromQuery;
-    }
-    return parseOption(localStorage.getItem(OPTION_KEY)) ?? 1;
-  } catch {
-    return 1;
-  }
-}
-
-export const OPTION: Option = OPTIONS_BUILD ? readOption() : built === 'base' ? 1 : 3;
-/** Option 2: the seat line stacks under the headline, the clock sits at the
-    foot of the column. */
-export const HERO_STACK = OPTIONS_BUILD && OPTION === 2;
+export const OPTION: Option = OPTIONS_BUILD || built === 'base' ? 2 : 3;
+/** The seat line stacks under the headline and the block at the foot of the
+    column carries the clock — every build but the creative one. */
+export const HERO_STACK = OPTION === 2;
 
 /* The options build proper — or dev with ?option= in the URL. The pieces
-   that change the BASE hub's own controls (option 1's race segments) hang
+   that change the BASE hub's own controls (the race segments) hang
    on this, not on OPTIONS_BUILD, so the base build and the lock/harness
    runs (dev, ?edition=base, no ?option=) keep the pills. */
 function hasOptionParam(): boolean {
@@ -71,19 +53,8 @@ function hasOptionParam(): boolean {
   }
 }
 export const OPTIONS_STRICT = built === 'options' || (import.meta.env.DEV && hasOptionParam());
-/** The base options (1 and 2): the race as segments beside the source pill. */
+/** The hub cut: the race as segments beside the source pill. */
 export const RACE_SEGMENTS = OPTIONS_STRICT && OPTION !== 3;
-
-export function selectOption(next: Option): void {
-  try {
-    localStorage.setItem(OPTION_KEY, String(next));
-  } catch {
-    // Private mode: the URL carries it.
-  }
-  const url = new URL(window.location.href);
-  url.searchParams.set('option', String(next));
-  window.location.assign(url.toString());
-}
 
 export const EDITION: Edition =
   fromUrl() ?? (OPTIONS_BUILD ? (OPTION === 3 ? 'creative' : 'base') : built === 'base' ? 'base' : 'creative');
@@ -93,7 +64,7 @@ export const IS_STILL_ARC = IS_CREATIVE && OPTION === 2;
 
 if (typeof document !== 'undefined') {
   // The switch's own number on <html>, so a cut's CSS can scope to it.
-  document.documentElement.dataset.option = OPTIONS_BUILD ? String(OPTION) : IS_CREATIVE ? '3' : '1';
+  document.documentElement.dataset.option = IS_CREATIVE ? '3' : '2';
 }
 
 /* OPTION 2's extras (Sep 21 2026): the Capitol strip and The Nation Speaks
