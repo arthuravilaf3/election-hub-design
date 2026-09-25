@@ -11,9 +11,12 @@ import {
 } from '../data/edition';
 import { IS_PREVIEW_FRAME } from './MobilePreview';
 
-/* One option left (Sep 23 2026): the switch stays wired for the day a second
-   cut comes back, and renders nothing until then. */
-const OPTIONS: Array<{ id: Option; name: string }> = [{ id: 1, name: 'Base' }];
+/* Two readings of the hero (Sep 24 2026). Add or drop an entry here and the
+   switch follows; with one left it renders nothing. */
+const OPTIONS: Array<{ id: Option; name: string }> = [
+  { id: 1, name: 'Bar on top' },
+  { id: 2, name: 'Stats under the headline' },
+];
 
 export function OptionSwitcher() {
   if (!OPTIONS_BUILD || IS_PREVIEW_FRAME || OPTIONS.length < 2) return null;

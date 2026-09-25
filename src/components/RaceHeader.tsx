@@ -20,7 +20,7 @@ import { INTRO_AT, Letters, introDelay } from './Intro';
 import { Countdown } from './Countdown';
 import { PartyMark } from './PartyMark';
 import { asset } from '../data/assets';
-import { IS_CREATIVE, IS_STILL_ARC, type DotsShape } from '../data/edition';
+import { HERO_STATS, IS_CREATIVE, IS_STILL_ARC, type DotsShape } from '../data/edition';
 import { CURRENT_SEATS } from '../data/summary';
 import polymarketLogo from '../images/polymarketlogo.png';
 import type { ForecastData, ResultsData } from '../data/hero';
@@ -657,13 +657,54 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
         <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
           {headline}
         </h2>
+        {/* OPTION 2 (Sep 24 2026): the chamber in one small line under the
+            headline — the seat line above already draws it, this says it. */}
+        {HERO_STATS && (
+          <p className="dots-seats intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
+            <span className="dots-num">
+              <b className="dots-party">D</b> {results ? results.demTotal : forecast.dem}
+            </span>
+            <span className="hub-dot" aria-hidden="true">
+              •
+            </span>
+            <span className="dots-num">
+              <b className="dots-party">R</b> {results ? results.repTotal : forecast.rep}
+            </span>
+            <span className="hub-dot" aria-hidden="true">
+              •
+            </span>
+            {results ? (
+              <>
+                <span>{results.open} uncalled</span>
+                <span className="hub-dot" aria-hidden="true">
+                  •
+                </span>
+                <span>{results.majority} to win</span>
+              </>
+            ) : (
+              <>
+                <span>{forecast.seatsUp} seats up</span>
+                <span className="hub-dot" aria-hidden="true">
+                  •
+                </span>
+                <span>{tail}</span>
+              </>
+            )}
+          </p>
+        )}
         {/* The Election Day clock as the copy's last line (Sep 21 2026):
             with the headline and the seats, not adrift above them. On the
-            night, the provider and its last batch take that line. */}
+            night, the provider and its last batch take that line. Option 2
+            gives it an eyebrow instead of the hairline. */}
         {results ? (
           <p className={`dots-updated dots-updated--night${results.delayed ? ' is-delayed' : ''}`}>
             {results.updatedLine}
           </p>
+        ) : HERO_STATS ? (
+          <div className="hero-clock">
+            <p className="hero-clock-eyebrow">Time to Election Day</p>
+            <Countdown compact />
+          </div>
         ) : (
           <Countdown compact />
         )}

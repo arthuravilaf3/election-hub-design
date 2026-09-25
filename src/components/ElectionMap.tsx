@@ -241,7 +241,6 @@ export function ElectionMap({
      while zoomed just flies from wherever the reader is. */
   const [userZoom, setUserZoom] = useState(false);
   const zoomRef = useRef(false);
-  const pointers = useRef(new Map<number, { x: number; y: number }>());
   const pinch = useRef({ on: false, d0: 0, s0: 1, cx: 0, cy: 0 });
   const clampPinch = (c: { s: number; x: number; y: number }) => {
     const s = Math.max(1, Math.min(MAX_PINCH, c.s));
@@ -252,40 +251,29 @@ export function ElectionMap({
       y: Math.min(0, Math.max(VIEW_H * (1 - s), c.y)),
     };
   };
-  /** The fingers' midpoint, in the svg's own user space. */
-  const midOf = (svg: SVGSVGElement) => {
-    const [a, b] = [...pointers.current.values()];
+  /** Two touches' midpoint and spread, in the svg's own user space. */
+  const midOf = (svg: SVGSVGElement, a: Touch, b: Touch) => {
     const r = svg.getBoundingClientRect();
     const k = VIEW_W / r.width;
     return {
-      x: ((a.x + b.x) / 2 - r.left) * k,
-      y: ((a.y + b.y) / 2 - r.top) * k,
-      d: Math.hypot(a.x - b.x, a.y - b.y),
+      x: ((a.clientX + b.clientX) / 2 - r.left) * k,
+      y: ((a.clientY + b.clientY) / 2 - r.top) * k,
+      d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
     };
+  };
+  const setZoomed = (on: boolean) => {
+    if (on === zoomRef.current) return;
+    zoomRef.current = on;
+    setUserZoom(on);
   };
   const resetZoom = () => {
     pinch.current.on = false;
-    zoomRef.current = false;
-    setUserZoom(false);
+    setZoomed(false);
     const camera = cameraRef.current;
     if (camera) applyCamera(camera, { s: 1, x: 0, y: 0 });
   };
 
   const onSvgPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (e.pointerType === 'touch') {
-      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.current.size === 2) {
-        // A pinch starts: whatever drag was in flight is over.
-        const m = midOf(e.currentTarget);
-        const c = camRef.current;
-        pinch.current = { on: true, d0: m.d, s0: c.s, cx: (m.x - c.x) / c.s, cy: (m.y - c.y) / c.s };
-        drag.current.on = false;
-        drag.current.moved = true; // the tap that follows must not open a state
-        setDragging(false);
-        stopGlide();
-        return;
-      }
-    }
     if ((!zoomedId && !zoomRef.current) || e.button !== 0) return;
     const d = drag.current;
     d.on = true;
@@ -306,23 +294,7 @@ export function ElectionMap({
     // once the press has become a drag (below).
   };
   const onSvgPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (e.pointerType === 'touch' && pointers.current.has(e.pointerId)) {
-      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pinch.current.on && pointers.current.size === 2) {
-        const m = midOf(e.currentTarget);
-        const p = pinch.current;
-        const s = Math.max(1, Math.min(MAX_PINCH, (p.s0 * m.d) / Math.max(1, p.d0)));
-        // The point the fingers grabbed stays under the fingers.
-        const next = clampPinch({ s, x: m.x - p.cx * s, y: m.y - p.cy * s });
-        if (cameraRef.current) applyCamera(cameraRef.current, next);
-        const on = next.s > 1.01;
-        if (on !== zoomRef.current) {
-          zoomRef.current = on;
-          setUserZoom(on);
-        }
-        return;
-      }
-    }
+    if (pinch.current.on) return;
     const d = drag.current;
     if (!d.on || e.pointerId !== d.id) return;
     const dxPx = e.clientX - d.x0;
@@ -349,15 +321,6 @@ export function ElectionMap({
     if (cameraRef.current) applyCamera(cameraRef.current, zoomedId ? clampCam(panned) : clampPinch(panned));
   };
   const onSvgPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (e.pointerType === 'touch') {
-      pointers.current.delete(e.pointerId);
-      if (pointers.current.size < 2 && pinch.current.on) {
-        pinch.current.on = false;
-        // A pinch that ended back at 1x hands the page its scroll back.
-        if (camRef.current.s <= 1.01) resetZoom();
-        return;
-      }
-    }
     const d = drag.current;
     if (!d.on || e.pointerId !== d.id) return;
     d.on = false;
@@ -409,6 +372,69 @@ export function ElectionMap({
     svg.addEventListener('wheel', onWheel, { passive: false });
     return () => svg.removeEventListener('wheel', onWheel);
   }, [zoomedId]);
+
+  /* THE PINCH, on native touch events (Sep 24 2026). Pointer events are the
+     wrong instrument here: the moment the browser decides the first finger
+     is scrolling the page it cancels the stream, and the second finger
+     never reaches us — which is why the gesture was hard to land. Touch
+     events keep coming, and preventDefault on a two-finger move takes the
+     gesture from the page for as long as it lasts. */
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return;
+      const m = midOf(svg, e.touches[0], e.touches[1]);
+      const c = camRef.current;
+      pinch.current = { on: true, d0: m.d, s0: c.s, cx: (m.x - c.x) / c.s, cy: (m.y - c.y) / c.s };
+      drag.current.on = false;
+      drag.current.moved = true; // the tap that follows must not open a state
+      setDragging(false);
+      stopGlide();
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!pinch.current.on || e.touches.length !== 2) return;
+      e.preventDefault();
+      const m = midOf(svg, e.touches[0], e.touches[1]);
+      const p = pinch.current;
+      const s = Math.max(1, Math.min(MAX_PINCH, (p.s0 * m.d) / Math.max(1, p.d0)));
+      // The point the fingers grabbed stays under the fingers.
+      const next = clampPinch({ s, x: m.x - p.cx * s, y: m.y - p.cy * s });
+      if (cameraRef.current) applyCamera(cameraRef.current, next);
+      setZoomed(next.s > 1.01);
+    };
+    const onEnd = (e: TouchEvent) => {
+      if (e.touches.length >= 2 || !pinch.current.on) return;
+      pinch.current.on = false;
+      window.setTimeout(() => {
+        drag.current.moved = false;
+      }, 0);
+      // A pinch that ended back at 1x hands the page its scroll back.
+      if (camRef.current.s <= 1.01) resetZoom();
+    };
+    svg.addEventListener('touchstart', onStart, { passive: false });
+    svg.addEventListener('touchmove', onMove, { passive: false });
+    svg.addEventListener('touchend', onEnd);
+    svg.addEventListener('touchcancel', onEnd);
+    return () => {
+      svg.removeEventListener('touchstart', onStart);
+      svg.removeEventListener('touchmove', onMove);
+      svg.removeEventListener('touchend', onEnd);
+      svg.removeEventListener('touchcancel', onEnd);
+    };
+  }, []);
+
+  /* A step of zoom about the middle of the frame — the buttons' way in, for
+     a reader who would rather tap than pinch. */
+  const zoomBy = (factor: number) => {
+    const c = camRef.current;
+    const s = Math.max(1, Math.min(MAX_PINCH, c.s * factor));
+    const cx = (VIEW_W / 2 - c.x) / c.s;
+    const cy = (VIEW_H / 2 - c.y) / c.s;
+    const next = clampPinch({ s, x: VIEW_W / 2 - cx * s, y: VIEW_H / 2 - cy * s });
+    if (cameraRef.current) applyCamera(cameraRef.current, next);
+    setZoomed(next.s > 1.01);
+  };
 
   // Escape closes the open state. The panel's own close button is the other
   // way back, on touch as well as pointer.
@@ -684,12 +710,32 @@ export function ElectionMap({
             </g>
           </svg>
 
-      {/* The way back: without it a zoomed reader has no scroll and no map. */}
-      {userZoom && (
-        <button type="button" className="map-zoom-reset" onClick={resetZoom}>
-          Reset zoom
+      {/* Phones: step buttons for the reader who would rather tap than
+          pinch, and the way back — without it a zoomed reader has no scroll
+          and no map. */}
+      <div className="map-zoom-controls">
+        {userZoom && (
+          <button type="button" className="map-zoom-reset" onClick={resetZoom}>
+            Reset zoom
+          </button>
+        )}
+        <button
+          type="button"
+          className="map-zoom-step"
+          aria-label="Zoom out"
+          disabled={!userZoom}
+          onClick={() => zoomBy(1 / 1.6)}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
         </button>
-      )}
+        <button type="button" className="map-zoom-step" aria-label="Zoom in" onClick={() => zoomBy(1.6)}>
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
 
       {tooltip && (
         <MapTooltip

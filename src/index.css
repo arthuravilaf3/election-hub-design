@@ -4594,43 +4594,10 @@ body {
   color: var(--ink-subtlest);
 }
 
-/* ==================== OPTION 3 (Sep 21 2026, Figma 11589:227618) ====================
-   The still-arc cut. Everything here is either a class only option 3 renders
-   (the controls block, the rail, the switch) or a shared rule re-set under
-   [data-option='2'], which data/edition.ts stamps on <html>. */
-
-/* The masthead: the name at 40px with its '26 mark, the arc mark 251 × 97. */
-[data-option='2'] .hub-title {
-  font-size: 40px;
-}
-
-[data-option='2'] .hub-mark {
-  width: 56px;
-  height: 48px;
-}
-
-[data-option='2'] .hub-rightplace {
-  width: 251px;
-  height: 97px;
-}
-
-/* The hero on the comp's 1100px rail: headline Regular 52 at 120%, the
-   freshness under it, then the seat line. */
-[data-option='2'] .dots.dots--creative {
-  gap: 32px;
-  width: 100%;
-  max-width: 1100px;
-  margin-inline: auto;
-}
-
-[data-option='2'] .dots--creative .dots-copy {
-  gap: 8px;
-}
-
-[data-option='2'] .dots--creative .dots-title {
-  line-height: 1.2;
-  font-weight: 400;
-}
+/* ==================== THE BASE OPTIONS' SHARED HERO ====================
+   The seat line's compact form, shared by options 1 and 2. (The still-arc
+   cut that used to own this block left the switch on Sep 23; what it alone
+   styled went with it.) */
 
 .dots-updated {
   margin: 0;
@@ -4687,12 +4654,6 @@ body {
 [data-option='1'] .seatline-current > :last-child,
 [data-option='2'] .seatline-current > :last-child {
   text-align: right;
-}
-
-/* The map to the rail's edges with a 16px corner; the banner on the 1100
-   rail, inside the section so the pinned controls stay through it. */
-[data-option='2'] .map-card {
-  border-radius: 16px;
 }
 
 /* ---------- The controls block (Figma 11613:230736) ----------
@@ -4888,6 +4849,7 @@ body {
   }
 
   /* The headline wraps on a phone; the comp's one line is a desktop fact. */
+  [data-option='1'] .dots.dots--creative .dots-title,
   [data-option='2'] .dots.dots--creative .dots-title {
     white-space: normal;
     text-wrap: balance;
@@ -5025,36 +4987,44 @@ body {
 
 /* Both: the headline in Regular. */
 [data-option='1'] .dots-title,
+[data-option='2'] .dots-title,
 [data-option='3'] .dots-title {
   font-weight: 400;
 }
 
 /* Option 1: the pills back on the page's ground (dark on dark, hairline),
    the way option 3's controls sit — not inverted. */
-[data-option='1'] .pill-wrap {
+[data-option='1'] .pill-wrap,
+[data-option='2'] .pill-wrap {
   --pill-bg: color-mix(in srgb, var(--surface-dim) 80%, transparent);
   --pill-ink: var(--ink);
   --pill-ink-soft: var(--ink-subtlest);
 }
 
-[data-option='1'] .pill {
+[data-option='1'] .pill,
+[data-option='2'] .pill {
   border-color: var(--border);
   backdrop-filter: blur(10px);
 }
 
 [data-option='1'] .pill:hover,
-[data-option='1'] .pill.is-open {
+[data-option='1'] .pill.is-open,
+[data-option='2'] .pill:hover,
+[data-option='2'] .pill.is-open {
   background: color-mix(in srgb, var(--surface-2) 80%, transparent);
   border-color: var(--border);
 }
 
-[data-option='1'] .pill-menu {
+[data-option='1'] .pill-menu,
+[data-option='2'] .pill-menu {
   border-color: var(--border);
   background: var(--surface);
 }
 
 [data-option='1'] .pill-option:hover,
-[data-option='1'] .pill-option:focus-visible {
+[data-option='1'] .pill-option:focus-visible,
+[data-option='2'] .pill-option:hover,
+[data-option='2'] .pill-option:focus-visible {
   background: var(--surface-2);
 }
 
@@ -5066,7 +5036,10 @@ body {
   border-top: 1px solid color-mix(in srgb, var(--ink-subtlest) 40%, transparent);
 }
 
+/* The caption is the eyebrow's job in option 2, and neither belongs where
+   the hairline already sets the clock apart (option 1). */
 [data-option='1'] .countdown-caption,
+[data-option='2'] .countdown-caption,
 [data-option='3'] .countdown-caption {
   display: none;
 }
@@ -5573,11 +5546,13 @@ body {
   margin-bottom: 8px;
 }
 
-[data-option='1'] .dots-seatline .seatline-label {
+[data-option='1'] .dots-seatline .seatline-label,
+[data-option='2'] .dots-seatline .seatline-label {
   color: var(--ink);
 }
 
-[data-option='1'] .dots-seatline .seatline {
+[data-option='1'] .dots-seatline .seatline,
+[data-option='2'] .dots-seatline .seatline {
   animation: none;
 }
 
@@ -5591,7 +5566,8 @@ body {
   align-items: start;
 }
 
-[data-option='1'] .dots-title {
+[data-option='1'] .dots-title,
+[data-option='2'] .dots-title {
   font-size: clamp(32px, 3.6vw, 56px);
 }
 
@@ -5645,11 +5621,36 @@ body {
   cursor: grab;
 }
 
-.map-zoom-reset {
+.map-zoom-controls {
   position: absolute;
   right: 10px;
   bottom: 10px;
   z-index: 4;
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-zoom-step {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-dim) 88%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.map-zoom-step:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.map-zoom-reset {
   height: 34px;
   padding: 0 14px;
   border: 1px solid var(--border);
@@ -5673,9 +5674,14 @@ body {
      the coastline. */
   .map-wrap {
     padding: 48px 4px 16px;
-    min-height: 44vh;
+    min-height: 52vh;
     display: flex;
     align-items: center;
+  }
+
+  /* The zoom's own controls live on the phone, where there is no wheel. */
+  .map-zoom-controls {
+    display: flex;
   }
 
   .map-hint {
@@ -5894,5 +5900,70 @@ body {
     align-items: flex-end;
     padding-bottom: 10px;
     height: 68px;
+  }
+}
+
+/* ==================== OPTION 2: STATS UNDER THE HEADLINE (Sep 24 2026) ====================
+   The same page as option 1, read differently at the top: the chamber in
+   one small line under the headline, no hairline over the clock, and the
+   clock under an eyebrow that names what it counts. */
+[data-option='2'] .dots-seats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--ink-subtle);
+}
+
+[data-option='2'] .dots-num {
+  color: var(--ink);
+}
+
+[data-option='2'] .dots-party {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.hero-clock {
+  margin-top: 4px;
+}
+
+.hero-clock-eyebrow {
+  margin: 0 0 10px;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
+}
+
+[data-option='2'] .dots-copy {
+  gap: 18px;
+}
+
+/* ==================== THE HERO, CENTRED ON A PHONE (Sep 24 2026) ==================== */
+@media (max-width: 700px) {
+  .dots-copy {
+    align-items: center;
+    text-align: center;
+  }
+
+  .dots-seats,
+  .countdown--compact {
+    justify-content: center;
+  }
+
+  .hero-clock {
+    width: 100%;
+  }
+
+  /* The hairline that sets the clock apart runs the copy's width. */
+  [data-option='1'] .dots-copy .countdown--compact {
+    width: 100%;
   }
 }
