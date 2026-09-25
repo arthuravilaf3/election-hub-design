@@ -367,7 +367,11 @@ check(
   `${Math.round(1440 / 2)},40,0`
 );
 // A SOURCE change keeps the same dots and recolours them; a RACE change
-// rebuilds the grid and replays the entry sweep.
+// rebuilds the grid and replays the entry sweep. Read the FIRST deal's
+// animation before either, while the page's own entrance is still on it.
+const firstDealAnim = await page.evaluate(
+  () => getComputedStyle(document.querySelector('.dot')).animationName
+);
 await page.evaluate(() => document.querySelectorAll('.dot').forEach((d) => (d.dataset.keep = '1')));
 await page.locator('.map-selectors .pill').nth(1).click();
 await page.locator('.pill-option[data-option="dw-poll-avg"]').click();
@@ -382,11 +386,15 @@ const entry = await page.evaluate(() => {
   return { kept: document.querySelectorAll('.dot[data-keep]').length, anim: cs(0).animationName, fill: cs(0).animationFillMode, d0: cs(0).animationDelay, d100: cs(Math.min(30, d.length - 1)).animationDelay, goo: getComputedStyle(document.querySelector('.dots-grid')).filter };
 });
 check('a race change rebuilds the dots', entry.kept, 0);
-// Two animations now: the rise/scale and, riding a shorter clock of its own,
-// the blur the seats resolve out of (Sep 24 2026). Both must still be
-// `backwards` so neither holds on to transform or filter once it ends.
+check('the page entrance resolves the seats out of a blur', firstDealAnim.includes('dot-blur'), true);
+/* The page's ENTRANCE runs two animations — the rise/scale, and the blur the
+   seats resolve out of on a shorter clock (Sep 24 2026). A RE-DEAL runs only
+   the first (Sep 25 2026): 435 filter animations starting on the same frame
+   while React mounts their elements cost a phone eight frames over 34ms, and
+   a race change is not the moment to spend that. Both cases must be
+   `backwards`, so nothing holds on to transform or filter once it ends. */
 check('dots replay an entry animation on race change', entry.anim.split(', ')[0], 'dot-in');
-check('the seats resolve out of a blur', entry.anim.includes('dot-blur'), true);
+check('a re-deal does not pay for the blur', entry.anim.includes('dot-blur'), false);
 check(
   'entry animation releases scale when done (backwards, not both)',
   entry.fill.split(', ').every((f) => f === 'backwards'),

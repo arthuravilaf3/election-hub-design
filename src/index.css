@@ -1525,8 +1525,14 @@ button,
 }
 
 /* A re-deal (race change) is the same wave, short and flat. */
+/* A RE-DEAL DROPS THE BLUR (Sep 25 2026). On the page's entrance the blur
+   is worth what it costs: it happens once, while nothing else is moving.
+   A race change is different — 435 filter animations start on the same
+   frame while React is still mounting their elements, and on a phone that
+   was eight frames over 34ms. One animation instead of two, shorter. */
 .dot--redeal {
-  animation-duration: 300ms, 160ms;
+  animation: dot-in 300ms var(--dot-ease) backwards;
+  animation-delay: var(--dot-delay, 0ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3919,6 +3925,22 @@ button,
     width: 100%;
   }
 
+  /* THE RACE CONTROL, BIGGER ON A PHONE (Sep 25 2026). It is the one thing
+     on that row you actually aim at, and on the night it has the row to
+     itself since the source control went. */
+  [data-option='2'] .map-card .map-selectors .race-seg-option {
+    padding: 13px 4px;
+    font-size: 15px;
+  }
+
+  /* THE BORDERS FOLLOW THE ZOOM. Fixed at 1 screen pixel they read as
+     heavy at rest here, where a state can be 20px across, and never got
+     any finer relative to the map when the reader pinched in. This starts
+     well under half a pixel of ink and opens up as the camera does. */
+  .state-shape {
+    stroke-width: calc(0.42 + 0.2 * var(--cam-s, 1));
+  }
+
   /* THE CONTROLS GO WITH THE MAP on a phone too (Sep 25 2026). They used
      to be pinned there for the whole page — "always visible on phones:
      nothing gates them" — which meant they floated over the coverage feed's
@@ -5208,6 +5230,8 @@ body {
 
 .dots-grid--arc .dot {
   position: absolute;
+  /* One number on the container, not 435 inline widths. */
+  width: var(--dot-size, 100%);
 }
 
 .layout-switch-option--word {

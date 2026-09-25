@@ -41,7 +41,9 @@ export const REDEAL_AT = {
      one the eye has nowhere to start. */
   seatline: 80,
   clock: 180,
-  dots: 300,
+  /* Far enough behind the headline to read as "after it", not so far that
+     the biggest chamber takes a full second to finish arriving. */
+  dots: 170,
 } as const;
 
 export function introDelay(ms: number): CSSProperties {

@@ -166,7 +166,20 @@ export function ElectionMap({
   const applyCamera = (camera: SVGGElement, c: { s: number; x: number; y: number }) => {
     camRef.current = c;
     camera.setAttribute('transform', `translate(${c.x} ${c.y}) scale(${c.s})`);
+    /* The camera's scale, published to CSS. The borders are drawn with
+       non-scaling-stroke — a fixed number of screen pixels at any zoom —
+       which on a phone made a 1px line heavy against a state 20px wide,
+       and left it exactly as heavy when the reader pinched in to look. The
+       stylesheet reads this to open the line up as the map does. */
+    (camera.ownerSVGElement ?? camera).style.setProperty('--cam-s', String(c.s));
   };
+  /* Publish the resting scale once, so the stylesheet never has to lean on
+     its fallback — and so a reader who never zooms still gets the number. */
+  useLayoutEffect(() => {
+    const camera = cameraRef.current;
+    if (camera) (camera.ownerSVGElement ?? camera).style.setProperty('--cam-s', String(camRef.current.s));
+  }, []);
+
   useLayoutEffect(() => {
     const camera = cameraRef.current;
     if (!camera) return;

@@ -796,7 +796,9 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
             '--dot-gap': `${grid.gap}px`,
             '--dot-cols-m': grid.colsM,
             '--dot-gap-m': `${grid.gapM}px`,
-            ...(arc ? { aspectRatio: String(arc.aspect) } : {}),
+            /* The seat's size is the same for every seat in an arc, so it
+               rides on the container instead of on 435 inline styles. */
+            ...(arc ? { aspectRatio: String(arc.aspect), '--dot-size': `${(arc.size * 100).toFixed(3)}%` } : {}),
           } as React.CSSProperties
         }
         role="img"
@@ -833,7 +835,7 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
               const jitter = ((i * 2654435761) % 1000) / 1000;
               const delay = firstDeal
                 ? INTRO_AT.dots + x * 320 + row * 9 + jitter * 22
-                : REDEAL_AT.dots + x * 260 + row * 7 + jitter * 16;
+                : REDEAL_AT.dots + x * 200 + row * 5 + jitter * 14;
               return (
                 <span
                   key={i}
@@ -841,11 +843,9 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
                   data-party={PARTY_OF[arcParty(i)]}
                   style={
                     {
-                      '--i': i,
                       '--dot-delay': `${Math.round(delay)}ms`,
                       left: `${((x - arc.size / 2) * 100).toFixed(3)}%`,
                       top: `${((y - (arc.size * arc.aspect) / 2) * 100).toFixed(3)}%`,
-                      width: `${(arc.size * 100).toFixed(3)}%`,
                     } as React.CSSProperties
                   }
                 />
@@ -863,7 +863,7 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
               key={i}
               className={`dot dot--${party}${firstDeal ? '' : ' dot--redeal'}`}
               data-party={PARTY_OF[party]}
-              style={{ '--i': i, '--dot-delay': `${Math.round(delay)}ms` } as React.CSSProperties}
+              style={{ '--dot-delay': `${Math.round(delay)}ms` } as React.CSSProperties}
             />
           );
         })}
