@@ -584,7 +584,12 @@ const night = await page.evaluate(() => ({
   called: document.querySelectorAll('.state-shape.is-called').length,
   hatched: document.querySelectorAll('.hatch-overlay').length,
   legend: [...document.querySelectorAll('.legend-strip li')].map((l) => l.textContent),
-  updated: document.querySelector('.dots-updated--night')?.textContent ?? '',
+  // The provider and its last batch moved (Sep 25 2026) out of a line under
+  // the headline and into the block at the FOOT of the column, where the
+  // countdown sits before the election: an eyebrow, then the stamp.
+  // The stamp's spaces are HARD spaces — each character is its own flex
+  // item and a plain space would collapse — so normalise before matching.
+  updated: `${document.querySelector('.hero-clock-eyebrow')?.textContent ?? ''} · ${(document.querySelector('.hero-clock-stamp')?.textContent ?? '').replace(/\u00a0/g, ' ')}`,
   bands: ['dot--rep', 'dot--rep-lead', 'dot--uncalled', 'dot--dem-lead', 'dot--dem'].map(
     (c) => document.querySelectorAll('.' + c).length
   ),
@@ -599,7 +604,7 @@ check(
   ['Too early to call', 'Leading', 'Called'].every((w) => night.legend.some((l) => l.includes(w))),
   true
 );
-check('night: the header names the provider and the batch', /Results by AP · updated 9:40 PM ET/.test(night.updated), true);
+check('night: the header names the provider and the batch', /Results by AP · 9:40 PM ET/.test(night.updated), true);
 check('night: the dots paint the feed (called, leading and early bands all present)', night.bands.every((n) => n > 0), true);
 check('night: no countdown on the night', night.countdown, false);
 check('night: the headline counts calls', /of \d+ races called|keep|take|hold/.test(night.headline ?? ''), true);
@@ -610,11 +615,11 @@ await page.waitForSelector('.state-shape');
 await page.waitForTimeout(1200);
 const delayed = await page.evaluate(() => ({
   chip: document.querySelector('.mode-chip--warning')?.textContent ?? '',
-  updated: document.querySelector('.dots-updated--night')?.textContent ?? '',
+  updated: `${document.querySelector('.hero-clock-eyebrow')?.textContent ?? ''} · ${(document.querySelector('.hero-clock-stamp')?.textContent ?? '').replace(/\u00a0/g, ' ')}`,
   pip: !!document.querySelector('.night-delayed'),
 }));
 check('night: results delayed — chip', /Results delayed/.test(delayed.chip), true);
-check('night: results delayed — header line', /Results delayed · last update 10:10 PM ET/.test(delayed.updated), true);
+check('night: results delayed — header line', /Results delayed · Last update 10:10 PM ET/.test(delayed.updated), true);
 check('night: results delayed — clock pip', delayed.pip, true);
 
 // Scrub back to 6:30 PM: no polls closed, nothing called, no results byline.

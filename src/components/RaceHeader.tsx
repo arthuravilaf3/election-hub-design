@@ -17,7 +17,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { INTRO_AT, Letters, introDelay } from './Intro';
 
-import { Countdown } from './Countdown';
+import { Countdown, Figure } from './Countdown';
 import { PartyMark } from './PartyMark';
 import { asset } from '../data/assets';
 import { HERO_STACK, IS_CREATIVE, IS_STILL_ARC, type DotsShape } from '../data/edition';
@@ -296,7 +296,9 @@ function SeatLine({
       <div className="seatline-ends">
         <span className="seatline-end seatline-end--dem">
           <PartyMark party="dem" />
-          <b className="seatline-big">{pd}</b>
+          <b className="seatline-big">
+            <Figure value={String(pd)} className="roll-figure" />
+          </b>
           {compact ? (
             <abbr className="seatline-label" title="Democrats">
               D
@@ -312,7 +314,9 @@ function SeatLine({
           <PartyMark party="rep" />
           {compact ? (
             <>
-              <b className="seatline-big">{pr}</b>
+              <b className="seatline-big">
+                <Figure value={String(pr)} className="roll-figure" />
+              </b>
               <abbr className="seatline-label" title="Republicans">
                 R
               </abbr>
@@ -320,7 +324,9 @@ function SeatLine({
           ) : (
             <>
               <span className="seatline-label">Republicans</span>
-              <b className="seatline-big">{pr}</b>
+              <b className="seatline-big">
+                <Figure value={String(pr)} className="roll-figure" />
+              </b>
             </>
           )}
         </span>
@@ -345,9 +351,17 @@ function SeatLine({
       <div className="seatline-current">
         {results ? (
           <>
-            <span>{results.calledDem} called</span>
-            {compact && <span className="seatline-toss">{results.open} uncalled</span>}
-            <span>{results.calledRep} called</span>
+            <span>
+              <Figure value={String(results.calledDem)} className="roll-figure" /> called
+            </span>
+            {compact && (
+              <span className="seatline-toss">
+                <Figure value={String(results.open)} className="roll-figure" /> uncalled
+              </span>
+            )}
+            <span>
+              <Figure value={String(results.calledRep)} className="roll-figure" /> called
+            </span>
           </>
         ) : (
           <>
@@ -703,22 +717,20 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
   return (
     <>
       <div className="dots-left">
-      {/* Keyed on the headline so a race switch crossfades the copy, the way
-          the old statement did. */}
-      <div className="dots-copy" key={headline}>
+      {/* Keyed on the headline so a race switch crossfades the copy — but
+          NOT on the night, where the count changes every five simulated
+          minutes and the key would re-typeset the whole block, entrance and
+          all, on every tick. There the figure rolls in place instead. */}
+      <div className="dots-copy" key={results ? 'night' : headline}>
         <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
-          {headline}
+          {results && results.headlineNum !== null ? (
+            <>
+              <Figure value={results.headlineNum} className="roll-figure" /> {results.headlineRest}
+            </>
+          ) : (
+            headline
+          )}
         </h2>
-
-        {/* The Election Day clock as the copy's last line (Sep 21 2026):
-            with the headline and the seats, not adrift above them. On the
-            night, the provider and its last batch take that line. Option 2
-            gives it an eyebrow instead of the hairline. */}
-        {results ? (
-          <p className={`dots-updated dots-updated--night${results.delayed ? ' is-delayed' : ''}`}>
-            {results.updatedLine}
-          </p>
-        ) : null}
       </div>
       {/* THE SEAT LINE, under the headline: option 2 always, and every
           option on a phone (Sep 25 2026), where one column has no top edge
@@ -736,15 +748,22 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           />
         </div>
       )}
-      {/* THE CLOCK at the foot of the column (Sep 24 2026, both cuts) — a
-          hairline, the eyebrow that names what it counts, the figures — so
-          it lands level with where the arc ends. */}
-      {!results && (
-        <div className="hero-clock">
-          <p className="hero-clock-eyebrow">Time to Election Day</p>
+      {/* THE FOOT OF THE COLUMN (Sep 24 2026, both cuts) — a hairline, an
+          eyebrow that names what the figure counts, the figure — so it
+          lands level with where the arc ends. Before the election that is
+          the countdown; on the night the provider and its last batch take
+          the same block, instead of a line tucked under the headline
+          (Sep 25 2026), and the stamp's digits roll like the clock's. */}
+      <div className={`hero-clock${results ? ' hero-clock--night' : ''}${results?.delayed ? ' is-delayed' : ''}`}>
+        <p className="hero-clock-eyebrow">{results ? results.eyebrow : 'Time to Election Day'}</p>
+        {results ? (
+          <p className="hero-clock-stamp">
+            <Figure value={results.stamp} className="roll-figure" />
+          </p>
+        ) : (
           <Countdown compact />
-        </div>
-      )}
+        )}
+      </div>
       </div>
 
       {/* The grid is one image to assistive tech — 435 list items would be

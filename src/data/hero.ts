@@ -123,6 +123,17 @@ export function forecastFor(
  */
 export interface ResultsData {
   headline: string;
+  /** The headline's ticking figure, split out so it can ROLL rather than
+      re-typeset the whole line every five simulated minutes. Null once a
+      party has the majority and the headline is a sentence, not a count. */
+  headlineNum: string | null;
+  /** What follows that figure — "of 29 races called". */
+  headlineRest: string;
+  /** The block at the foot of the column reads like the Election Day clock:
+      an eyebrow that names what it is, then the figure. */
+  eyebrow: string;
+  /** "9:42 PM ET" on its own, so its digits roll like the countdown's. */
+  stamp: string;
   /** "Results by AP · updated 9:42 PM ET", or the delay notice. */
   updatedLine: string;
   /** The same, without the words — the phone's byline. */
@@ -175,6 +186,8 @@ export function resultsFor(
   } else {
     headline = `${called} of ${seatsUp} races called`;
   }
+  const headlineNum = control ? null : String(called);
+  const headlineRest = control ? headline : `of ${seatsUp} races called`;
   const stamp = feed.asOf ? formatET(new Date(feed.asOf).getTime()) : '';
   const updatedLine = feed.delayed
     ? `Results delayed · last update ${stamp}`
@@ -184,6 +197,12 @@ export function resultsFor(
     : `${resultsLabel(providerId)}${stamp ? ` · ${stamp}` : ''}`;
   return {
     headline,
+    headlineNum,
+    headlineRest,
+    /* The clock's eyebrow says what the figure under it counts; on the
+       night that is which provider last spoke, or that it has gone quiet. */
+    eyebrow: feed.delayed ? 'Results delayed' : `Results by ${resultsLabel(providerId)}`,
+    stamp: feed.delayed && stamp ? `Last update ${stamp}` : stamp,
     updatedLine,
     updatedShortLine,
     delayed: feed.delayed,

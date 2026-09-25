@@ -67,15 +67,33 @@ function Roll({ value, intro }: { value: string; intro: number | null }) {
   );
 }
 
-/** A figure as independent digits, so "19" -> "18" rolls only the 9. */
-export function Figure({ value, order = null }: { value: string; order?: number | null }) {
+/**
+ * A figure as independent digits, so "19" -> "18" rolls only the 9. The
+ * container class is the caller's: the timer wants its own big type, and
+ * the election-night figures (the headline's count, the seat totals, the
+ * provider's stamp) want the type they already sit in — the ROLL is the
+ * shared part, not the size.
+ */
+export function Figure({
+  value,
+  order = null,
+  className = 'countdown-num',
+}: {
+  value: string;
+  order?: number | null;
+  className?: string;
+}) {
   // Entrance: the digits land one by one, 70ms apart, figure after figure.
   const STEP = 70;
   return (
-    <span className="countdown-num">
+    <span className={className}>
       {value.split('').map((d, i) => (
         <Roll
-          value={d}
+          // Every character is its own flex item, and a flex item that is a
+          // plain space collapses to nothing — which turned the night's
+          // stamp into "9:40PMET". A hard space holds its width. The timer's
+          // own values have no spaces, so this only ever fires here.
+          value={d === ' ' ? '\u00a0' : d}
           intro={order === null ? null : INTRO_AT.countdown + (order * value.length + i) * STEP}
           key={`${value.length}-${i}`}
         />

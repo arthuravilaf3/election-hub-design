@@ -26,6 +26,16 @@
   --ink-subtle: #dfdfdf; /* text/neutral/subtle/default -> color/gray/200 */
   --ink-subtlest: #8f8f8f; /* text/neutral/subtlest/default -> color/gray/400 */
 
+  /* DS spacing the shared files do not carry yet. NOT new values — local
+     aliases of `semantic/spacing/*` (collection Semantics/Dimension). lg,
+     xl and 8xl are read off the DW 3.0 Shorts Card; 2xl and 3xl are read
+     ACROSS that scale (20 and 24) because the desktop bridge was offline
+     when they were needed — if either is wrong, this is the one place. */
+  --space-lg: 12px; /* spacing-lg */
+  --space-xl: 16px; /* spacing-xl */
+  --space-2xl: 20px; /* spacing-2xl */
+  --space-3xl: 24px; /* spacing-3xl */
+
   /* ---- Layout metrics (redesign Aug 2026, from the DW WIP Q3 frames) ----
      The Figma frame is 1440 with 64px side padding, so the content rail is
      1312. Every rail on the page (nav, main, footer) uses these two numbers
@@ -1114,6 +1124,27 @@ button,
   animation: roll-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* THE ROLL, OUTSIDE THE TIMER (Sep 25 2026). Election night's figures —
+   the headline's count, the seat totals, the provider's stamp — change the
+   way the countdown's digits do, so they use the same component in the
+   type they already sit in.
+
+   The timer clips each digit with `overflow: hidden`, which makes it a
+   scroll container and moves its baseline to the bottom margin edge. In a
+   row of digits nothing shows; the moment a rolled figure sits in a line of
+   words ("2 of 29 races called") the number drops off the baseline. A
+   clip-path clips the same way without touching the baseline. */
+.roll-figure {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+
+.roll-figure .countdown-digit {
+  height: auto;
+  overflow: visible;
+  clip-path: inset(0 -0.12em);
+}
+
 .countdown-roll-out {
   position: absolute;
   inset: 0;
@@ -1548,12 +1579,6 @@ button,
 .dots-updated--night.is-delayed {
   color: var(--warning);
   font-weight: 600;
-}
-
-[data-option='1'] .dots-copy .dots-updated--night {
-  margin-top: 4px;
-  padding-top: 18px;
-  border-top: 1px solid color-mix(in srgb, var(--ink-subtlest) 40%, transparent);
 }
 
 /* ---------- Live row ---------- */
@@ -6079,11 +6104,35 @@ body {
   margin-top: 4px;
 }
 
-/* The clock, pushed to the bottom of the column, under its hairline. */
+/* The block at the foot of the column, under its hairline: the countdown
+   before the election, the provider and its last batch on the night.
+   `margin-top: auto` pushes it down to meet the end of the arc — but auto
+   collapses to nothing the moment the column runs short, and the rule ends
+   up against the text above it. The column's own gap is the floor. */
+.dots-left {
+  gap: var(--space-3xl);
+}
+
 .hero-clock {
   margin-top: auto;
-  padding-top: 20px;
+  padding-top: var(--space-3xl);
   border-top: 1px solid color-mix(in srgb, var(--ink-subtlest) 30%, transparent);
+}
+
+/* The night's stamp reads at the compact countdown's size, in its place. */
+.hero-clock-stamp {
+  margin: 0;
+  padding-top: var(--space-2xl);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.hero-clock--night.is-delayed .hero-clock-eyebrow,
+.hero-clock--night.is-delayed .hero-clock-stamp {
+  color: var(--warning);
 }
 
 .hero-clock-eyebrow {
