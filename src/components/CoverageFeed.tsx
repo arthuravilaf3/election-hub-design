@@ -50,6 +50,10 @@ function ShortCard({
   const rootRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimer = useRef<number | null>(null);
+  /* The DS card carries a mute/unmute control (see the Shorts Card page in
+     DW 3.0). Starts muted because that is the only way a loop may autoplay;
+     a tap unmutes, which the policy allows once the reader has asked. */
+  const [muted, setMuted] = useState(true);
 
   // Viewport mode: report intersection ratios upward; the coordinator picks
   // the single most-visible card.
@@ -75,9 +79,13 @@ function ShortCard({
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
+    // `muted` has to be set on the element, not through the attribute:
+    // React writes the attribute, which the media element ignores after
+    // creation, so a JSX-only `muted` leaves the loop audible.
+    v.muted = muted;
     if (playing) void v.play().catch(() => undefined);
     else v.pause();
-  }, [playing]);
+  }, [playing, muted]);
 
   const enter = (pointerType: string) => {
     if (!hoverMode || reducedMotion || pointerType !== 'mouse') return;
@@ -119,6 +127,23 @@ function ShortCard({
           <span>{item.headline}</span>
         </p>
       </div>
+      {playing && item.video && (
+        /* DS: the icon button inside the card is ALWAYS white — it sits over
+           a video still, which is dark whatever the app's theme is. It is
+           the card's one real control, so it lives OUTSIDE the aria-hidden
+           media and names the short it belongs to. */
+        <button
+          type="button"
+          className="short-mute"
+          aria-label={`${muted ? 'Unmute' : 'Mute'}: ${item.headline}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setMuted((m) => !m);
+          }}
+        >
+          {muted ? <VolumeOffIcon /> : <VolumeIcon />}
+        </button>
+      )}
     </div>
   );
 }
@@ -254,6 +279,25 @@ function BookmarkIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** DS icon: Tabler volume, 18px at 1.5 stroke — the card's control is
+    smaller than the shelf's utility buttons. */
+function VolumeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M15 8a5 5 0 0 1 0 8M17.7 5a9 9 0 0 1 0 14M6 15H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h2l3.5-4.5a.8.8 0 0 1 1.5.5v14a.8.8 0 0 1-1.5.5L6 15Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** DS icon: Tabler volume-off, 18px at 1.5 stroke. */
+function VolumeOffIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 15H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h2l3.5-4.5a.8.8 0 0 1 1.5.5v14a.8.8 0 0 1-1.5.5L6 15ZM16 10l4 4m0-4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

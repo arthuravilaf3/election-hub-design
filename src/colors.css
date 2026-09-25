@@ -120,6 +120,12 @@
   --color-chart-overlay-dim: rgb(0 0 0 / 0.5);
   --color-chart-overlay-hatch: rgb(255 255 255 / 0.35);
 
+  /* semantic/color/focus/info/bold/default — read off the DW 3.0 Shorts
+     Card, whose focused state is a 2px dark ring under a 4px blue one. It
+     is NOT in the chart set and not in the published election tokens, so it
+     lives here on its own until the shared colors file carries it. */
+  --color-focus-info-bold-default: #60a5fa;
+
   /* ---- semantic/color/background/{rep|dem|tossup}/{bold|subtle|subtlest}/{state}
      — INTERACTIVE: the seat dots, the arc's seats, anything that changes
      colour under a hand. bold/default IS the chart colour: a seat at rest is

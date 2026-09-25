@@ -2882,6 +2882,13 @@ button,
   bottom: auto;
 }
 
+/* Caption container, to the DS Shorts Card (DW 3.0, node 8400:10882):
+   spacing-8xl of scrim above spacing-lg of padding, title/500/sm — family
+   default, weight 500, size sm, leading 1.2 — in text/neutral/bold, over a
+   plain black 0 -> 0.6 gradient. The scrim used to run to 0.88 because the
+   type had nothing else holding it up; the DS pairs the lighter scrim with
+   a wide soft shadow on the glyphs instead, which keeps the photo readable
+   under the words. */
 .short-caption {
   position: absolute;
   left: 0;
@@ -2894,12 +2901,51 @@ button,
   line-height: 1.2;
   font-weight: 500;
   /* Light type on the scrim in BOTH themes: it reads against the photo. */
-  color: #fafafa;
+  color: var(--color-gray-50);
   /* Black in BOTH themes (decided Sep 2026): the caption sits on a photo,
      so the scrim is the photo's, not the page's. */
-  background: linear-gradient(180deg, transparent 0%, rgba(10, 9, 9, 0.88) 62%);
+  background: linear-gradient(180deg, rgb(0 0 0 / 0) 0%, rgb(0 0 0 / 0.6) 100%);
+  text-shadow: 0 4px 46.5px rgb(0 0 0 / 0.6);
   border-radius: 0 0 4px 4px;
   pointer-events: none;
+}
+
+/* While a loop is running the mute control owns the bottom-right corner,
+   so the words stop short of it. */
+.short-card.is-playing .short-caption {
+  padding-right: 52px;
+}
+
+/* The card's one control. ALWAYS WHITE, by DS rule: it sits over a video
+   still, which is dark in either theme, so it may not follow the page. */
+.short-mute {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.short-mute:hover {
+  background: rgb(0 0 0 / 0.75);
+}
+
+/* DS focus ring: 2px of the card's own ground, then 4px of
+   focus/info/bold/default — the dark step keeps the blue off the photo. */
+.short-mute:focus-visible,
+.short-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-gray-900), 0 0 0 4px var(--color-focus-info-bold-default);
 }
 
 .short-caption span {
