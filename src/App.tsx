@@ -4,7 +4,6 @@ import { RaceHeader } from './components/RaceHeader';
 import { MapCard } from './components/MapCard';
 import { DevToolbar } from './components/DevToolbar';
 import { IS_PREVIEW_FRAME } from './components/MobilePreview';
-import { ThemeToggle } from './components/ThemeToggle';
 import { CoverageFeed, type FeedCall } from './components/CoverageFeed';
 import { Hemicycle } from './components/Hemicycle';
 import { HouseColors } from './components/HouseColors';
@@ -13,6 +12,7 @@ import { ChapterRail } from './components/ChapterRail';
 import { OptionSwitcher } from './components/OptionSwitcher';
 import { WinPromo } from './components/WinPromo';
 import { MiniPlayer } from './components/MiniPlayer';
+import { Celebration } from './components/Celebration';
 import {
   IS_CREATIVE,
   IS_STILL_ARC,
@@ -97,14 +97,55 @@ export default function App() {
   /* The night's calls as feed items, newest first (PRD tenet 4). */
   const feedCalls = useMemo<FeedCall[]>(
     () =>
-      [...state.night.calls].reverse().map((c) => ({
-        key: `${c.chamber}:${c.stateId}:${c.at}`,
-        stateId: c.stateId,
-        headline: `${resultsLabel(resultsProvider)} calls ${STATE_SHAPES.find((s) => s.id === c.stateId)?.name ?? c.stateId} ${c.chamber === 'governor' ? 'governor' : CHAMBER_LABEL[c.chamber]} for the ${PARTY_LABEL[c.leader]}`,
-        time: formatET(c.at),
-      })),
-    [state.night.calls, resultsProvider]
+      [...state.night.calls].reverse().map((c) => {
+        const stateName = STATE_SHAPES.find((s) => s.id === c.stateId)?.name ?? c.stateId;
+        const chamberLabel = c.chamber === 'governor' ? 'Governor' : CHAMBER_LABEL[c.chamber];
+        /* The winner by name: the race's own candidate list, the leading one
+           of the called party. The fixture always has both parties. */
+        const race = state.ballot[c.chamber][c.stateId];
+        const winner =
+          race?.candidates?.find((k) => k.party === c.leader)?.name ?? PARTY_LABEL[c.leader];
+        return {
+          key: `${c.chamber}:${c.stateId}:${c.at}`,
+          stateId: c.stateId,
+          stateName,
+          chamberLabel,
+          winner,
+          party: c.leader,
+          headline: `${resultsLabel(resultsProvider)} calls ${stateName} ${c.chamber === 'governor' ? 'governor' : CHAMBER_LABEL[c.chamber]} for the ${PARTY_LABEL[c.leader]}`,
+          time: formatET(c.at),
+        };
+      }),
+    [state.night.calls, resultsProvider, state.ballot]
   );
+  /* THE MOMENT THE MAJORITY FALLS. Fired on the transition, so a reader
+     who is on the page sees it break and a reader who lands on a decided
+     night does not get a party for old news. `?celebrate=1` forces it, so
+     the moment can be shown without playing the whole simulation. */
+  const [celebrating, setCelebrating] = useState(false);
+  /* Per CHAMBER, because switching from a House that is still open to a
+     Senate that was decided an hour ago is not the majority falling — it is
+     the reader looking somewhere else. Undefined means "not seen yet". */
+  const seenControl = useRef<Partial<Record<Chamber, 'dem' | 'rep' | null>>>({});
+  useEffect(() => {
+    const now = results?.control ?? null;
+    const before = seenControl.current[state.chamber];
+    seenControl.current[state.chamber] = now;
+    if (now !== 'rep') return;
+    if (before === undefined) {
+      // First look at this chamber: only celebrate when asked to.
+      try {
+        if (new URLSearchParams(window.location.search).get('celebrate') === '1') {
+          setCelebrating(true);
+        }
+      } catch {
+        // No URL to read: nothing forced, nothing to do.
+      }
+      return;
+    }
+    if (before !== 'rep') setCelebrating(true);
+  }, [results?.control, state.chamber]);
+
   /* What the creative pieces (the arcs, the Capitol strip) paint: the
      projection before the polls close, the feed's counts after. */
   const painted = results ? resultsAsForecast(results, forecast) : forecast;
@@ -315,6 +356,7 @@ export default function App() {
             staggering={state.staggering}
             flash={state.flash}
             resultsMode={anyResults}
+            calls={feedCalls}
             onChamber={(chamber) => selectChamber(chamber, 'header')}
             onSource={(sourceId) => dispatch({ type: 'SET_SOURCE', sourceId })}
             onSelect={handleSelect}
@@ -387,10 +429,12 @@ export default function App() {
             onToggle={setDevOpen}
           />
         )}
+        {celebrating && results && (
+          <Celebration headline={results.headline} onDone={() => setCelebrating(false)} />
+        )}
         <OptionSwitcher />
         <MiniPlayer />
         {features.results && <NightClock night={state.night} dispatch={dispatch} />}
-        <ThemeToggle />
       </div>
 
       {/* Full-bleed: the footer runs edge to edge with its own inner rail. */}

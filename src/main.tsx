@@ -7,13 +7,20 @@ import './colors.css';
 import './index.css';
 import './home/home.css';
 
-/* The homepage edition is dailywire.com on election night, and that page is a
-   DW+ DARK surface end to end (Arthur, Sep 22 2026). Dark is the token source
-   of truth, so no theme is set — a stored light preference is cleared instead,
-   after the imports (ThemeToggle applies it at module eval) and before the
-   first paint, so the page cannot flash light. */
+/* ONE THEME (Sep 25 2026): the light/dark button is gone, so nothing can
+   choose light any more. The stored preference is cleared here rather than
+   ignored — a reader who left the prototype in light mode would otherwise
+   be stuck in a theme with no way out. The light layer stays in index.css:
+   it is a lot of work to redo and the switch may come back.
+
+   The homepage edition was already dark end to end (Arthur, Sep 22 2026). */
+try {
+  localStorage.removeItem('dw-theme');
+} catch {
+  // Private mode: nothing was stored to begin with.
+}
+delete document.documentElement.dataset.theme;
 if (IS_HOMEPAGE) {
-  delete document.documentElement.dataset.theme;
   document.documentElement.dataset.page = 'home';
 }
 

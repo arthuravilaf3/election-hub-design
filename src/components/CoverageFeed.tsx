@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { track } from '../data/analytics';
+import { RaceCallRow } from './RaceCalls';
 import { ALL_ITEMS, FILTERS, HOSTS, HOST_FILTERABLE, STATE_FILTERABLE, TAGGED_STATE_IDS } from '../data/feedItems';
 import { STATE_SHAPES } from '../data/states';
 import type { FeedItem, ItemKind } from '../data/feedItems';
@@ -373,10 +374,18 @@ export interface FeedCall {
   stateId: string;
   headline: string;
   time: string;
+  /** Who the provider called it for, and the face to put on the row. */
+  stateName: string;
+  chamberLabel: string;
+  winner: string;
+  party: 'dem' | 'rep';
 }
 
 export function CoverageFeed({ calls = [] }: { calls?: FeedCall[] }) {
   const [filter, setFilter] = useState<ItemKind | 'all'>('all');
+  /* The calls are a view of their own, not a kind of item: turning it on
+     replaces the list, turning it off puts the reader back where they were. */
+  const [callsOnly, setCallsOnly] = useState(false);
   const [host, setHost] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   /* The three-dots menu: which item's is open. */
@@ -915,6 +924,27 @@ export function CoverageFeed({ calls = [] }: { calls?: FeedCall[] }) {
             );
           })}
 
+          {/* RACES CALLED, its own filter (Sep 25 2026). It sits OUTSIDE the
+              kind pills' collapse choreography on purpose: those animate
+              against measured geometry, and a pill that comes and goes with
+              the night would fight it. It only exists while the provider
+              has called something. The rule under it carries the nav's
+              Midterms gradient, and sweeps on hover the same way. */}
+          {barMode === 'browse' && calls.length > 0 && (
+            <button
+              type="button"
+              aria-pressed={callsOnly}
+              className={`feed-filter feed-filter--calls${callsOnly ? ' is-active' : ''}`}
+              onClick={() => {
+                setCallsOnly((v) => !v);
+                track('feed_filter', { kind: 'call', on: !callsOnly });
+              }}
+            >
+              <span className="feed-filter-calls-label">Races called</span>
+              <span className="feed-filter-calls-count">{calls.length}</span>
+            </button>
+          )}
+
           {/* Trigger group: slides out FROM BEHIND the pill (lower z-index,
               translateX only). Hosts never render for Opinion; the state
               filter renders for every kind. */}
@@ -1184,34 +1214,21 @@ export function CoverageFeed({ calls = [] }: { calls?: FeedCall[] }) {
             )}
 
             {/* ELECTION NIGHT (PRD tenet 4): every call the map shows is
-                also here, newest first, above the day's coverage — so the
-                results and the narrative never disagree. A click hands off
-                to the map (the same event the race tags use). */}
-            {filter === 'all' && barMode === 'browse' && calls.length > 0 && (
-              <ul className="feed-calls" aria-label="Race calls">
+                also here, so results and the narrative never disagree — but
+                behind a filter of its own since Sep 25 2026. Loose on top of
+                the feed they read as headlines among headlines and got
+                lost. A click still hands off to the map. */}
+            {callsOnly && (
+              <ul className="call-rows" aria-label="Races called">
                 {calls.map((c) => (
                   <li key={c.key}>
-                    <button
-                      type="button"
-                      className="feed-call"
-                      onClick={() => {
-                        track('feed_call_click', { stateId: c.stateId });
-                        window.dispatchEvent(new CustomEvent('dw-open-map', { detail: { stateId: c.stateId } }));
-                      }}
-                    >
-                      <span className="feed-call-kicker">
-                        <span aria-hidden="true">✓ </span>Race called
-                        <span className="feed-sep" aria-hidden="true">•</span>
-                        <span className="feed-time">{c.time}</span>
-                      </span>
-                      <span className="feed-call-headline">{c.headline}</span>
-                    </button>
+                    <RaceCallRow c={c} />
                   </li>
                 ))}
               </ul>
             )}
 
-            {rows.map((row, i) => {
+            {!callsOnly && rows.map((row, i) => {
               if (row.type === 'divider') {
                 return (
                   <p className="feed-date" key={`d-${row.label}`}>

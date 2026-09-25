@@ -15,6 +15,8 @@ import { MapSelectors } from './MapSelectors';
 import type { Chamber, StateRace } from '../data/types';
 import { DRAWER_INSET, DRAWER_W } from '../data/layout';
 import { CHAMBER_LABEL } from '../data/summary';
+import { RaceCallsRail } from './RaceCalls';
+import type { FeedCall } from './CoverageFeed';
 
 interface MapCardProps {
   races: Record<string, StateRace>;
@@ -27,6 +29,8 @@ interface MapCardProps {
   staggering: boolean;
   flash: { stateId: string; nonce: number } | null;
   resultsMode: boolean;
+  /** The night's calls, for the rail anchored inside the map. */
+  calls?: FeedCall[];
   /** Phase gate: the county choropleth is depth, not the base map. */
   /** The state detail panel, injected so the card owns no app state. */
   panel?: React.ReactNode;
@@ -47,6 +51,7 @@ export function MapCard({
   staggering,
   flash,
   resultsMode,
+  calls = [],
   panel,
   onChamber,
   onSource,
@@ -100,6 +105,8 @@ export function MapCard({
           onZoom={onZoom}
           onClearZoom={onClearZoom}
         />
+        {/* The night's running score, on the thing it repaints. */}
+        {resultsMode && <RaceCallsRail calls={calls} />}
         {panel}
       </div>
 
