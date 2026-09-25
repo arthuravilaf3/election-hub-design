@@ -76,15 +76,12 @@ export function RaceHeader({
         <div className="hub-brand">
           <h1 className="hub-title">
             {/* Entrance: the letters resolve one by one out of a blur. */}
+            {/* The '26 mark used to sit here, a dot-matrix numeral finishing
+                the name. It came out Sep 25 2026: with the campaign's own
+                arc mark on the same screen — above the name on a phone,
+                beside it on a desktop — two dot-matrix drawings were
+                fighting each other. The name carries the year in words. */}
             <Letters text="The Midterms" base={INTRO_AT.title} step={26} className="hub-title-text" />
-            {/* The '26 mark completes the name — it is part of the heading,
-                so its alt is the year the type is not spelling out. */}
-            <img
-              className="hub-mark intro-rise"
-              style={introDelay(INTRO_AT.mark)}
-              src={asset('logos/midterms-26.svg')}
-              alt="'26"
-            />
           </h1>
           <p className="hub-byline intro-rise" style={introDelay(INTRO_AT.presented)}>
             <span className="hub-presented">

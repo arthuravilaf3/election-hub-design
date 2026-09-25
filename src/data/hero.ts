@@ -12,7 +12,6 @@
  */
 import { leanOf, readFor } from './encoding';
 import { CURRENT_SEATS, type ChamberSummary } from './summary';
-import { resultsLabel } from './sources';
 import { formatDateET, formatET } from './time';
 import type { Chamber, StateRace } from './types';
 
@@ -157,11 +156,13 @@ export interface ResultsData {
   control: 'dem' | 'rep' | null;
 }
 
+/* No providerId here any more: the hero stopped naming the provider
+   (Sep 25 2026) and this file has no other use for it. The race panel, the
+   tooltip and the byline under the source control still carry it. */
 export function resultsFor(
   summary: ChamberSummary,
   chamber: Chamber,
-  feed: { asOf: string | null; delayed: boolean },
-  providerId: string
+  feed: { asOf: string | null; delayed: boolean }
 ): ResultsData {
   const current = CURRENT_SEATS[chamber];
   const seatsUp = summary.seatsUp;
@@ -188,20 +189,25 @@ export function resultsFor(
   }
   const headlineNum = control ? null : String(called);
   const headlineRest = control ? headline : `of ${seatsUp} races called`;
+  /* THE PROVIDER'S NAME IS OFF THE HERO (Sep 25 2026, by request). It said
+     "Results by AP" three times on one screen — the byline, the block at
+     the foot of the column, and the byline under the source control. The
+     last one stays, beside the control it explains, and the race panel
+     still names the provider on every number; here the hero just says when
+     the count was last read. */
   const stamp = feed.asOf ? formatET(new Date(feed.asOf).getTime()) : '';
   const updatedLine = feed.delayed
     ? `Results delayed · last update ${stamp}`
-    : `Results by ${resultsLabel(providerId)}${stamp ? ` · updated ${stamp}` : ''}`;
-  const updatedShortLine = feed.delayed
-    ? `Delayed · ${stamp}`
-    : `${resultsLabel(providerId)}${stamp ? ` · ${stamp}` : ''}`;
+    : `Updated ${stamp}`;
+  const updatedShortLine = feed.delayed ? `Delayed · ${stamp}` : `Updated ${stamp}`;
   return {
     headline,
     headlineNum,
     headlineRest,
-    /* The clock's eyebrow says what the figure under it counts; on the
-       night that is which provider last spoke, or that it has gone quiet. */
-    eyebrow: feed.delayed ? 'Results delayed' : `Results by ${resultsLabel(providerId)}`,
+    /* The eyebrow says what the figure under it is, the way "TIME TO
+       ELECTION DAY" does before the polls close — when the count was last
+       read, or that the feed has gone quiet. */
+    eyebrow: feed.delayed ? 'Results delayed' : 'Last update',
     stamp: feed.delayed && stamp ? `Last update ${stamp}` : stamp,
     updatedLine,
     updatedShortLine,

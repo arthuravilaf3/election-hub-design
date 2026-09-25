@@ -898,6 +898,10 @@ button,
   /* Was a springy overshoot; the seats now arrive on the entrance's own
      curve, so the arc resolves as one thing. */
   --dot-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* The blur a seat resolves out of. A filter radius cannot be a
+     percentage, so the phone's smaller seats get their own number rather
+     than a 2px smear over an 8px dot. */
+  --dot-blur: 2px;
 }
 
 .hub-title-text {
@@ -1003,12 +1007,6 @@ button,
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--ink);
-}
-
-.hub-mark {
-  flex: none;
-  width: 73px;
-  height: 63px;
 }
 
 .hub-byline {
@@ -1494,10 +1492,15 @@ button,
 /* A soft overshoot rather than the shared ease: the dot settles into size
    instead of snapping to it, and it drifts down a few pixels on the way in
    so the fill still reads as coming from above. */
+/* THE ENTRANCE IS MEASURED IN DOTS, NOT PIXELS (Sep 25 2026). A seat is
+   18.8px across on a desktop and 8.3px on a phone, so a fixed -4px drop was
+   a fifth of a dot on one and half a dot on the other — which is why the
+   phone's arc popped instead of settling. A percentage is the dot's own
+   size wherever it is drawn. */
 @keyframes dot-in {
   from {
     opacity: 0;
-    transform: translateY(-4px) scale(0.72);
+    transform: translateY(-22%) scale(0.72);
   }
   60% {
     opacity: 1;
@@ -1514,7 +1517,7 @@ button,
    down and still reads as the arc coming out of a blur. */
 @keyframes dot-blur {
   from {
-    filter: blur(2px);
+    filter: blur(var(--dot-blur, 2px));
   }
   to {
     filter: blur(0);
@@ -3930,12 +3933,6 @@ button,
     font-size: 40px;
   }
 
-  .hub-mark {
-    width: 56px;
-    height: 48px;
-    margin-top: -2px;
-  }
-
   /* The header stacks on a phone, and the campaign mark reads ABOVE the
      name (Sep 25 2026), centred and at a bit over half its desktop size —
      it is the campaign's mark, not a second headline, so under "The
@@ -3944,8 +3941,11 @@ button,
   .hub-rightplace {
     order: -1;
     align-self: center;
-    width: 172px;
-    height: 84px;
+    width: 212px;
+    height: 104px;
+    /* Closer to the name than the header's own 16px gap (Sep 25 2026):
+       with the '26 numeral gone they read as one lockup. */
+    margin-bottom: -6px;
   }
 
   .countdown {
@@ -3979,6 +3979,13 @@ button,
   .dots-grid {
     grid-template-columns: repeat(var(--dot-cols-m, 20), minmax(0, 1fr));
     gap: var(--dot-gap-m, 3px);
+  }
+
+  /* A seat is ~8px across here, less than half its desktop size: the same
+     2px of blur smeared it into its neighbours and the arc arrived as a
+     cloud that snapped into focus. */
+  :root {
+    --dot-blur: 1px;
   }
 
   .map-card .pill {
@@ -5206,11 +5213,7 @@ body {
   font-size: 12px;
 }
 
-/* Option 2: no '26 mark, the name at 40px, the arc mark twice the size. */
-[data-option='3'] .hub-mark {
-  display: none;
-}
-
+/* Creative: the name at 40px, the arc mark twice the size. */
 [data-option='3'] .hub-title {
   font-size: 40px;
 }
@@ -6245,4 +6248,145 @@ body {
    under it, so the type gives it room. */
 [data-option='2'] .dots-title {
   font-size: clamp(30px, 3.2vw, 46px);
+}
+
+/* ==================== THE WIN PROMO (Sep 25 2026) ====================
+   The shop's tumbler, under the headline that just said the Republicans
+   have the chamber. It mounts when CALLED seats cross the majority, so it
+   rises in once rather than sitting there from the start — and it leaves
+   again if a later batch takes the majority back. */
+.win-promo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3xl);
+  margin-top: 48px;
+  padding: 20px var(--space-3xl);
+  border: 1px solid color-mix(in srgb, var(--color-chart-rep-safe) 45%, transparent);
+  border-radius: 16px;
+  /* The party's colour as a ground, not a fill: the page underneath still
+     reads through it, so the band belongs to the page rather than sitting
+     on it like an ad. */
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--color-chart-rep-safe) 22%, transparent),
+    transparent 62%
+  );
+  animation: rise-in 440ms var(--intro-ease) both;
+}
+
+.win-promo-figure {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+}
+
+.win-promo-art {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.win-promo-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-chart-rep-lean);
+}
+
+.win-promo-title {
+  margin: 8px 0 0;
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.win-promo-dek {
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-subtle);
+}
+
+.win-promo-buy {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.win-promo-price {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.win-promo-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--color-background-rep-bold-default);
+  color: var(--color-chart-text-on-dark);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 150ms ease;
+}
+
+.win-promo-cta:hover {
+  background: var(--color-background-rep-bold-hovered);
+}
+
+.win-promo-cta:active {
+  background: var(--color-background-rep-bold-pressed);
+}
+
+.win-promo-cta:focus-visible {
+  outline: 2px solid var(--color-focus-info-bold-default);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win-promo {
+    animation: none;
+  }
+}
+
+@media (max-width: 700px) {
+  /* One column on a phone: the tumbler and the headline share the top row,
+     the price and the button take the bottom one at full width. */
+  .win-promo {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-xl);
+    margin-top: 32px;
+    padding: 18px var(--space-xl);
+  }
+
+  .win-promo-buy {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+
+  .win-promo-title {
+    font-size: 20px;
+  }
+
+  .win-promo-dek {
+    font-size: 14px;
+  }
+
+  .win-promo-cta {
+    flex: 1;
+    max-width: 220px;
+    justify-content: center;
+  }
 }

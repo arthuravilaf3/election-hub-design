@@ -12,6 +12,7 @@ import { HouseColors } from './components/HouseColors';
 import { NationSpeaks } from './components/NationSpeaks';
 import { ChapterRail } from './components/ChapterRail';
 import { OptionSwitcher } from './components/OptionSwitcher';
+import { WinPromo } from './components/WinPromo';
 import {
   IS_CREATIVE,
   IS_STILL_ARC,
@@ -90,7 +91,7 @@ export default function App() {
   const results = useMemo(
     () =>
       anyResults
-        ? resultsFor(summary, state.chamber, { asOf: state.night.feedAsOf, delayed: state.night.delayed }, resultsProvider)
+        ? resultsFor(summary, state.chamber, { asOf: state.night.feedAsOf, delayed: state.night.delayed })
         : null,
     [anyResults, summary, state.chamber, state.night.feedAsOf, state.night.delayed, resultsProvider]
   );
@@ -303,6 +304,10 @@ export default function App() {
             called={called}
             raceCount={Object.keys(races).length}
           />
+
+          {/* THE WIN PROMO: only once CALLED seats cross the majority for the
+              Republicans, directly under the headline that says so. */}
+          {results?.control === 'rep' && <WinPromo headline={results.headline} />}
 
           {/* OPTION 3: the still arc between the seat line and the map —
               the chamber's seats, coloured by the same projection, answering
