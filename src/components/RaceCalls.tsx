@@ -2,15 +2,11 @@
  * THE RACES ALREADY CALLED (Sep 25 2026).
  *
  * They used to be three rows pushed on top of the coverage feed, where they
- * read as a headline among headlines and got lost. A call is not coverage:
- * it is the night's running score, and it belongs next to the thing it
- * changes. So it is told twice, in two shapes, from one component:
- *
- *   rail  — anchored inside the map on the left, newest first, with the
- *           winner's face. The map is what a call repaints; the list sits
- *           on it and clicking a row opens that state.
- *   row   — the same call as a feed row, behind a "Races called" filter of
- *           its own, for a reader working through the feed.
+ * read as a headline among headlines and got lost; then a filter of their
+ * own, which read no better. A call is not coverage: it is the night's
+ * running score, and it belongs next to the thing it changes. So there is
+ * one shape left — a rail anchored inside the map, newest first, with the
+ * winner's face. Clicking a row opens that state.
  *
  * The photos are the fixture's placeholder portraits (see candidatePhoto).
  */
@@ -29,27 +25,6 @@ function Face({ c }: { c: FeedCall }) {
     <span className={`call-face call-face--${c.party}`} aria-hidden="true">
       <img src={photoFor(c.winner)} alt="" loading="lazy" decoding="async" />
     </span>
-  );
-}
-
-/** The call as a feed row, under its own filter. */
-export function RaceCallRow({ c }: { c: FeedCall }) {
-  return (
-    <button type="button" className="call-row" onClick={() => open(c, 'feed')}>
-      <Face c={c} />
-      <span className="call-row-copy">
-        <span className="call-row-kicker">
-          <span aria-hidden="true">✓ </span>
-          {c.stateName} {c.chamberLabel}
-          <span className="feed-sep" aria-hidden="true">
-            •
-          </span>
-          <span className="feed-time">{c.time}</span>
-        </span>
-        <span className="call-row-name">{c.winner}</span>
-      </span>
-      <span className={`call-chip call-chip--${c.party}`}>{c.party === 'rep' ? 'R' : 'D'}</span>
-    </button>
   );
 }
 

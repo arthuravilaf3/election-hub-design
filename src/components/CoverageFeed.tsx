@@ -10,7 +10,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { track } from '../data/analytics';
-import { RaceCallRow } from './RaceCalls';
 import { ALL_ITEMS, FILTERS, HOSTS, HOST_FILTERABLE, STATE_FILTERABLE, TAGGED_STATE_IDS } from '../data/feedItems';
 import { STATE_SHAPES } from '../data/states';
 import type { FeedItem, ItemKind } from '../data/feedItems';
@@ -381,11 +380,15 @@ export interface FeedCall {
   party: 'dem' | 'rep';
 }
 
-export function CoverageFeed({ calls = [] }: { calls?: FeedCall[] }) {
+/* THE CALLS LEFT THE FEED (Sep 25 2026). They were three loose rows on top
+   of it, then a filter of their own; neither read. They live in the rail
+   anchored inside the map now — next to the thing a call repaints — so the
+   feed is coverage again and nothing else.
+
+   PRD tenet 4 (results and coverage never disagree) still holds: the rail
+   is fed by the same calls the map paints, on the same page. */
+export function CoverageFeed() {
   const [filter, setFilter] = useState<ItemKind | 'all'>('all');
-  /* The calls are a view of their own, not a kind of item: turning it on
-     replaces the list, turning it off puts the reader back where they were. */
-  const [callsOnly, setCallsOnly] = useState(false);
   const [host, setHost] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   /* The three-dots menu: which item's is open. */
@@ -924,27 +927,6 @@ export function CoverageFeed({ calls = [] }: { calls?: FeedCall[] }) {
             );
           })}
 
-          {/* RACES CALLED, its own filter (Sep 25 2026). It sits OUTSIDE the
-              kind pills' collapse choreography on purpose: those animate
-              against measured geometry, and a pill that comes and goes with
-              the night would fight it. It only exists while the provider
-              has called something. The rule under it carries the nav's
-              Midterms gradient, and sweeps on hover the same way. */}
-          {barMode === 'browse' && calls.length > 0 && (
-            <button
-              type="button"
-              aria-pressed={callsOnly}
-              className={`feed-filter feed-filter--calls${callsOnly ? ' is-active' : ''}`}
-              onClick={() => {
-                setCallsOnly((v) => !v);
-                track('feed_filter', { kind: 'call', on: !callsOnly });
-              }}
-            >
-              <span className="feed-filter-calls-label">Races called</span>
-              <span className="feed-filter-calls-count">{calls.length}</span>
-            </button>
-          )}
-
           {/* Trigger group: slides out FROM BEHIND the pill (lower z-index,
               translateX only). Hosts never render for Opinion; the state
               filter renders for every kind. */}
@@ -1213,22 +1195,7 @@ export function CoverageFeed({ calls = [] }: { calls?: FeedCall[] }) {
               </div>
             )}
 
-            {/* ELECTION NIGHT (PRD tenet 4): every call the map shows is
-                also here, so results and the narrative never disagree — but
-                behind a filter of its own since Sep 25 2026. Loose on top of
-                the feed they read as headlines among headlines and got
-                lost. A click still hands off to the map. */}
-            {callsOnly && (
-              <ul className="call-rows" aria-label="Races called">
-                {calls.map((c) => (
-                  <li key={c.key}>
-                    <RaceCallRow c={c} />
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {!callsOnly && rows.map((row, i) => {
+            {rows.map((row, i) => {
               if (row.type === 'divider') {
                 return (
                   <p className="feed-date" key={`d-${row.label}`}>

@@ -548,7 +548,8 @@ const nightDrawer = await page.evaluate(() => ({
   chip: document.querySelector('.race-chip')?.textContent ?? null,
   bar: !!document.querySelector('.reporting-bar[role="progressbar"]'),
   rows: document.querySelectorAll('.race-panel .bar-row, .drawer .bar-row').length,
-  calls: document.querySelectorAll('.feed-call').length,
+  // The calls left the feed for the rail inside the map (Sep 25 2026).
+  calls: document.querySelectorAll('.calls-rail-row').length,
 }));
 console.log('night drawer:', JSON.stringify(nightDrawer));
 await page.screenshot({ path: SHOT('night-drawer'), fullPage: false });

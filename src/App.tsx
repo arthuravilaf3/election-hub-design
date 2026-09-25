@@ -411,7 +411,7 @@ export default function App() {
           {isCreativeFull && <ChapterRail option={3} />}
 
 
-          <CoverageFeed calls={feedCalls} />
+          <CoverageFeed />
 
           {/* Race calls, cutover notices and control changes are announced politely. */}
           <div aria-live="polite" className="visually-hidden">
