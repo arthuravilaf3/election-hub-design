@@ -5953,10 +5953,10 @@ body {
 }
 
 .hero-clock-eyebrow {
-  margin: 0 0 12px;
+  margin: 0 0 6px;
   font-size: 11px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-subtlest);
@@ -5966,7 +5966,7 @@ body {
    weight: a 6px track, tighter gaps, the figures a size down and the
    footnotes in the page's quiet ink. */
 [data-option='2'] .seatline-bar {
-  height: 6px;
+  height: 4px;
   gap: 3px;
 }
 
@@ -6016,4 +6016,10 @@ body {
     margin-top: 20px;
     width: 100%;
   }
+}
+
+/* The headline a size down in option 2 (Sep 24 2026) — the bar reads right
+   under it, so the type gives it room. */
+[data-option='2'] .dots-title {
+  font-size: clamp(30px, 3.2vw, 46px);
 }
