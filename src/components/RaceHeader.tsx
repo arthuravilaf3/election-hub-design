@@ -149,7 +149,7 @@ export function RaceHeader({
               </p>
             )}
           </div>
-          <SeatLine forecast={forecast} results={results} chamber={chamber} />
+          <SeatLine forecast={forecast} results={results} chamber={chamber} delay={INTRO_AT.seatlineStacked} />
         </section>
       ) : (
       /* Keyed on the RACE only: a race change rebuilds the grid and replays
@@ -163,7 +163,8 @@ export function RaceHeader({
             one the way a source switch does — a remount would snap it. */}
         {!HERO_STACK && (
           <div className="dots-seatline">
-            <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
+            {/* On top of the hero: the line reads before the headline. */}
+            <SeatLine forecast={forecast} results={results} chamber={chamber} compact delay={INTRO_AT.seatline} />
           </div>
         )}
       <Dots
@@ -195,12 +196,15 @@ function SeatLine({
   results,
   chamber,
   compact = IS_STILL_ARC,
+  delay = INTRO_AT.seatline,
 }: {
   forecast: ForecastData;
   results: ResultsData | null;
   chamber: Chamber;
   /** The comp's terse form: "203 D", "Toss Ups: N" between the currents. */
   compact?: boolean;
+  /** When the block starts its own entrance — see INTRO_AT. */
+  delay?: number;
 }) {
   const total = forecast.dem + forecast.rep;
   const gap = forecast.tossupShare;
@@ -248,8 +252,21 @@ function SeatLine({
     return () => window.cancelAnimationFrame(id);
   }, []);
 
+  /* THE BLOCK ARRIVES IN PIECES (Sep 25 2026), not as one slab: the two
+     ends first, then the bar drawing itself out, then the majority tick and
+     the small figures underneath. Every part reads its offset from
+     --seat-at in the CSS, so the order lives in one place. The bar's glide
+     needs the same offset, and a transition-delay cannot come from the
+     stylesheet without also delaying every LATER re-split (a race or source
+     change), so it rides inline and is dropped once the entrance is over. */
+  const [intro, setIntro] = useState(true);
+  useEffect(() => {
+    const t = window.setTimeout(() => setIntro(false), delay + 1400);
+    return () => window.clearTimeout(t);
+  }, [delay]);
+
   return (
-    <div className="seatline intro-rise" style={introDelay(INTRO_AT.statement + 120)}>
+    <div className="seatline" style={{ '--seat-at': `${delay}ms` } as React.CSSProperties}>
       <div className="seatline-ends">
         <span className="seatline-end seatline-end--dem">
           <PartyMark party="dem" />
@@ -292,7 +309,11 @@ function SeatLine({
         }
       >
         {runs.map(([k, n]) => (
-          <span key={k} className={`seatline-run seatline-run--${k}`} style={{ width: laid ? pct(n) : '0%' }} />
+          <span
+            key={k}
+            className={`seatline-run seatline-run--${k}`}
+            style={{ width: laid ? pct(n) : '0%', transitionDelay: intro ? `calc(var(--seat-at) + 170ms)` : undefined }}
+          />
         ))}
       </div>
       <div className="seatline-current">
@@ -664,7 +685,8 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
             on the copy's own measure. */}
         {HERO_STACK && (
           <div className="hero-seatline">
-            <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
+            {/* Option 2 hangs it under the headline, so it waits its turn. */}
+            <SeatLine forecast={forecast} results={results} chamber={chamber} compact delay={INTRO_AT.seatlineStacked} />
           </div>
         )}
         {/* The Election Day clock as the copy's last line (Sep 21 2026):
@@ -734,7 +756,7 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
                  front, and the jitter breaks the line. */
               const jitter = ((i * 2654435761) % 1000) / 1000;
               const delay = firstDeal
-                ? INTRO_AT.dots + x * 420 + row * 9 + jitter * 22
+                ? INTRO_AT.dots + x * 320 + row * 9 + jitter * 22
                 : x * 260 + row * 7 + jitter * 16;
               return (
                 <span

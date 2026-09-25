@@ -4,15 +4,28 @@
 // CSS pairs switch every entrance off, so the delays are inert there.
 import type { CSSProperties } from 'react';
 
+/**
+ * THE WORDS READ FIRST (Sep 25 2026). The page is a sentence before it is a
+ * chart: masthead, seat line, headline — and only once those have landed
+ * does the arc deal itself. The arc used to start at 660ms, on top of the
+ * headline still rising, and the two motions fought for the eye.
+ */
 export const INTRO_AT = {
   /* the byline arrives first, then the letters of the name */
   presented: 40,
-  title: 110,
-  mark: 430, // after the last letter of "The Midterms"
-  rule: 260,
-  countdown: 360,
-  statement: 520,
-  dots: 660,
+  title: 90,
+  mark: 400, // after the last letter of "The Midterms"
+  rule: 220,
+  /* The seat line where it sits on top of the hero (option 1). */
+  seatline: 430,
+  statement: 560,
+  /* Option 2 hangs the seat line UNDER the headline, so there it waits
+     its turn instead of arriving before the sentence it belongs to. */
+  seatlineStacked: 700,
+  /* The arc, after the text. */
+  dots: 1000,
+  /* The clock at the foot of the column lights up while the arc fills. */
+  countdown: 1080,
 } as const;
 
 export function introDelay(ms: number): CSSProperties {

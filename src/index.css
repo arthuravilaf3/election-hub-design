@@ -1304,6 +1304,62 @@ button,
   color: var(--ink-subtlest);
 }
 
+/* ---------- The seat line arrives in pieces (Sep 25 2026) ----------
+   It used to rise as one slab, which read as a card dropping in rather than
+   as a chart being drawn. Now the two ends land first, the bar draws itself
+   out between them (the runs' width transition, delayed inline from the
+   same --seat-at), the majority tick drops onto it, and the small figures
+   underneath come last. Every offset is measured from --seat-at, which the
+   component sets from INTRO_AT — so the order lives here and the clock
+   lives there. */
+.seatline-end {
+  animation: rise-in 420ms var(--intro-ease) backwards;
+}
+
+.seatline-end--dem {
+  animation-delay: var(--seat-at, 0ms);
+}
+
+.seatline-end--rep {
+  animation-delay: calc(var(--seat-at, 0ms) + 80ms);
+}
+
+/* The tick is positioned by a transform, so it may only fade and resolve —
+   rise-in ends on `transform: none` and would drop it half a bar to the
+   right of the majority it marks. */
+.seatline-win {
+  animation: seat-tick-in 300ms var(--intro-ease) backwards;
+  animation-delay: calc(var(--seat-at, 0ms) + 300ms);
+}
+
+@keyframes seat-tick-in {
+  from {
+    opacity: 0;
+    filter: blur(0.12em);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.seatline-current {
+  animation: rise-in 420ms var(--intro-ease) backwards;
+  animation-delay: calc(var(--seat-at, 0ms) + 360ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seatline-end,
+  .seatline-win,
+  .seatline-current {
+    animation: none;
+  }
+
+  .seatline-run {
+    transition: none;
+  }
+}
+
 /* ---------- Dots (the forecast beside every seat) ---------- */
 
 .dots {
@@ -5563,10 +5619,6 @@ body {
   color: var(--ink);
 }
 
-[data-option='1'] .dots-seatline .seatline,
-[data-option='2'] .dots-seatline .seatline {
-  animation: none;
-}
 
 /* ==================== HERO AND PHONE PASS (Sep 24 2026) ==================== */
 
