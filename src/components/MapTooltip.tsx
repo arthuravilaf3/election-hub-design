@@ -17,7 +17,7 @@ interface MapTooltipProps {
   y: number;
 }
 
-const WIDTH = 260;
+const WIDTH = 284;
 
 export function MapTooltip({ name, race, chamber, sourceId, trusted, x, y }: MapTooltipProps) {
   // Clamp horizontally, flip above the cursor; keep it dumb — Floating UI
@@ -28,6 +28,7 @@ export function MapTooltip({ name, race, chamber, sourceId, trusted, x, y }: Map
   if (!race) {
     return (
       <div className="map-tooltip" style={{ left, top, width: WIDTH }} role="presentation">
+        <p className="map-tooltip-eyebrow">{CHAMBER_LABEL[chamber]}</p>
         <p className="map-tooltip-name">{name}</p>
         <p className="map-tooltip-value">No {CHAMBER_LABEL[chamber]} race in 2026</p>
         <p className="map-tooltip-source">Nothing to compare in this chamber.</p>
@@ -39,10 +40,14 @@ export function MapTooltip({ name, race, chamber, sourceId, trusted, x, y }: Map
 
   return (
     <div className="map-tooltip" style={{ left, top, width: WIDTH }} role="presentation">
-      <p className="map-tooltip-name">
-        {name}
-        {trusted && <span className="map-tooltip-trust">✓ your source</span>}
+      {/* The eyebrow carries the chamber you are reading, the way the
+          onboarding card carries its step — so the name below can be just
+          the name. The trusted-source marker rides here too. */}
+      <p className="map-tooltip-eyebrow">
+        {CHAMBER_LABEL[chamber]}
+        {trusted && <span className="map-tooltip-trust"> · ✓ your source</span>}
       </p>
+      <p className="map-tooltip-name">{name}</p>
       <p className="map-tooltip-value">{statusLine(race, sourceId)}</p>
       {/* Every number carries its provenance and its age. */}
       <p className="map-tooltip-source">

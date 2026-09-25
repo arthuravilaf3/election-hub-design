@@ -608,38 +608,55 @@ button,
   background: var(--surface-hover);
 }
 
-/* ---------- Tooltip (inverse surface) ---------- */
-
+/* ---------- Tooltip (the onboarding card's dark surface) ----------
+   DARK IN BOTH THEMES (Sep 25 2026, by request): it sits over the map,
+   which is dark in both, so an inverse surface made it a white slab on a
+   black card. The primitives below never flip with the theme. Same build
+   as the onboarding card — a caps eyebrow, the name in white, the reading
+   under it, the provenance last. */
 .map-tooltip {
   position: fixed;
-  transform: translateY(calc(-100% - 10px));
-  background: var(--ink);
-  color: var(--surface-dim);
-  border-radius: 8px;
-  padding: 8px 12px;
+  transform: translateY(calc(-100% - 12px));
+  background: var(--color-gray-700);
+  color: var(--color-gray-200);
+  border-radius: 12px;
+  padding: 18px 20px 16px;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.5);
   pointer-events: none;
   z-index: 20;
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
-.map-tooltip p {
+/* No blanket `p { margin: 0 }` here: it outranks the single-class rules
+   below (one class + one type beats one class), which is how the old
+   tooltip's margins were silently dead. Each line sets its own. */
+.map-tooltip-eyebrow {
   margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-300);
 }
 
 .map-tooltip-name {
+  margin: 6px 0 0;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--color-gray-25);
 }
 
 .map-tooltip-value {
-  margin-top: 2px;
+  margin: 8px 0 0;
 }
 
 .map-tooltip-source {
-  margin-top: 4px;
-  font-size: 10px;
-  opacity: 0.75;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--color-gray-300);
 }
 
 /* ---------- Dev toolbar ---------- */
@@ -1631,13 +1648,12 @@ button,
   }
 }
 
-/* Tooltip echo of the marker. */
+/* Tooltip echo of the marker — inside the eyebrow, so it inherits its
+   size and caps and only changes ink. Crimson 300, not the brand's bold
+   step: at 11px on the tooltip's gray/700 the bold one reads 4.4:1, under
+   AA, and this one 7.4:1 while staying in the same family. */
 .map-tooltip-trust {
-  margin-left: 8px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--brand-hover);
+  color: var(--color-crimson-300);
   white-space: nowrap;
 }
 
