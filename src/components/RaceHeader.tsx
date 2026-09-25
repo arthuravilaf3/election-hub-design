@@ -20,7 +20,7 @@ import { INTRO_AT, Letters, introDelay } from './Intro';
 import { Countdown } from './Countdown';
 import { PartyMark } from './PartyMark';
 import { asset } from '../data/assets';
-import { HERO_STATS, IS_CREATIVE, IS_STILL_ARC, type DotsShape } from '../data/edition';
+import { HERO_STACK, IS_CREATIVE, IS_STILL_ARC, type DotsShape } from '../data/edition';
 import { CURRENT_SEATS } from '../data/summary';
 import polymarketLogo from '../images/polymarketlogo.png';
 import type { ForecastData, ResultsData } from '../data/hero';
@@ -156,13 +156,16 @@ export function RaceHeader({
           the entry sweep; a source change keeps the same dots and just
           recolours them in place (the background transition). */
       <section className="dots" aria-label={`${CHAMBER_BODY[chamber]} forecast`}>
-        {/* THE SEAT LINE, first and across both columns. It lives OUT of the
-            keyed block below: a race switch re-deals the seats, but the bar
-            must GLIDE from the old split to the new one the way a source
-            switch does — a remount would snap it. */}
-        <div className="dots-seatline">
-          <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
-        </div>
+        {/* THE SEAT LINE. Option 1 runs it across the top of the hero;
+            option 2 stacks it under the headline (below, in the copy). It
+            lives OUT of the keyed block either way: a race switch re-deals
+            the seats, but the bar must GLIDE from the old split to the new
+            one the way a source switch does — a remount would snap it. */}
+        {!HERO_STACK && (
+          <div className="dots-seatline">
+            <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
+          </div>
+        )}
       <Dots
         key={`${chamber}:${resultsMode ? 'results' : 'forecast'}:${dotsShape}`}
         forecast={forecast}
@@ -657,40 +660,12 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
         <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
           {headline}
         </h2>
-        {/* OPTION 2 (Sep 24 2026): the chamber in one small line under the
-            headline — the seat line above already draws it, this says it. */}
-        {HERO_STATS && (
-          <p className="dots-seats intro-rise" style={introDelay(INTRO_AT.statement + 60)}>
-            <span className="dots-num">
-              <b className="dots-party">D</b> {results ? results.demTotal : forecast.dem}
-            </span>
-            <span className="hub-dot" aria-hidden="true">
-              •
-            </span>
-            <span className="dots-num">
-              <b className="dots-party">R</b> {results ? results.repTotal : forecast.rep}
-            </span>
-            <span className="hub-dot" aria-hidden="true">
-              •
-            </span>
-            {results ? (
-              <>
-                <span>{results.open} uncalled</span>
-                <span className="hub-dot" aria-hidden="true">
-                  •
-                </span>
-                <span>{results.majority} to win</span>
-              </>
-            ) : (
-              <>
-                <span>{forecast.seatsUp} seats up</span>
-                <span className="hub-dot" aria-hidden="true">
-                  •
-                </span>
-                <span>{tail}</span>
-              </>
-            )}
-          </p>
+        {/* OPTION 2 (Sep 24 2026): the seat line reads under the headline,
+            on the copy's own measure. */}
+        {HERO_STACK && (
+          <div className="hero-seatline">
+            <SeatLine forecast={forecast} results={results} chamber={chamber} compact />
+          </div>
         )}
         {/* The Election Day clock as the copy's last line (Sep 21 2026):
             with the headline and the seats, not adrift above them. On the
@@ -700,15 +675,19 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           <p className={`dots-updated dots-updated--night${results.delayed ? ' is-delayed' : ''}`}>
             {results.updatedLine}
           </p>
-        ) : HERO_STATS ? (
-          <div className="hero-clock">
-            <p className="hero-clock-eyebrow">Time to Election Day</p>
-            <Countdown compact />
-          </div>
-        ) : (
+        ) : HERO_STACK ? null : (
           <Countdown compact />
         )}
       </div>
+      {/* OPTION 2: the clock at the foot of the column — a hairline, the
+          eyebrow that names what it counts, the figures — so it lands level
+          with where the arc ends. */}
+      {HERO_STACK && !results && (
+        <div className="hero-clock">
+          <p className="hero-clock-eyebrow">Time to Election Day</p>
+          <Countdown compact />
+        </div>
+      )}
       </div>
 
       {/* The grid is one image to assistive tech — 435 list items would be

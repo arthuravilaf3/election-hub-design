@@ -5903,49 +5903,6 @@ body {
   }
 }
 
-/* ==================== OPTION 2: STATS UNDER THE HEADLINE (Sep 24 2026) ====================
-   The same page as option 1, read differently at the top: the chamber in
-   one small line under the headline, no hairline over the clock, and the
-   clock under an eyebrow that names what it counts. */
-[data-option='2'] .dots-seats {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 7px;
-  margin: 0;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 500;
-  color: var(--ink-subtle);
-}
-
-[data-option='2'] .dots-num {
-  color: var(--ink);
-}
-
-[data-option='2'] .dots-party {
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.hero-clock {
-  margin-top: 4px;
-}
-
-.hero-clock-eyebrow {
-  margin: 0 0 10px;
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-subtlest);
-}
-
-[data-option='2'] .dots-copy {
-  gap: 18px;
-}
-
 /* ==================== THE HERO, CENTRED ON A PHONE (Sep 24 2026) ==================== */
 @media (max-width: 700px) {
   .dots-copy {
@@ -5964,6 +5921,99 @@ body {
 
   /* The hairline that sets the clock apart runs the copy's width. */
   [data-option='1'] .dots-copy .countdown--compact {
+    width: 100%;
+  }
+}
+
+/* ==================== OPTION 2: THE BAR UNDER THE HEADLINE (Sep 24 2026) ====================
+   The same page as option 1, stacked differently: the seat line reads under
+   the headline on the copy's own measure, its bars drawn thinner, and the
+   clock sits at the FOOT of the column — so it lands level with where the
+   arc ends, the way a Figma column set to fill would put it. */
+
+/* Only the copy column stretches to the row: the arc keeps its own box
+   (its aspect ratio is what draws the arch). */
+[data-option='2'] .dots-left {
+  align-self: stretch;
+}
+
+[data-option='2'] .hero-seatline {
+  /* The copy centres its lines on a phone; the bar still takes the full
+     measure — centred, it collapses onto itself. */
+  align-self: stretch;
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* The clock, pushed to the bottom of the column, under its hairline. */
+[data-option='2'] .hero-clock {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--ink-subtlest) 30%, transparent);
+}
+
+.hero-clock-eyebrow {
+  margin: 0 0 12px;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
+}
+
+/* THINNER, QUIETER BARS. At the copy's width the block has to carry less
+   weight: a 6px track, tighter gaps, the figures a size down and the
+   footnotes in the page's quiet ink. */
+[data-option='2'] .seatline-bar {
+  height: 6px;
+  gap: 3px;
+}
+
+[data-option='2'] .seatline-ends {
+  margin-bottom: 10px;
+}
+
+[data-option='2'] .seatline-big,
+[data-option='2'] .seatline-label {
+  font-size: 20px;
+  line-height: 28px;
+}
+
+[data-option='2'] .party-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+[data-option='2'] .party-mark svg {
+  width: 12px;
+  height: 12px;
+}
+
+[data-option='2'] .seatline-win {
+  font-size: 12px;
+  font-weight: 600;
+  padding-bottom: 8px;
+}
+
+[data-option='2'] .seatline-win::after {
+  height: 6px;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+[data-option='2'] .seatline-current {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-subtlest);
+}
+
+@media (max-width: 700px) {
+  /* One column on a phone: nothing to align with, so the clock just follows
+     the bar. */
+  [data-option='2'] .hero-clock {
+    margin-top: 20px;
     width: 100%;
   }
 }

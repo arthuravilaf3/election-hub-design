@@ -15,7 +15,7 @@ import { IS_PREVIEW_FRAME } from './MobilePreview';
    switch follows; with one left it renders nothing. */
 const OPTIONS: Array<{ id: Option; name: string }> = [
   { id: 1, name: 'Bar on top' },
-  { id: 2, name: 'Stats under the headline' },
+  { id: 2, name: 'Bar under the headline' },
 ];
 
 export function OptionSwitcher() {

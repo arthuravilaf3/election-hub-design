@@ -23,9 +23,9 @@ const built = import.meta.env.VITE_EDITION;
 /* THE OPTIONS BUILD (Sep 21 2026; renumbered Sep 24): one link, two cuts of
    the SAME page — the hub, with two readings of the hero:
      1  the seat line on top, the clock under a hairline
-     2  the seat line on top AND the small "D 215 · R 220 · …" line under the
-        headline, no hairline, and the clock under a "TIME TO ELECTION DAY"
-        eyebrow
+     2  the seat line UNDER the headline instead of across the top, its bars
+        thinner, and the clock at the foot of the column — a hairline, a
+        "TIME TO ELECTION DAY" eyebrow — landing level with the arc's end
      3  the full creative edition (Capitol strip, arc on scroll, The Nation
         Speaks) — not on the switch; it lives on as the /creative/ build
    Only VITE_EDITION=options reads the choice (?option= first, then the
@@ -55,8 +55,9 @@ function readOption(): Option {
 }
 
 export const OPTION: Option = OPTIONS_BUILD ? readOption() : built === 'base' ? 1 : 3;
-/** Option 2: the stats line under the headline and the clock's eyebrow. */
-export const HERO_STATS = OPTIONS_BUILD && OPTION === 2;
+/** Option 2: the seat line stacks under the headline, the clock sits at the
+    foot of the column. */
+export const HERO_STACK = OPTIONS_BUILD && OPTION === 2;
 
 /* The options build proper — or dev with ?option= in the URL. The pieces
    that change the BASE hub's own controls (option 1's race segments) hang
