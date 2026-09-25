@@ -3909,10 +3909,16 @@ button,
     margin-top: -2px;
   }
 
-  /* The header stacks on a phone, and the campaign mark centres under the
-     brand block instead of hanging off its left edge. */
+  /* The header stacks on a phone, and the campaign mark reads ABOVE the
+     name (Sep 25 2026), centred and at a bit over half its desktop size —
+     it is the campaign's mark, not a second headline, so under "The
+     Midterms" at full width it was outweighing the thing it sits with.
+     Keeps the 300 x 147 ratio from the Figma so the arch never squashes. */
   .hub-rightplace {
+    order: -1;
     align-self: center;
+    width: 172px;
+    height: 84px;
   }
 
   .countdown {
@@ -5530,6 +5536,14 @@ body {
     bottom: calc(var(--ticker-h) + 150px);
   }
 
+  /* The 150px above is cut for the OPEN panel, which is tall and has to
+     clear the race tabs. The start button is one 44px pill, and at that
+     offset it lands straight on the hero's countdown — it was covering the
+     seconds. It goes in the free band just above the tabs instead. */
+  .night-clock--off {
+    bottom: calc(var(--ticker-h) + 68px);
+  }
+
   .night-leave {
     display: none;
   }
@@ -6135,6 +6149,73 @@ body {
   .hero-clock {
     margin-top: 20px;
     width: 100%;
+  }
+
+  /* THE SEAT LINE ON A PHONE (Sep 25 2026) reads under the headline in
+     every option — one column has no top edge to run it across — and it
+     takes option 2's thinner build while it is there: at the copy's width
+     a 12px track read as a slab, not as a line. The component moves it
+     into the stacked slot; these are the same values as the option-2
+     block above, written with the option prefixes because the unscoped
+     rules would lose to it in the cascade. */
+  [data-option='1'] .hero-seatline,
+  [data-option='2'] .hero-seatline {
+    align-self: stretch;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  [data-option='1'] .seatline-bar,
+  [data-option='2'] .seatline-bar {
+    height: 4px;
+    gap: 3px;
+  }
+
+  [data-option='1'] .seatline-ends,
+  [data-option='2'] .seatline-ends {
+    margin-bottom: 10px;
+  }
+
+  [data-option='1'] .seatline-big,
+  [data-option='1'] .seatline-label,
+  [data-option='2'] .seatline-big,
+  [data-option='2'] .seatline-label {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  [data-option='1'] .party-mark,
+  [data-option='2'] .party-mark {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+  }
+
+  [data-option='1'] .party-mark svg,
+  [data-option='2'] .party-mark svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  [data-option='1'] .seatline-win,
+  [data-option='2'] .seatline-win {
+    font-size: 12px;
+    font-weight: 600;
+    padding-bottom: 8px;
+  }
+
+  [data-option='1'] .seatline-win::after,
+  [data-option='2'] .seatline-win::after {
+    height: 6px;
+    background: color-mix(in srgb, var(--ink) 55%, transparent);
+  }
+
+  [data-option='1'] .seatline-current,
+  [data-option='2'] .seatline-current {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--ink-subtlest);
   }
 }
 

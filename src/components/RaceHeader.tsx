@@ -64,6 +64,11 @@ export function RaceHeader({
     : resultsMode
       ? 'Updating live'
       : `Updated ${forecast.updatedShort}`;
+  /* WHERE THE SEAT LINE READS. Option 2 always hangs it under the headline;
+     on a phone every option does, because one column has no top edge to run
+     it across (Sep 25 2026). */
+  const phone = useMedia(PHONE);
+  const stacked = HERO_STACK || phone;
 
   return (
     <>
@@ -161,7 +166,7 @@ export function RaceHeader({
             lives OUT of the keyed block either way: a race switch re-deals
             the seats, but the bar must GLIDE from the old split to the new
             one the way a source switch does — a remount would snap it. */}
-        {!HERO_STACK && (
+        {!stacked && (
           <div className="dots-seatline">
             {/* On top of the hero: the line reads before the headline. */}
             <SeatLine forecast={forecast} results={results} chamber={chamber} compact delay={INTRO_AT.seatline} />
@@ -176,6 +181,7 @@ export function RaceHeader({
         headline={headline}
         resultsMode={resultsMode}
         called={called}
+        stacked={stacked}
       />
       </section>
       )}
@@ -191,6 +197,26 @@ const CHAMBER_BODY: Record<Chamber, string> = { house: 'House', senate: 'Senate'
  * each gains under this source, the toss-ups — and the majority marked
  * where it falls. Same projection as the dots and the hemicycle.
  */
+/**
+ * A live media query. Read once is the house pattern for the motion
+ * queries, but the hero's layout has to follow a window being dragged
+ * across the breakpoint — which is how this prototype gets read.
+ */
+function useMedia(query: string): boolean {
+  const [on, setOn] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = () => setOn(mq.matches);
+    mq.addEventListener('change', onChange);
+    setOn(mq.matches);
+    return () => mq.removeEventListener('change', onChange);
+  }, [query]);
+  return on;
+}
+
+/* Same 700 as the phone block in index.css. */
+const PHONE = '(max-width: 700px)';
+
 function SeatLine({
   forecast,
   results,
@@ -343,6 +369,8 @@ interface DotsProps {
   headline: string;
   resultsMode: boolean;
   called: number;
+  /** True when the seat line reads under the headline, not above the hero. */
+  stacked: boolean;
 }
 
 /**
@@ -431,7 +459,7 @@ function arcLayout(total: number, shape: 'arc' | 'semi'): ArcLayout {
   };
 }
 
-function Dots({ forecast, results, chamber, headline, resultsMode, called, shape }: DotsProps) {
+function Dots({ forecast, results, chamber, headline, resultsMode, called, shape, stacked }: DotsProps) {
   const total = forecast.dem + forecast.rep;
   const grid = DOT_GRID[chamber];
 
@@ -681,14 +709,7 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
         <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
           {headline}
         </h2>
-        {/* OPTION 2 (Sep 24 2026): the seat line reads under the headline,
-            on the copy's own measure. */}
-        {HERO_STACK && (
-          <div className="hero-seatline">
-            {/* Option 2 hangs it under the headline, so it waits its turn. */}
-            <SeatLine forecast={forecast} results={results} chamber={chamber} compact delay={INTRO_AT.seatlineStacked} />
-          </div>
-        )}
+
         {/* The Election Day clock as the copy's last line (Sep 21 2026):
             with the headline and the seats, not adrift above them. On the
             night, the provider and its last batch take that line. Option 2
@@ -699,6 +720,22 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           </p>
         ) : null}
       </div>
+      {/* THE SEAT LINE, under the headline: option 2 always, and every
+          option on a phone (Sep 25 2026), where one column has no top edge
+          to hang it from. It sits OUTSIDE the keyed copy above — inside it,
+          a race change would remount the bar and snap it from zero instead
+          of gliding to the new split. */}
+      {stacked && (
+        <div className="hero-seatline">
+          <SeatLine
+            forecast={forecast}
+            results={results}
+            chamber={chamber}
+            compact
+            delay={INTRO_AT.seatlineStacked}
+          />
+        </div>
+      )}
       {/* THE CLOCK at the foot of the column (Sep 24 2026, both cuts) — a
           hairline, the eyebrow that names what it counts, the figures — so
           it lands level with where the arc ends. */}
