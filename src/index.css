@@ -5724,12 +5724,6 @@ body {
   background: var(--color-chart-rep-safe);
 }
 
-/* The night's start button is parked while the phone experience is being
-   read (Sep 24 2026); ?night=HH:MM still opens the clock. */
-.night-clock--off {
-  display: none;
-}
-
 /* ---------- The map takes a hand ----------
    Two fingers zoom the map, one pans it once zoomed. Until then the page
    keeps its scroll over the map (touch-action), and the Reset chip is the
