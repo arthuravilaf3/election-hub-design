@@ -1554,9 +1554,11 @@ button,
 /* Under the hand (DS background · bold): hovered while the lens swells a
    seat, pressed while the pointer is down on it. Toward the ground in both
    themes — darker here, lighter in Light. */
-.dot--dem.is-hovered { background: var(--color-background-dem-bold-hovered); }
-.dot--rep.is-hovered { background: var(--color-background-rep-bold-hovered); }
-.dot--toss.is-hovered { background: var(--color-background-tossup-bold-hovered); }
+/* No hovered token on the seats (Sep 25 2026): a class is all-or-nothing,
+   and every seat the lens touched wore the hovered colour at full strength
+   — two dozen at once, a flat dark blob with a hard edge. The darkening is
+   a per-seat ramp now, set inline from the lens loop in RaceHeader, so it
+   falls off with the swell. Pressed stays a token: a press IS discrete. */
 .dot--dem.is-pressed { background: var(--color-background-dem-bold-pressed); }
 .dot--rep.is-pressed { background: var(--color-background-rep-bold-pressed); }
 .dot--toss.is-pressed { background: var(--color-background-tossup-bold-pressed); }
@@ -3917,11 +3919,12 @@ button,
     width: 100%;
   }
 
-  /* Always visible on phones: nothing gates them. */
-  .map-card .map-selectors.is-offscreen {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  /* THE CONTROLS GO WITH THE MAP on a phone too (Sep 25 2026). They used
+     to be pinned there for the whole page — "always visible on phones:
+     nothing gates them" — which meant they floated over the coverage feed's
+     own filters once you scrolled past the map. The observer that hides
+     them on a desktop was already running; only this override stood in its
+     way. */
 
   .hub-header {
     flex-direction: column;

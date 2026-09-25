@@ -28,6 +28,16 @@ export const INTRO_AT = {
   countdown: 1080,
 } as const;
 
+/**
+ * A RACE CHANGE READS THE SAME WAY (Sep 25 2026): the headline for the new
+ * chamber lands, then its seats deal themselves. Not the page's 1000ms —
+ * nothing else is arriving, so the copy only has to get out in front.
+ */
+export const REDEAL_AT = {
+  statement: 0,
+  dots: 300,
+} as const;
+
 export function introDelay(ms: number): CSSProperties {
   return { animationDelay: `${ms}ms` };
 }

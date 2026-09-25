@@ -15,7 +15,7 @@
  * track, so a race switch recolours exactly what the bar used to resize.
  */
 import { useEffect, useRef, useState } from 'react';
-import { INTRO_AT, Letters, introDelay } from './Intro';
+import { INTRO_AT, Letters, REDEAL_AT, introDelay } from './Intro';
 
 import { Countdown, Figure } from './Countdown';
 import { PartyMark } from './PartyMark';
@@ -581,7 +581,7 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           L.y[i] = 0;
           L.dots[i].style.transform = '';
           L.dots[i].style.zIndex = '';
-          L.dots[i].classList.remove('is-hovered');
+          L.dots[i].style.filter = '';
         }
         continue;
       }
@@ -591,9 +591,16 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
       L.y[i] = ny;
       L.dots[i].style.transform = `translate(${nx.toFixed(2)}px, ${ny.toFixed(2)}px) scale(${ns.toFixed(3)})`;
       L.dots[i].style.zIndex = ns > 1.02 ? '1' : '';
-      // The seats the lens swells wear the DS hovered colour
-      // (background/*/bold/hovered); the ones it pushes away do not.
-      L.dots[i].classList.toggle('is-hovered', ns > 1.02);
+      /* THE DARKENING FOLLOWS THE SWELL (restored Sep 25 2026). It used to
+         be a class carrying the DS hovered token, which every seat the lens
+         touched wore at full strength — two dozen at once, a flat dark blob
+         with a hard edge. It is a RAMP instead: (ns - 1) / A is the lens's
+         own falloff, 1 under the pointer and easing to 0 at the edge of its
+         reach, so the seat you are on is 40% darker and its neighbours sit
+         progressively closer to their own colour. No token, and nothing to
+         toggle: it eases back out with the swell it came in with. */
+      L.dots[i].style.filter =
+        ns > 1.005 ? `brightness(${(1 - (0.4 * (ns - 1)) / A).toFixed(3)})` : '';
     }
     if (moving) L.raf = window.requestAnimationFrame(tick);
   };
@@ -719,7 +726,13 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           minutes and the key would re-typeset the whole block, entrance and
           all, on every tick. There the figure rolls in place instead. */}
       <div className="dots-copy" key={results ? 'night' : headline}>
-        <h2 className="dots-title intro-rise" style={introDelay(INTRO_AT.statement)}>
+        {/* On the page's first deal the headline waits its turn in the
+            entrance; on a race change there is no entrance to wait for, so
+            it goes straight away and the seats follow it (REDEAL_AT). */}
+        <h2
+          className="dots-title intro-rise"
+          style={introDelay(firstDeal ? INTRO_AT.statement : REDEAL_AT.statement)}
+        >
           {results && results.headlineNum !== null ? (
             <>
               <Figure value={results.headlineNum} className="roll-figure" /> {results.headlineRest}
@@ -810,7 +823,7 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
               const jitter = ((i * 2654435761) % 1000) / 1000;
               const delay = firstDeal
                 ? INTRO_AT.dots + x * 320 + row * 9 + jitter * 22
-                : x * 260 + row * 7 + jitter * 16;
+                : REDEAL_AT.dots + x * 260 + row * 7 + jitter * 16;
               return (
                 <span
                   key={i}
@@ -834,7 +847,7 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           const jitter = ((i * 2654435761) % 1000) / 1000;
           const delay = firstDeal
             ? INTRO_AT.dots + row * 30 + col * 1.6 + jitter * 26
-            : row * 12 + jitter * 90;
+            : REDEAL_AT.dots + row * 12 + jitter * 90;
           return (
             <span
               key={i}
