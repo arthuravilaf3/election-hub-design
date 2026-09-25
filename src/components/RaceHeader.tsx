@@ -675,14 +675,12 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           <p className={`dots-updated dots-updated--night${results.delayed ? ' is-delayed' : ''}`}>
             {results.updatedLine}
           </p>
-        ) : HERO_STACK ? null : (
-          <Countdown compact />
-        )}
+        ) : null}
       </div>
-      {/* OPTION 2: the clock at the foot of the column — a hairline, the
-          eyebrow that names what it counts, the figures — so it lands level
-          with where the arc ends. */}
-      {HERO_STACK && !results && (
+      {/* THE CLOCK at the foot of the column (Sep 24 2026, both cuts) — a
+          hairline, the eyebrow that names what it counts, the figures — so
+          it lands level with where the arc ends. */}
+      {!results && (
         <div className="hero-clock">
           <p className="hero-clock-eyebrow">Time to Election Day</p>
           <Countdown compact />

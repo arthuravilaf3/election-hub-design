@@ -5028,14 +5028,6 @@ body {
   background: var(--surface-2);
 }
 
-/* Option 1: the clock is the copy's last line, under a hairline after the
-   seats, without the caption. */
-[data-option='1'] .dots-copy .countdown--compact {
-  margin-top: 4px;
-  padding-top: 18px;
-  border-top: 1px solid color-mix(in srgb, var(--ink-subtlest) 40%, transparent);
-}
-
 /* The caption is the eyebrow's job in option 2, and neither belongs where
    the hairline already sets the clock apart (option 1). */
 [data-option='1'] .countdown-caption,
@@ -5919,8 +5911,8 @@ body {
     width: 100%;
   }
 
-  /* The hairline that sets the clock apart runs the copy's width. */
-  [data-option='1'] .dots-copy .countdown--compact {
+  /* The clock's rule runs the copy's width. */
+  .hero-clock {
     width: 100%;
   }
 }
@@ -5933,7 +5925,7 @@ body {
 
 /* Only the copy column stretches to the row: the arc keeps its own box
    (its aspect ratio is what draws the arch). */
-[data-option='2'] .dots-left {
+.dots-left {
   align-self: stretch;
 }
 
@@ -5946,7 +5938,7 @@ body {
 }
 
 /* The clock, pushed to the bottom of the column, under its hairline. */
-[data-option='2'] .hero-clock {
+.hero-clock {
   margin-top: auto;
   padding-top: 20px;
   border-top: 1px solid color-mix(in srgb, var(--ink-subtlest) 30%, transparent);
@@ -6012,7 +6004,7 @@ body {
 @media (max-width: 700px) {
   /* One column on a phone: nothing to align with, so the clock just follows
      the bar. */
-  [data-option='2'] .hero-clock {
+  .hero-clock {
     margin-top: 20px;
     width: 100%;
   }
