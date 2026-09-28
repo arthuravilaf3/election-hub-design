@@ -67,6 +67,12 @@ function Roll({ value, intro }: { value: string; intro: number | null }) {
   );
 }
 
+/** Entrance: the digits land one by one, 70ms apart, figure after figure. */
+export const STEP = 70;
+/** How long a four-figure sweep takes, base to last digit at rest: four
+    figures of two digits, plus the roll itself. */
+export const SWEEP_MS = 4 * 2 * STEP + 420;
+
 /**
  * A figure as independent digits, so "19" -> "18" rolls only the 9. The
  * container class is the caller's: the timer wants its own big type, and
@@ -77,14 +83,15 @@ function Roll({ value, intro }: { value: string; intro: number | null }) {
 export function Figure({
   value,
   order = null,
+  base = INTRO_AT.countdown,
   className = 'countdown-num',
 }: {
   value: string;
   order?: number | null;
+  /** When this figure's slot in the sweep starts counting from. */
+  base?: number;
   className?: string;
 }) {
-  // Entrance: the digits land one by one, 70ms apart, figure after figure.
-  const STEP = 70;
   return (
     <span className={className}>
       {value.split('').map((d, i) => (
@@ -94,7 +101,7 @@ export function Figure({
           // stamp into "9:40PMET". A hard space holds its width. The timer's
           // own values have no spaces, so this only ever fires here.
           value={d === ' ' ? '\u00a0' : d}
-          intro={order === null ? null : INTRO_AT.countdown + (order * value.length + i) * STEP}
+          intro={order === null ? null : base + (order * value.length + i) * STEP}
           key={`${value.length}-${i}`}
         />
       ))}
@@ -110,15 +117,38 @@ interface CountdownProps {
   /** The pill (Sep 21 2026): the four figures in one capsule, no caption,
       pinned with the map's controls. */
   pill?: boolean;
+  /** When the figures' sweep starts, or null for no entrance at all —
+      a re-deal, where the block it sits in rises as one piece. */
+  introAt?: number | null;
 }
 
-export function Countdown({ now, compact = false, pill = false }: CountdownProps) {
+export function Countdown({
+  now,
+  compact = false,
+  pill = false,
+  introAt = INTRO_AT.countdown,
+}: CountdownProps) {
   const [tick, setTick] = useState(() => now ?? Date.now());
   useEffect(() => {
     if (now !== undefined) return;
-    const id = window.setInterval(() => setTick(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, [now]);
+    /* THE CLOCK HOLDS ITS BREATH THROUGH ITS OWN ENTRANCE (Sep 28 2026).
+       A digit that changes drops out of the entrance — Roll only honours
+       the intro delay while the value is the one the slot was born with —
+       so the seconds, which change every second, were landing a full beat
+       before the days. The figures swept right to left. Nothing ticks until
+       the sweep has finished; a second held on the first frame of a page
+       load costs nothing and buys the order back. */
+    const hold = introAt === null ? 0 : introAt + SWEEP_MS;
+    let interval = 0;
+    const begin = window.setTimeout(() => {
+      setTick(Date.now());
+      interval = window.setInterval(() => setTick(Date.now()), 1000);
+    }, hold);
+    return () => {
+      window.clearTimeout(begin);
+      window.clearInterval(interval);
+    };
+  }, [now, introAt]);
   const t = partsUntil(ELECTION_DAY, tick);
 
   const units: Array<[string, string]> = [
@@ -142,10 +172,12 @@ export function Countdown({ now, compact = false, pill = false }: CountdownProps
     >
       {units.map(([value, label], order) => (
         <span className="countdown-unit" key={label}>
-          <Figure value={value} order={order} />
+          <Figure value={value} order={introAt === null ? null : order} base={introAt ?? 0} />
+          {/* The label lands with its own figure's first digit: order * 140
+              is exactly order * 2 digits * STEP. */}
           <span
-            className="countdown-label intro-rise"
-            style={introDelay(INTRO_AT.countdown + order * 140)}
+            className={`countdown-label${introAt === null ? '' : ' intro-rise'}`}
+            style={introAt === null ? undefined : introDelay(introAt + order * 2 * STEP)}
           >
             {label}
           </span>

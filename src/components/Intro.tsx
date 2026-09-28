@@ -22,10 +22,17 @@ export const INTRO_AT = {
   /* Option 2 hangs the seat line UNDER the headline, so there it waits
      its turn instead of arriving before the sentence it belongs to. */
   seatlineStacked: 700,
-  /* The arc, after the text. */
-  dots: 1000,
-  /* The clock at the foot of the column lights up while the arc fills. */
-  countdown: 1080,
+  /* THE BLOCK AT THE FOOT, in the column's own order — after the headline
+     and the seat line, BEFORE the arc (Sep 28 2026). It used to have no
+     entrance at all on the first load: its rule and its eyebrow were simply
+     there from the first frame and then, a second later and after the seats
+     had started dealing, the figures rolled in underneath them. */
+  clock: 820,
+  /* The figures sweep left to right from there — days, hours, minutes,
+     seconds — each label landing with its own first digit. */
+  countdown: 880,
+  /* The arc last, after the whole column has read. */
+  dots: 1060,
 } as const;
 
 /**
@@ -40,10 +47,11 @@ export const REDEAL_AT = {
      foot, then the seats. They overlap; only the order matters, and without
      one the eye has nowhere to start. */
   seatline: 80,
-  clock: 180,
+  clock: 160,
   /* Far enough behind the headline to read as "after it", not so far that
-     the biggest chamber takes a full second to finish arriving. */
-  dots: 170,
+     the biggest chamber takes a full second to finish arriving — and after
+     the clock, so the column keeps its order here too. */
+  dots: 280,
 } as const;
 
 export function introDelay(ms: number): CSSProperties {

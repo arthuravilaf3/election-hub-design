@@ -769,11 +769,15 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
           the countdown; on the night the provider and its last batch take
           the same block, instead of a line tucked under the headline
           (Sep 25 2026), and the stamp's digits roll like the clock's. */}
+      {/* The rule and the eyebrow rise WITH the figures under them, on both
+          deals (Sep 28 2026). They used to be painted from the first frame
+          while the figures waited a second to arrive, which read as the
+          clock arriving twice. */}
       <div
-        className={`hero-clock${results ? ' hero-clock--night' : ''}${results?.delayed ? ' is-delayed' : ''}${
-          firstDeal ? '' : ' intro-rise'
+        className={`hero-clock intro-rise${results ? ' hero-clock--night' : ''}${
+          results?.delayed ? ' is-delayed' : ''
         }`}
-        style={firstDeal ? undefined : introDelay(REDEAL_AT.clock)}
+        style={introDelay(firstDeal ? INTRO_AT.clock : REDEAL_AT.clock)}
       >
         <p className="hero-clock-eyebrow">{results ? results.eyebrow : 'Time to Election Day'}</p>
         {results ? (
@@ -781,7 +785,9 @@ function Dots({ forecast, results, chamber, headline, resultsMode, called, shape
             <Figure value={results.stamp} className="roll-figure" />
           </p>
         ) : (
-          <Countdown compact />
+          /* On a re-deal the whole block rises as one piece, so the figures
+             have no sweep of their own to run and keep ticking. */
+          <Countdown compact introAt={firstDeal ? INTRO_AT.countdown : null} />
         )}
       </div>
       </div>
