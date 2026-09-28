@@ -1,22 +1,22 @@
 /**
- * THE MINI PLAYER (Sep 25 2026), anchored bottom right: the episode the
- * reader left running, the way a video site keeps one in the corner while
- * you read on. Modelled on the YouTube corner card Arthur sent — still,
- * play button over it, elapsed / total, a scrub line, the title, and a row
- * naming what it is. Picture-in-picture on the left of the head, close on
- * the right.
+ * THE MINI PLAYER (Sep 25 2026; autoplaying since Sep 28), parked in the
+ * bottom-right corner just above the Polymarket ticker: the episode the
+ * reader left running, the way a video site keeps one going while you read
+ * on. Picture-in-picture on the left of the head, close on the right, the
+ * elapsed / total under it and a scrub line across the bottom.
  *
  * It is CHROME, not content: nothing on the page depends on it, closing it
  * is final for the session, and it never covers the page's own controls
- * (see the CSS — it sits above the theme toggle and clears the map's fixed
- * pills).
+ * (see the CSS — it clears the ticker and the map's fixed pills).
  *
- * The clock is a prototype's: a resume point that ticks while it plays, so
- * the scrub line and the figures move. There is no real media element —
- * the still is the frame.
+ * PLACEHOLDER FOOTAGE: the loop below is one of the fixture's short clips,
+ * not the episode it names. The clock is the episode's — a resume point
+ * that runs while it plays — so the figures and the scrub line are the
+ * episode's own running time, which is the thing being designed here.
  */
 import { useEffect, useRef, useState } from 'react';
 import { track } from '../data/analytics';
+import { asset } from '../data/assets';
 import { ALL_ITEMS } from '../data/feedItems';
 
 /** "11:55" from seconds. */
@@ -30,22 +30,6 @@ function clock(total: number): string {
 function seconds(stamp: string): number {
   const [m, s] = stamp.split(':');
   return Number(m) * 60 + Number(s || 0);
-}
-
-function PlayIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28">
-      <path d="M8 5.5v13l11-6.5Z" fill="currentColor" />
-    </svg>
-  );
-}
-
-function PauseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28">
-      <path d="M8 5h3.2v14H8zM12.8 5H16v14h-3.2z" fill="currentColor" />
-    </svg>
-  );
 }
 
 /** Tabler picture-in-picture, 18px at 1.5 stroke. */
@@ -72,52 +56,62 @@ function CloseIcon() {
 }
 
 export function MiniPlayer() {
-  /* The episode furthest down the feed that carries a runtime — "the one
-     you were on", without pretending to a history we do not have. */
+  /* The first episode that carries a runtime — "the one you were on",
+     without pretending to a history we do not have. */
   const episode = ALL_ITEMS.find((i) => i.kind === 'episode' && i.duration);
   const total = episode?.duration ? seconds(episode.duration) : 0;
 
   const [open, setOpen] = useState(true);
-  const [playing, setPlaying] = useState(false);
   // Resumed a little under half way, the way a real one would be.
   const [at, setAt] = useState(() => Math.round(total * 0.47));
+  const videoRef = useRef<HTMLVideoElement>(null);
   const raf = useRef<number | null>(null);
 
+  /* It plays on its own now, so the clock runs from the first frame. The
+     video element is muted because that is the only way a browser lets a
+     loop start without a gesture. */
   useEffect(() => {
-    if (!playing) return;
+    if (total === 0) return;
     let last = performance.now();
     const step = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      setAt((a) => Math.min(total, a + dt));
+      setAt((a) => (a + dt >= total ? 0 : a + dt));
       raf.current = window.requestAnimationFrame(step);
     };
     raf.current = window.requestAnimationFrame(step);
     return () => {
       if (raf.current) window.cancelAnimationFrame(raf.current);
     };
-  }, [playing, total]);
+  }, [total]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    // React writes `muted` as an attribute, which a media element ignores
+    // after creation — so autoplay would be blocked without this line.
+    v.muted = true;
+    void v.play().catch(() => undefined);
+  }, []);
 
   if (!open || !episode) return null;
   const pct = total ? (at / total) * 100 : 0;
 
   return (
     /* A landmark of its own: it is beside the page, not inside it. */
-    <aside className="mini-player" aria-label="Continue watching">
+    <aside className="mini-player" aria-label={`Playing: ${episode.headline}`}>
       <div className="mini-player-frame">
-        <img className="mini-player-still" src={episode.imageWide} alt="" />
+        <video
+          ref={videoRef}
+          className="mini-player-video"
+          src={asset('shorts/short-1.webm')}
+          muted
+          loop
+          playsInline
+          autoPlay
+          aria-hidden="true"
+        />
         <div className="mini-player-scrim" aria-hidden="true" />
-        <button
-          type="button"
-          className="mini-player-play"
-          aria-label={playing ? `Pause ${episode.headline}` : `Play ${episode.headline}`}
-          onClick={() => {
-            setPlaying((p) => !p);
-            track('mini_player', { what: playing ? 'pause' : 'play', id: episode.id });
-          }}
-        >
-          {playing ? <PauseIcon /> : <PlayIcon />}
-        </button>
         <button type="button" className="mini-player-pip" aria-label="Open picture in picture">
           <PipIcon />
         </button>
@@ -151,12 +145,6 @@ export function MiniPlayer() {
       </div>
       <div className="mini-player-copy">
         <p className="mini-player-title">{episode.headline}</p>
-        <p className="mini-player-meta">
-          <span className="mini-player-badge" aria-hidden="true">
-            DW
-          </span>
-          Continue watching
-        </p>
       </div>
     </aside>
   );

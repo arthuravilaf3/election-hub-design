@@ -6384,9 +6384,10 @@ body {
 .mini-player {
   position: fixed;
   right: 24px;
-  /* Clear of the theme toggle, which owns this corner at bottom:128px and
-     is 44px tall — 128 + 44 + 16 of air. */
-  bottom: 188px;
+  /* Down on the ticker (Sep 28 2026). It used to sit at 188px to clear the
+     theme toggle, which has since gone; the corner is free, so it takes
+     it. */
+  bottom: calc(var(--ticker-h) + 12px);
   z-index: 620;
   width: 320px;
   border-radius: 14px;
@@ -6402,7 +6403,7 @@ body {
   background: var(--color-gray-900);
 }
 
-.mini-player-still {
+.mini-player-video {
   display: block;
   width: 100%;
   height: 100%;
@@ -6423,7 +6424,6 @@ body {
 
 /* Every control on the still is WHITE in both themes: it sits over a video
    frame, which is dark whatever the page is doing. */
-.mini-player-play,
 .mini-player-pip,
 .mini-player-close {
   position: absolute;
@@ -6434,21 +6434,6 @@ body {
   background: transparent;
   color: #fff;
   cursor: pointer;
-}
-
-.mini-player-play {
-  inset: 0;
-  margin: auto;
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-  background: rgb(0 0 0 / 0.45);
-  transition: background 150ms ease, transform 150ms ease;
-}
-
-.mini-player-play:hover {
-  background: rgb(0 0 0 / 0.65);
-  transform: scale(1.04);
 }
 
 .mini-player-pip {
@@ -6472,7 +6457,6 @@ body {
   background: rgb(0 0 0 / 0.45);
 }
 
-.mini-player-play:focus-visible,
 .mini-player-pip:focus-visible,
 .mini-player-close:focus-visible {
   outline: 2px solid var(--color-focus-info-bold-default);
@@ -6522,54 +6506,23 @@ body {
   color: var(--color-gray-25);
 }
 
-.mini-player-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0 0;
-  font-size: 12px;
-  color: var(--color-gray-300);
-}
-
-/* Same reason as the promo's button: white on crimson 500 is 4.05:1, and
-   this mark is 9px. Crimson 600 carries it at 5.8:1. */
-.mini-player-badge {
-  display: grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  background: var(--color-crimson-600);
-  color: var(--color-chart-text-on-dark);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .mini-player {
     animation: none;
-  }
-
-  .mini-player-play {
-    transition: none;
   }
 }
 
 @media (max-width: 700px) {
   /* On a phone it takes the width it can and sits above the race tabs, so
      it never lands on them or on the map. */
+  /* On a phone the bottom is a stack, not a corner: ticker, then the race
+     tabs, then the night's start button. The player sits above all three. */
   .mini-player {
     right: 12px;
     left: auto;
-    bottom: 188px;
-    width: 232px;
+    bottom: calc(var(--ticker-h) + 128px);
+    width: 208px;
     border-radius: 12px;
-  }
-
-  .mini-player-play {
-    width: 44px;
-    height: 44px;
   }
 
   .mini-player-copy {
