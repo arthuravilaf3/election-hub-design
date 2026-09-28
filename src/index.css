@@ -6463,16 +6463,38 @@ body {
   outline-offset: 2px;
 }
 
-.mini-player-time {
+/* LIVE where the running time was. White word, red dot, both over the
+   video — so like every other control on the frame they do not follow the
+   page's theme. */
+.mini-player-live {
   position: absolute;
   left: 12px;
   bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   margin: 0;
   font-size: 12px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: #fff;
   text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
+}
+
+.mini-player-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-crimson-500);
+  /* The page's own live pulse, so the two badges never drift apart. */
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-player-live-dot {
+    animation: none; /* a static dot still communicates "live" */
+  }
 }
 
 .mini-player-track {
@@ -6496,7 +6518,7 @@ body {
 
 .mini-player-title {
   display: -webkit-box;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;

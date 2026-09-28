@@ -126,8 +126,12 @@ export function MiniPlayer() {
         >
           <CloseIcon />
         </button>
-        <p className="mini-player-time">
-          {clock(at)} / {clock(total)}
+        {/* LIVE, not a running time (Sep 28 2026). The dot pulses on the
+            page's own live-pulse, the same one the header's LIVE badge
+            uses, so the two never drift apart. */}
+        <p className="mini-player-live">
+          <span className="mini-player-live-dot" aria-hidden="true" />
+          Live
         </p>
         {/* The played part of the line, in the brand's red. Not a control:
             role="progressbar" says what it is without promising a scrub. */}
