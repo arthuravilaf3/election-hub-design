@@ -125,10 +125,25 @@
   --color-chart-neutral-offballot: var(--color-gray-700);
   --color-chart-neutral-unreported: var(--color-gray-600);
   --color-chart-neutral-nodata: var(--color-gray-400);
-  --color-chart-map-border: var(--color-gray-800); /* = the card */
-  --color-chart-map-focus: var(--color-gray-25);
+  /* ---- The state's border, three states (Arthur's table, Sep 29 2026).
+     `default` is the card it sits on, so the shapes read as one sheet;
+     `hovered` is the mid grey the lifted copy carries; `selected` is the
+     ink at full strength. ---- */
+  --color-chart-border-default: var(--color-gray-800); /* = the card */
+  --color-chart-border-hovered: var(--color-gray-400);
+  --color-chart-border-selected: var(--color-gray-25);
+  /* The names this file used before the table gave them proper ones. */
+  --color-chart-map-border: var(--color-chart-border-default);
+  --color-chart-map-focus: var(--color-chart-border-selected);
+  /* ---- The abbreviation on a state, which follows the FILL and not the
+     theme: white on anything with colour in it, and on the neutrals it
+     follows them, because those are the only fills that flip. ---- */
   --color-chart-text-on-dark: var(--color-gray-25);
   --color-chart-text-on-light: var(--color-gray-900);
+  --color-chart-text-on-neutral: var(--color-chart-text-on-dark);
+  /* The no-data grey runs against the theme (mid here, dark in Light), so
+     its label does too — see labelToneFor for the numbers. */
+  --color-chart-text-on-nodata: var(--color-chart-text-on-light);
   --color-chart-overlay-lift-face: rgb(255 255 255 / 0.18);
   --color-chart-overlay-lift-side: rgb(0 0 0 / 0.3);
   --color-chart-overlay-dim: rgb(0 0 0 / 0.5);

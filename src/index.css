@@ -568,7 +568,9 @@ button,
 /* The lifted copy carries a stroke highlight so elevation is not
    shadow-alone on low-contrast fills. */
 .lift-shape {
-  stroke: rgba(250, 250, 250, 0.65);
+  /* chart/border/hovered: the lifted copy IS the hovered state, so it
+     carries the hovered border rather than a hardcoded white. */
+  stroke: var(--color-chart-border-hovered);
   stroke-width: 1.25;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -2340,15 +2342,24 @@ button,
   opacity: 0.85;
 }
 
+/* Not on the ballot: a neutral fill, so the same rule as the others —
+   it just says it more quietly. */
 .state-label--dim {
-  fill: var(--ink-soft);
+  fill: var(--color-chart-text-on-neutral);
   opacity: 0.45;
 }
 
 /* On the map's neutrals the ink follows the theme (chart.text.on-dark on
    the dark grays, on-light on the light ones). */
+/* On a neutral fill — nothing counted yet. */
 .state-label--neutral {
-  fill: var(--ink);
+  fill: var(--color-chart-text-on-neutral);
+  opacity: 0.8;
+}
+
+/* On the no-data grey, which is the one fill that runs against the theme. */
+.state-label--nodata {
+  fill: var(--color-chart-text-on-nodata);
   opacity: 0.8;
 }
 
@@ -4163,8 +4174,13 @@ button,
   --color-chart-neutral-offballot: var(--color-gray-200);
   --color-chart-neutral-unreported: var(--color-gray-300);
   --color-chart-neutral-nodata: var(--color-gray-500);
-  --color-chart-map-border: var(--color-gray-100); /* = the light card */
-  --color-chart-map-focus: var(--color-gray-900);
+  --color-chart-border-default: var(--color-gray-100); /* = the light card */
+  --color-chart-border-hovered: var(--color-gray-500);
+  --color-chart-border-selected: var(--color-gray-900);
+  /* The neutrals are the only fills that flip, so their label flips too —
+     except the no-data grey, which flips the other way. */
+  --color-chart-text-on-neutral: var(--color-chart-text-on-light);
+  --color-chart-text-on-nodata: var(--color-chart-text-on-dark);
   --color-chart-overlay-dim: rgb(0 0 0 / 0.4);
   --color-chart-overlay-hatch: rgb(0 0 0 / 0.25);
   --dim-k: 0.6; /* chart.overlay.dim = black 40%, as a brightness filter */
@@ -4222,9 +4238,9 @@ button,
   fill: var(--ink);
 }
 
-:root[data-theme='light'] .state-label--light {
-  fill: var(--surface-dim);
-}
+/* No light override for .state-label--light any more (Sep 29 2026): the
+   abbreviation on a coloured fill is chart/text/on-dark in both themes,
+   because what it sits on does not change with the theme. */
 
 /* Light mode keeps the same neutral step (the token flips with the theme). */
 

@@ -407,7 +407,7 @@ check('the grid has no filter at rest (perfect circles)', entry.goo, 'none');
    one thing on this page a reader learns once and then trusts, and it has
    drifted before — a whole workstream went into pinning it to the DS. The
    same seven in both themes, so the light layer may not touch them. */
-const MAP_SCALE = {
+const SAME_IN_BOTH = {
   '--color-chart-dem-safe': '#0f45db',
   '--color-chart-dem-likely': '#0017a3',
   '--color-chart-dem-lean': '#001b7e',
@@ -415,18 +415,79 @@ const MAP_SCALE = {
   '--color-chart-rep-lean': '#99003b',
   '--color-chart-rep-likely': '#cc003b',
   '--color-chart-rep-safe': '#fc002c',
+  '--color-chart-rep-reporting-1': '#99003b',
+  '--color-chart-rep-reporting-2': '#cc003b',
+  '--color-chart-rep-reporting-3': '#fc002c',
+  '--color-chart-rep-reporting-4': '#fc002c',
+  '--color-chart-rep-reporting-5': '#fc002c',
+  '--color-chart-dem-reporting-1': '#001b7e',
+  '--color-chart-dem-reporting-2': '#0017a3',
+  '--color-chart-dem-reporting-3': '#0f45db',
+  '--color-chart-dem-reporting-4': '#0f45db',
+  '--color-chart-dem-reporting-5': '#0f45db',
+  '--color-chart-text-on-dark': '#ffffffff',
+  '--color-chart-text-on-light': '#0a0909ff',
+  '--color-chart-overlay-lift-face': '#ffffff2e',
+  '--color-chart-overlay-lift-side': '#0000004d',
+};
+const PER_THEME = {
+  dark: {
+    '--color-chart-ind': '#10b981',
+    '--color-chart-neutral-offballot': '#292929',
+    '--color-chart-neutral-unreported': '#424242',
+    '--color-chart-neutral-nodata': '#8f8f8f',
+    '--color-chart-border-default': '#151515',
+    '--color-chart-border-hovered': '#8f8f8f',
+    '--color-chart-border-selected': '#ffffffff',
+    '--color-chart-text-on-neutral': '#ffffffff',
+    '--color-chart-text-on-nodata': '#0a0909ff',
+    '--color-chart-overlay-dim': '#00000080',
+    '--color-chart-overlay-hatch': '#ffffff59',
+  },
+  light: {
+    '--color-chart-ind': '#059669',
+    '--color-chart-neutral-offballot': '#dfdfdf',
+    '--color-chart-neutral-unreported': '#d1d1d1',
+    '--color-chart-neutral-nodata': '#5c5c5c',
+    '--color-chart-border-default': '#f0f0f0',
+    '--color-chart-border-hovered': '#5c5c5c',
+    '--color-chart-border-selected': '#0a0909ff',
+    '--color-chart-text-on-neutral': '#0a0909ff',
+    '--color-chart-text-on-nodata': '#ffffffff',
+    '--color-chart-overlay-dim': '#00000066',
+    '--color-chart-overlay-hatch': '#00000040',
+  },
 };
 for (const theme of ['dark', 'light']) {
+  const want = { ...SAME_IN_BOTH, ...PER_THEME[theme] };
   const got = await page.evaluate(
     ([keys, t]) => {
       if (t === 'light') document.documentElement.dataset.theme = 'light';
       else delete document.documentElement.dataset.theme;
       const cs = getComputedStyle(document.documentElement);
-      return keys.map((k) => cs.getPropertyValue(k).trim().toLowerCase());
+      /* Normalise through the browser: the minifier is free to emit #fff,
+         rgb(0 0 0 / .5) or #00000080 for the same colour, and a string
+         comparison would fail on all three. */
+      const probe = document.createElement('span');
+      document.body.appendChild(probe);
+      const hex = (v) => {
+        probe.style.color = '';
+        probe.style.color = v;
+        const m = getComputedStyle(probe).color.match(/[\d.]+/g);
+        if (!m) return v;
+        const [r, g, b, a = '1'] = m;
+        const p2 = (x) => Math.round(+x).toString(16).padStart(2, '0');
+        return '#' + p2(r) + p2(g) + p2(b) + Math.round(+a * 255).toString(16).padStart(2, '0');
+      };
+      const out = keys.map((k) => hex(cs.getPropertyValue(k).trim()));
+      probe.remove();
+      return out;
     },
-    [Object.keys(MAP_SCALE), theme]
+    [Object.keys(want), theme]
   );
-  check(`the map's rating scale is unchanged in ${theme}`, got.join(' '), Object.values(MAP_SCALE).join(' '));
+  const wanted = Object.values(want).map((v) => (v.length === 7 ? v + 'ff' : v));
+  const diff = got.map((g, i) => (g === wanted[i] ? null : `${Object.keys(want)[i]}=${g}`)).filter(Boolean);
+  check(`the map's palette is unchanged in ${theme} (${wanted.length} values)`, diff.join(' ') || 'ok', 'ok');
 }
 await page.evaluate(() => delete document.documentElement.dataset.theme);
 await page.waitForTimeout(1200);

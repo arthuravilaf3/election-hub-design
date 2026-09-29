@@ -145,17 +145,26 @@ export function fillFor(race: StateRace, sourceId: string): string {
 export function labelToneFor(
   race: StateRace | undefined,
   sourceId: string
-): 'dark' | 'light' | 'dim' | 'neutral' {
+): 'dark' | 'light' | 'dim' | 'neutral' | 'nodata' {
   if (!race) return 'dim'; // not on ballot
   // Every party fill (rating, reporting, called) is a saturated mid-to-dark
-  // colour: chart.text.on-dark. The neutrals flip with the theme.
+  // colour: chart.text.on-dark, in either theme.
   if (race.mode === 'results') {
     const r = race.results;
+    // Nothing counted yet: chart/neutral/unreported, which is dark in the
+    // dark theme and light in the light one, so the label follows suit.
     if (!r || r.status === 'uncalled') return 'neutral';
     return 'light';
   }
   const read = readFor(race, sourceId);
-  if (!read) return 'neutral'; // no-read gray
+  /* NO-DATA IS ITS OWN TONE (Sep 29 2026). The other neutrals track the
+     theme; this one does the opposite, because its fill does. chart/neutral/
+     nodata is a MID grey in the dark theme (#8f8f8f) and a DARK one in the
+     light theme (#5c5c5c) — so the label that reads on it is dark where the
+     page is dark and white where the page is light. Following the theme
+     here instead of the fill gives 3.2:1 and 3.0:1; following the fill
+     gives 6.1:1 and 6.7:1. */
+  if (!read) return 'nodata';
   return 'light';
 }
 
