@@ -4243,10 +4243,15 @@ button,
 }
 
 /* Theme toggle FAB — stacked above the mobile-preview toggle. */
+/* THE THEME BUTTON, back Sep 29 2026 and in a new slot. Its old one —
+   right: 24px, bottom: 128px — is now the middle of the mini player, which
+   took that corner. It sits on the bottom rail beside the dev button
+   instead: the one strip that is free at every width, and where the rest
+   of the prototype's own chrome already lives. */
 .theme-toggle {
   position: fixed;
-  right: 24px;
-  bottom: 128px;
+  right: 84px;
+  bottom: 16px;
   z-index: 640;
   width: 44px;
   height: 44px;

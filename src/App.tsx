@@ -12,6 +12,7 @@ import { ChapterRail } from './components/ChapterRail';
 import { OptionSwitcher } from './components/OptionSwitcher';
 import { WinPromo } from './components/WinPromo';
 import { MiniPlayer } from './components/MiniPlayer';
+import { ThemeToggle } from './components/ThemeToggle';
 import { Celebration } from './components/Celebration';
 import {
   IS_CREATIVE,
@@ -434,6 +435,7 @@ export default function App() {
         )}
         <OptionSwitcher />
         <MiniPlayer />
+        <ThemeToggle />
         {features.results && <NightClock night={state.night} dispatch={dispatch} />}
       </div>
 
