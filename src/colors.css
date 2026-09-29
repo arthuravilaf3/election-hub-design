@@ -68,17 +68,15 @@
   --color-purple-800: #5b21b6;
   --color-purple-900: #4c1d95;
   --color-purple-950: #2e1065;
-  /* THE BUTTON'S REDS ARE NOT THE CHART'S (Arthur's table, Sep 29 2026).
-     Four steps of the interactive crimson land a touch purer than the
-     chart ramp they sit next to — #cd0028 against crimson/600 #cc003b,
-     #9c0020 against crimson/700 #99003b, #ff6c69 against crimson/400
-     #ff6b6f, #ffa09b against crimson/300 #ff9fa1. Close enough to look
-     like a typo and far enough to be one if it were: they are named for
-     the states they serve, since the DS has no primitive to point at. */
-  --color-crimson-bold-hovered: #cd0028;
-  --color-crimson-bold-pressed: #9c0020;
-  --color-crimson-bold-light: #ff6c69;
-  --color-crimson-bold-lightest: #ffa09b;
+  /* THE BUTTON'S PRESSED RED IS NOT THE CHART'S (Arthur's table, Sep 29
+     2026, trimmed Sep 30). A party chip's pressed step lands a touch purer
+     than the chart ramp beside it — #cd0028 against crimson/600 #cc003b in
+     the dark theme, #ff6c69 against crimson/400 #ff6b6f in the light one.
+     Close enough to look like a typo and far enough to be one if it were,
+     so they are named for where they are used; the DS has no primitive to
+     point at. Two more steps lived here until the table dropped them. */
+  --color-crimson-pressed-dark: #cd0028;
+  --color-crimson-pressed-light: #ff6c69;
   --color-green-500: #10b981;
   --color-green-600: #059669;
   --color-gray-25: #ffffff;
@@ -134,6 +132,9 @@
   --color-chart-border-selected: var(--color-gray-25);
   /* The names this file used before the table gave them proper ones. */
   --color-chart-map-border: var(--color-chart-border-default);
+  /* The DS retired chart/map/focus (Sep 30 2026): keyboard focus uses the
+     SELECTED border. Kept as an alias because the election-day homepage
+     reads it, and that file belongs to another hand. */
   --color-chart-map-focus: var(--color-chart-border-selected);
   /* ---- The abbreviation on a state, which follows the FILL and not the
      theme: white on anything with colour in it, and on the neutrals it
@@ -141,9 +142,11 @@
   --color-chart-text-on-dark: var(--color-gray-25);
   --color-chart-text-on-light: var(--color-gray-900);
   --color-chart-text-on-neutral: var(--color-chart-text-on-dark);
-  /* The no-data grey runs against the theme (mid here, dark in Light), so
-     its label does too — see labelToneFor for the numbers. */
-  --color-chart-text-on-nodata: var(--color-chart-text-on-light);
+  /* Every fill in the dark theme takes the white label, the no-data grey
+     included (Arthur's table, Sep 30 2026) — and it keeps it in Light,
+     where that fill goes DARKER rather than lighter. So this one is white
+     in both. See the note in labelToneFor about what it measures. */
+  --color-chart-text-on-nodata: var(--color-chart-text-on-dark);
   --color-chart-overlay-lift-face: rgb(255 255 255 / 0.18);
   --color-chart-overlay-lift-side: rgb(0 0 0 / 0.3);
   --color-chart-overlay-dim: rgb(0 0 0 / 0.5);
@@ -160,10 +163,13 @@
      colour under a hand. bold/default IS the chart colour: a seat at rest is
      identical to the state on the map. Hover and pressed go toward the
      ground (darker here, lighter in Light); selected goes the other way. ---- */
+  /* HOVER AND SELECTED ARE THE DEFAULT, deliberately (Sep 30 2026): on this
+     map the border says which state the hand is on and which one is open,
+     so the fill has no work to do. Only pressed moves. */
   --color-background-rep-bold-default: var(--color-crimson-500);
-  --color-background-rep-bold-hovered: var(--color-crimson-bold-hovered);
-  --color-background-rep-bold-pressed: var(--color-crimson-bold-pressed);
-  --color-background-rep-bold-selected: var(--color-crimson-bold-light);
+  --color-background-rep-bold-hovered: var(--color-crimson-500);
+  --color-background-rep-bold-pressed: var(--color-crimson-pressed-dark);
+  --color-background-rep-bold-selected: var(--color-crimson-500);
   --color-background-rep-bold-disabled: var(--color-gray-700);
   --color-background-rep-subtle-default: var(--color-crimson-600);
   --color-background-rep-subtle-hovered: var(--color-crimson-700);
@@ -176,9 +182,9 @@
   --color-background-rep-subtlest-selected: var(--color-crimson-600);
   --color-background-rep-subtlest-disabled: var(--color-gray-900);
   --color-background-dem-bold-default: var(--color-indigo-500);
-  --color-background-dem-bold-hovered: var(--color-indigo-600);
-  --color-background-dem-bold-pressed: var(--color-indigo-700);
-  --color-background-dem-bold-selected: var(--color-indigo-400);
+  --color-background-dem-bold-hovered: var(--color-indigo-500);
+  --color-background-dem-bold-pressed: var(--color-indigo-600);
+  --color-background-dem-bold-selected: var(--color-indigo-500);
   --color-background-dem-bold-disabled: var(--color-gray-700);
   --color-background-dem-subtle-default: var(--color-indigo-600);
   --color-background-dem-subtle-hovered: var(--color-indigo-700);
@@ -190,12 +196,13 @@
   --color-background-dem-subtlest-pressed: var(--color-indigo-900);
   --color-background-dem-subtlest-selected: var(--color-indigo-600);
   --color-background-dem-subtlest-disabled: var(--color-gray-900);
-  /* bold/default is the chart colour, so it moved with it. Hover and
-     pressed share 950 — the ramp has nowhere darker to go. */
+  /* THERE IS NO TOSS-UP CHIP in the table — but the hemicycle's seats are
+     painted from this group, so it mirrors the two that do exist: default,
+     hover and selected all the chart colour, only pressed moving. */
   --color-background-tossup-bold-default: var(--color-purple-900);
-  --color-background-tossup-bold-hovered: var(--color-purple-950);
+  --color-background-tossup-bold-hovered: var(--color-purple-900);
   --color-background-tossup-bold-pressed: var(--color-purple-950);
-  --color-background-tossup-bold-selected: var(--color-purple-800);
+  --color-background-tossup-bold-selected: var(--color-purple-900);
   --color-background-tossup-bold-disabled: var(--color-gray-700);
   --color-background-tossup-subtle-default: var(--color-purple-600);
   --color-background-tossup-subtle-hovered: var(--color-purple-700);

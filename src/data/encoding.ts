@@ -157,13 +157,16 @@ export function labelToneFor(
     return 'light';
   }
   const read = readFor(race, sourceId);
-  /* NO-DATA IS ITS OWN TONE (Sep 29 2026). The other neutrals track the
-     theme; this one does the opposite, because its fill does. chart/neutral/
-     nodata is a MID grey in the dark theme (#8f8f8f) and a DARK one in the
-     light theme (#5c5c5c) — so the label that reads on it is dark where the
-     page is dark and white where the page is light. Following the theme
-     here instead of the fill gives 3.2:1 and 3.0:1; following the fill
-     gives 6.1:1 and 6.7:1. */
+  /* NO-DATA IS ITS OWN TONE. The other neutrals track the theme — light
+     fill, dark label and the reverse. This one does not, because its fill
+     does not: chart/neutral/nodata is a MID grey in the dark theme
+     (#8f8f8f) and a DARKER one in the light theme (#5c5c5c). The table
+     (Sep 30 2026) gives it the white label in both.
+     MEASURED: white on #5c5c5c in Light is 6.7:1, comfortable. White on
+     #8f8f8f in Dark is 3.2:1, which is under AA for text this size —
+     reported to Arthur rather than quietly corrected, because he asked to
+     be told if it read weak. A darker no-data grey, or the dark label, is
+     what would fix it. */
   if (!read) return 'nodata';
   return 'light';
 }

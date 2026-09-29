@@ -55,13 +55,23 @@ interface Box {
 }
 
 /**
- * Label nudges (viewBox units) for states whose bbox CENTER falls outside or
- * at the edge of the land: Louisiana's boot/delta pulls the center southeast,
- * Florida's panhandle+peninsula L-shape parks it over the Gulf bend.
+ * Label nudges (viewBox units) for states whose bbox CENTER falls outside
+ * the land. A bounding box has no idea what shape it holds: Louisiana's
+ * boot and delta pull the centre southeast, Florida's panhandle-plus-
+ * peninsula parks it over the Gulf bend, MICHIGAN's two peninsulas put it
+ * in the middle of Lake Michigan, and Hawaii's centre is open ocean
+ * between islands.
+ *
+ * MI and HI were found by testing every label against its own path with
+ * isPointInFill and then sampling each failing state's interior for the
+ * point furthest from any edge — see the nudges below, which are that
+ * point rounded. The other 44 labels sit on their own land already.
  */
 const LABEL_NUDGE: Record<string, { dx: number; dy: number }> = {
   LA: { dx: -10, dy: -2 },
   FL: { dx: 36, dy: 20 },
+  MI: { dx: 28, dy: 27 }, // the palm of the mitten, not the lake
+  HI: { dx: 43, dy: 20 }, // the big island, not the water between islands
 };
 
 const [, , VIEW_W, VIEW_H] = MAP_VIEWBOX.split(' ').map(Number);
