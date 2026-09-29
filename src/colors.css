@@ -68,6 +68,17 @@
   --color-purple-800: #5b21b6;
   --color-purple-900: #4c1d95;
   --color-purple-950: #2e1065;
+  /* THE BUTTON'S REDS ARE NOT THE CHART'S (Arthur's table, Sep 29 2026).
+     Four steps of the interactive crimson land a touch purer than the
+     chart ramp they sit next to — #cd0028 against crimson/600 #cc003b,
+     #9c0020 against crimson/700 #99003b, #ff6c69 against crimson/400
+     #ff6b6f, #ffa09b against crimson/300 #ff9fa1. Close enough to look
+     like a typo and far enough to be one if it were: they are named for
+     the states they serve, since the DS has no primitive to point at. */
+  --color-crimson-bold-hovered: #cd0028;
+  --color-crimson-bold-pressed: #9c0020;
+  --color-crimson-bold-light: #ff6c69;
+  --color-crimson-bold-lightest: #ffa09b;
   --color-green-500: #10b981;
   --color-green-600: #059669;
   --color-gray-25: #ffffff;
@@ -91,7 +102,10 @@
   --color-chart-dem-safe: var(--color-indigo-500);
   --color-chart-dem-likely: var(--color-indigo-600);
   --color-chart-dem-lean: var(--color-indigo-700);
-  --color-chart-tossup: var(--color-purple-500);
+  /* Purple 900, not 500 (Sep 29 2026): the toss-up sits with the deepest
+     party steps now, and its state label is white. IDENTICAL IN LIGHT —
+     the map's scale does not flip with the theme. */
+  --color-chart-tossup: var(--color-purple-900);
   --color-chart-ind: var(--color-green-500);
   /* Reporting 1…5 — 700 → 600 → 500; 3 hatched, 4 plain, 5 = called with an outline */
   --color-chart-rep-reporting-1: var(--color-crimson-700);
@@ -132,9 +146,9 @@
      identical to the state on the map. Hover and pressed go toward the
      ground (darker here, lighter in Light); selected goes the other way. ---- */
   --color-background-rep-bold-default: var(--color-crimson-500);
-  --color-background-rep-bold-hovered: var(--color-crimson-600);
-  --color-background-rep-bold-pressed: var(--color-crimson-700);
-  --color-background-rep-bold-selected: var(--color-crimson-400);
+  --color-background-rep-bold-hovered: var(--color-crimson-bold-hovered);
+  --color-background-rep-bold-pressed: var(--color-crimson-bold-pressed);
+  --color-background-rep-bold-selected: var(--color-crimson-bold-light);
   --color-background-rep-bold-disabled: var(--color-gray-700);
   --color-background-rep-subtle-default: var(--color-crimson-600);
   --color-background-rep-subtle-hovered: var(--color-crimson-700);
@@ -161,10 +175,12 @@
   --color-background-dem-subtlest-pressed: var(--color-indigo-900);
   --color-background-dem-subtlest-selected: var(--color-indigo-600);
   --color-background-dem-subtlest-disabled: var(--color-gray-900);
-  --color-background-tossup-bold-default: var(--color-purple-500);
-  --color-background-tossup-bold-hovered: var(--color-purple-600);
-  --color-background-tossup-bold-pressed: var(--color-purple-700);
-  --color-background-tossup-bold-selected: var(--color-purple-400);
+  /* bold/default is the chart colour, so it moved with it. Hover and
+     pressed share 950 — the ramp has nowhere darker to go. */
+  --color-background-tossup-bold-default: var(--color-purple-900);
+  --color-background-tossup-bold-hovered: var(--color-purple-950);
+  --color-background-tossup-bold-pressed: var(--color-purple-950);
+  --color-background-tossup-bold-selected: var(--color-purple-800);
   --color-background-tossup-bold-disabled: var(--color-gray-700);
   --color-background-tossup-subtle-default: var(--color-purple-600);
   --color-background-tossup-subtle-hovered: var(--color-purple-700);

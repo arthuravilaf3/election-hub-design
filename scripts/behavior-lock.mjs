@@ -402,6 +402,33 @@ check(
 );
 check('entry is staggered across the grid', entry.d0 !== entry.d100, true);
 check('the grid has no filter at rest (perfect circles)', entry.goo, 'none');
+
+/* THE MAP'S SEVEN (Arthur's table, Sep 29 2026). The rating scale is the
+   one thing on this page a reader learns once and then trusts, and it has
+   drifted before — a whole workstream went into pinning it to the DS. The
+   same seven in both themes, so the light layer may not touch them. */
+const MAP_SCALE = {
+  '--color-chart-dem-safe': '#0f45db',
+  '--color-chart-dem-likely': '#0017a3',
+  '--color-chart-dem-lean': '#001b7e',
+  '--color-chart-tossup': '#4c1d95',
+  '--color-chart-rep-lean': '#99003b',
+  '--color-chart-rep-likely': '#cc003b',
+  '--color-chart-rep-safe': '#fc002c',
+};
+for (const theme of ['dark', 'light']) {
+  const got = await page.evaluate(
+    ([keys, t]) => {
+      if (t === 'light') document.documentElement.dataset.theme = 'light';
+      else delete document.documentElement.dataset.theme;
+      const cs = getComputedStyle(document.documentElement);
+      return keys.map((k) => cs.getPropertyValue(k).trim().toLowerCase());
+    },
+    [Object.keys(MAP_SCALE), theme]
+  );
+  check(`the map's rating scale is unchanged in ${theme}`, got.join(' '), Object.values(MAP_SCALE).join(' '));
+}
+await page.evaluate(() => delete document.documentElement.dataset.theme);
 await page.waitForTimeout(1200);
 // Hover lens: the dot under the pointer swells most, its neighbours less,
 // everything far away stays put; circles stay circles (uniform scale, no
