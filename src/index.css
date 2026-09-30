@@ -514,9 +514,11 @@ button,
 }
 
 /* While its lifted copy floats above, the original darkens into the
-   elevation base — the exposed sliver under the copy reads as depth. */
+   elevation base — the exposed sliver under the copy reads as depth. That
+   sliver IS the lift's side, so it takes chart/overlay/lift-side's own
+   number instead of the 0.55 that used to be hand-picked here. */
 .state-shape.is-lift-source {
-  filter: brightness(0.55);
+  filter: brightness(var(--lift-side-k));
 }
 
 /* Visible focus ring: outline doesn't render on SVG paths, so use a stroke. */
@@ -2332,25 +2334,27 @@ button,
   stroke-width: 1.5;
 }
 
+/* NO OPACITY ON ANY OF THESE (Sep 30 2026). Every one of them named the
+   right token and then faded it — 0.9, 0.85, 0.8, 0.45 — so what actually
+   reached the screen was a blend and never the token's value. If a state
+   should read quieter than another, that belongs to its FILL, which is
+   where the DS puts it. */
 .state-label--light {
   fill: var(--color-chart-text-on-dark);
   /* chart.text.on-dark: the abbreviation with a 1px lift-side outline. */
   paint-order: stroke;
   stroke: var(--color-chart-overlay-lift-side);
   stroke-width: 1px;
-  opacity: 0.9;
 }
 
 .state-label--dark {
   fill: var(--color-chart-text-on-light);
-  opacity: 0.85;
 }
 
 /* Not on the ballot: a neutral fill, so the same rule as the others — it
    just says it more quietly. */
 .state-label--dim {
   fill: var(--color-chart-text-on-dark);
-  opacity: 0.45;
 }
 
 /* On the map's neutrals the ink follows the theme (chart.text.on-dark on
@@ -2367,7 +2371,6 @@ button,
 .state-label--neutral,
 .state-label--nodata {
   fill: var(--color-chart-text-on-dark);
-  opacity: 0.8;
 }
 
 /* ---------- Coverage feed ---------- */

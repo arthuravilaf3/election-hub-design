@@ -200,6 +200,13 @@
   --lift-face: var(--color-chart-overlay-lift-face);
   /* chart.overlay.lift-side and .dim are applied as brightness filters on the
      map (black 30% / 50% over the fill): the filter is the overlay. */
+  /* chart/overlay/lift-side and /dim, as brightness multipliers rather than
+     overlay fills. These are NOT approximations: compositing black at alpha
+     a over a colour gives C*(1-a), which is exactly brightness(1-a), and it
+     keeps the hue instead of flattening it. Read straight off the tokens —
+     lift-side #0000004D is a=0.302 so k=0.698, dim #00000080 is a=0.502 so
+     k=0.498 (and #00000066 -> 0.6 in the light theme). Move these only when
+     the token moves. */
   --lift-side-k: 0.7;
   --dim-k: 0.5;
   --hatch: var(--color-chart-overlay-hatch);
