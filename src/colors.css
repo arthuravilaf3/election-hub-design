@@ -35,17 +35,36 @@
      every colour that encodes data or reacts to a hand is one of these. */
 
   /* ---- Primitives (collection "Primitives", mode Default) ---- */
-  --color-crimson-50: #fff1f2;
-  --color-crimson-100: #ffe1e2;
-  --color-crimson-200: #ffc6c7;
-  --color-crimson-300: #ff9fa1;
-  --color-crimson-400: #ff6b6f;
+  /* TWO RED RAMPS, AND THIS FILE HELD A BLEND OF THEM until Sep 30 2026.
+     What lived here as "crimson" was crimson/500 with rose/600 and rose/700
+     under it and near-rose values elsewhere — read off a comp by eye rather
+     than off the variables. Both ramps are below at the DS's own values.
+     CRIMSON is the pure red: the brand, and every chip and button.
+     ROSE leans magenta: the chart's likely and lean steps, and nothing
+     else. They diverge most exactly where they used to be confused —
+     crimson/600 #cd0028 against rose/600 #cc003b. */
+  --color-crimson-50: #fff1f1;
+  --color-crimson-100: #ffe1e0;
+  --color-crimson-200: #ffc6c4;
+  --color-crimson-300: #ffa09b;
+  --color-crimson-400: #ff6c69;
   --color-crimson-500: #fc002c;
-  --color-crimson-600: #cc003b;
-  --color-crimson-700: #99003b;
-  --color-crimson-800: #6c002d;
-  --color-crimson-900: #45001c;
-  --color-crimson-950: #2b0011;
+  --color-crimson-600: #cd0028;
+  --color-crimson-700: #9c0020;
+  --color-crimson-800: #6e0017;
+  --color-crimson-900: #47000d;
+  --color-crimson-950: #2d0006;
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe1e3;
+  --color-rose-200: #ffc5ca;
+  --color-rose-300: #ff9ea6;
+  --color-rose-400: #ff6977;
+  --color-rose-500: #f81244;
+  --color-rose-600: #cc003b;
+  --color-rose-700: #99003b;
+  --color-rose-800: #65003a;
+  --color-rose-900: #3e002e;
+  --color-rose-950: #240020;
   --color-indigo-50: #edf2ff;
   --color-indigo-100: #dee8ff;
   --color-indigo-200: #bed1ff;
@@ -86,8 +105,8 @@
   /* ---- semantic/color/chart/* — STATIC DATA: map fills, legend, rating
      chips, the count. Never reacts to a hand. ---- */
   --color-chart-rep-safe: var(--color-crimson-500);
-  --color-chart-rep-likely: var(--color-crimson-600);
-  --color-chart-rep-lean: var(--color-crimson-700);
+  --color-chart-rep-likely: var(--color-rose-600);
+  --color-chart-rep-lean: var(--color-rose-700);
   --color-chart-dem-safe: var(--color-indigo-500);
   --color-chart-dem-likely: var(--color-indigo-600);
   --color-chart-dem-lean: var(--color-indigo-700);
@@ -97,8 +116,8 @@
   --color-chart-tossup: var(--color-purple-900);
   --color-chart-ind: var(--color-green-500);
   /* Reporting 1…5 — 700 → 600 → 500; 3 hatched, 4 plain, 5 = called with an outline */
-  --color-chart-rep-reporting-1: var(--color-crimson-700);
-  --color-chart-rep-reporting-2: var(--color-crimson-600);
+  --color-chart-rep-reporting-1: var(--color-rose-700);
+  --color-chart-rep-reporting-2: var(--color-rose-600);
   --color-chart-rep-reporting-3: var(--color-crimson-500);
   --color-chart-rep-reporting-4: var(--color-crimson-500);
   --color-chart-rep-reporting-5: var(--color-crimson-500);
@@ -153,55 +172,20 @@
      so the fill has no work to do. Only pressed moves. */
   --color-background-rep-bold-default: var(--color-crimson-500);
   --color-background-rep-bold-hovered: var(--color-crimson-500);
-  /* The hex, not a primitive: a chip's pressed red is NOT the chart's
-     crimson/600 (#cd0028 against #cc003b), and inventing a primitive for a
-     value the DS has none for would be its own kind of drift. */
-  --color-background-rep-bold-pressed: #cd0028;
+  --color-background-rep-bold-pressed: var(--color-crimson-600);
   --color-background-rep-bold-selected: var(--color-crimson-500);
   --color-background-rep-bold-disabled: var(--color-gray-700);
-  --color-background-rep-subtle-default: var(--color-crimson-600);
-  --color-background-rep-subtle-hovered: var(--color-crimson-700);
-  --color-background-rep-subtle-pressed: var(--color-crimson-800);
-  --color-background-rep-subtle-selected: var(--color-crimson-500);
-  --color-background-rep-subtle-disabled: var(--color-gray-700);
-  --color-background-rep-subtlest-default: var(--color-crimson-700);
-  --color-background-rep-subtlest-hovered: var(--color-crimson-800);
-  --color-background-rep-subtlest-pressed: var(--color-crimson-900);
-  --color-background-rep-subtlest-selected: var(--color-crimson-600);
-  --color-background-rep-subtlest-disabled: var(--color-gray-900);
   --color-background-dem-bold-default: var(--color-indigo-500);
   --color-background-dem-bold-hovered: var(--color-indigo-500);
   --color-background-dem-bold-pressed: var(--color-indigo-600);
   --color-background-dem-bold-selected: var(--color-indigo-500);
   --color-background-dem-bold-disabled: var(--color-gray-700);
-  --color-background-dem-subtle-default: var(--color-indigo-600);
-  --color-background-dem-subtle-hovered: var(--color-indigo-700);
-  --color-background-dem-subtle-pressed: var(--color-indigo-800);
-  --color-background-dem-subtle-selected: var(--color-indigo-500);
-  --color-background-dem-subtle-disabled: var(--color-gray-700);
-  --color-background-dem-subtlest-default: var(--color-indigo-700);
-  --color-background-dem-subtlest-hovered: var(--color-indigo-800);
-  --color-background-dem-subtlest-pressed: var(--color-indigo-900);
-  --color-background-dem-subtlest-selected: var(--color-indigo-600);
-  --color-background-dem-subtlest-disabled: var(--color-gray-900);
-  /* THERE IS NO TOSS-UP CHIP in the table — but the hemicycle's seats are
-     painted from this group, so it mirrors the two that do exist: default,
-     hover and selected all the chart colour, only pressed moving. */
-  --color-background-tossup-bold-default: var(--color-purple-900);
-  --color-background-tossup-bold-hovered: var(--color-purple-900);
-  --color-background-tossup-bold-pressed: var(--color-purple-950);
-  --color-background-tossup-bold-selected: var(--color-purple-900);
-  --color-background-tossup-bold-disabled: var(--color-gray-700);
-  --color-background-tossup-subtle-default: var(--color-purple-600);
-  --color-background-tossup-subtle-hovered: var(--color-purple-700);
-  --color-background-tossup-subtle-pressed: var(--color-purple-800);
-  --color-background-tossup-subtle-selected: var(--color-purple-500);
-  --color-background-tossup-subtle-disabled: var(--color-gray-700);
-  --color-background-tossup-subtlest-default: var(--color-purple-700);
-  --color-background-tossup-subtlest-hovered: var(--color-purple-800);
-  --color-background-tossup-subtlest-pressed: var(--color-purple-900);
-  --color-background-tossup-subtlest-selected: var(--color-purple-600);
-  --color-background-tossup-subtlest-disabled: var(--color-gray-900);
+  /* THE DS HAS background/{rep,dem}/bold AND NOTHING ELSE for the parties
+     (read off the variables Sep 30 2026): no subtle, no subtlest, and no
+     tossup group at all. This file carried 35 of them, invented or left
+     over from an earlier read, and not one was ever used. They are gone;
+     the toss-up seats take chart/tossup, which is what they always looked
+     like anyway. */
 
   /* ---- Legacy names, kept as aliases for the few places that still read
      them (the chrome's focus ring, the home edition). New code uses the
