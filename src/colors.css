@@ -68,15 +68,6 @@
   --color-purple-800: #5b21b6;
   --color-purple-900: #4c1d95;
   --color-purple-950: #2e1065;
-  /* THE BUTTON'S PRESSED RED IS NOT THE CHART'S (Arthur's table, Sep 29
-     2026, trimmed Sep 30). A party chip's pressed step lands a touch purer
-     than the chart ramp beside it — #cd0028 against crimson/600 #cc003b in
-     the dark theme, #ff6c69 against crimson/400 #ff6b6f in the light one.
-     Close enough to look like a typo and far enough to be one if it were,
-     so they are named for where they are used; the DS has no primitive to
-     point at. Two more steps lived here until the table dropped them. */
-  --color-crimson-pressed-dark: #cd0028;
-  --color-crimson-pressed-light: #ff6c69;
   --color-green-500: #10b981;
   --color-green-600: #059669;
   --color-gray-25: #ffffff;
@@ -127,26 +118,20 @@
      `default` is the card it sits on, so the shapes read as one sheet;
      `hovered` is the mid grey the lifted copy carries; `selected` is the
      ink at full strength. ---- */
-  --color-chart-border-default: var(--color-gray-800); /* = the card */
-  --color-chart-border-hovered: var(--color-gray-400);
-  --color-chart-border-selected: var(--color-gray-25);
-  /* The names this file used before the table gave them proper ones. */
-  --color-chart-map-border: var(--color-chart-border-default);
-  /* The DS retired chart/map/focus (Sep 30 2026): keyboard focus uses the
-     SELECTED border. Kept as an alias because the election-day homepage
-     reads it, and that file belongs to another hand. */
-  --color-chart-map-focus: var(--color-chart-border-selected);
-  /* ---- The abbreviation on a state, which follows the FILL and not the
-     theme: white on anything with colour in it, and on the neutrals it
-     follows them, because those are the only fills that flip. ---- */
+  --color-chart-map-border-default: var(--color-gray-800); /* = the card */
+  --color-chart-map-border-hovered: var(--color-gray-400);
+  --color-chart-map-border-selected: var(--color-gray-25);
+  /* LOCAL ALIASES, not DS names — the two this file used before the table
+     gave the group a path of its own. chart/map/focus was retired with it
+     (keyboard focus wears the SELECTED border now); both stay because the
+     election-day homepage reads them, and that file is another hand's. */
+  --color-chart-map-border: var(--color-chart-map-border-default);
+  --color-chart-map-focus: var(--color-chart-map-border-selected);
+  /* ---- The abbreviation on a state. There are only these two, and which
+     one a state takes is a RULE about its FILL, not a token of its own —
+     see .state-label--* in index.css, where that rule is written. ---- */
   --color-chart-text-on-dark: var(--color-gray-25);
   --color-chart-text-on-light: var(--color-gray-900);
-  --color-chart-text-on-neutral: var(--color-chart-text-on-dark);
-  /* Every fill in the dark theme takes the white label, the no-data grey
-     included (Arthur's table, Sep 30 2026) — and it keeps it in Light,
-     where that fill goes DARKER rather than lighter. So this one is white
-     in both. See the note in labelToneFor about what it measures. */
-  --color-chart-text-on-nodata: var(--color-chart-text-on-dark);
   --color-chart-overlay-lift-face: rgb(255 255 255 / 0.18);
   --color-chart-overlay-lift-side: rgb(0 0 0 / 0.3);
   --color-chart-overlay-dim: rgb(0 0 0 / 0.5);
@@ -168,7 +153,10 @@
      so the fill has no work to do. Only pressed moves. */
   --color-background-rep-bold-default: var(--color-crimson-500);
   --color-background-rep-bold-hovered: var(--color-crimson-500);
-  --color-background-rep-bold-pressed: var(--color-crimson-pressed-dark);
+  /* The hex, not a primitive: a chip's pressed red is NOT the chart's
+     crimson/600 (#cd0028 against #cc003b), and inventing a primitive for a
+     value the DS has none for would be its own kind of drift. */
+  --color-background-rep-bold-pressed: #cd0028;
   --color-background-rep-bold-selected: var(--color-crimson-500);
   --color-background-rep-bold-disabled: var(--color-gray-700);
   --color-background-rep-subtle-default: var(--color-crimson-600);

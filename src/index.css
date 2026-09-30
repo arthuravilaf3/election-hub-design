@@ -527,7 +527,7 @@ button,
 /* No focus colour of its own any more (Sep 30 2026): keyboard focus wears
    the SELECTED border, at the selected width. */
 .state-shape:focus-visible {
-  stroke: var(--color-chart-border-selected);
+  stroke: var(--color-chart-map-border-selected);
   stroke-width: 2;
 }
 
@@ -572,7 +572,7 @@ button,
 .lift-shape {
   /* chart/border/hovered: the lifted copy IS the hovered state, so it
      carries the hovered border rather than a hardcoded white. */
-  stroke: var(--color-chart-border-hovered);
+  stroke: var(--color-chart-map-border-hovered);
   stroke-width: 1;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -598,7 +598,7 @@ button,
 
 .selection-outline {
   fill: none;
-  stroke: var(--color-chart-border-selected);
+  stroke: var(--color-chart-map-border-selected);
   stroke-width: 2;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -2344,24 +2344,27 @@ button,
   opacity: 0.85;
 }
 
-/* Not on the ballot: a neutral fill, so the same rule as the others —
-   it just says it more quietly. */
+/* Not on the ballot: a neutral fill, so the same rule as the others — it
+   just says it more quietly. */
 .state-label--dim {
-  fill: var(--color-chart-text-on-neutral);
+  fill: var(--color-chart-text-on-dark);
   opacity: 0.45;
 }
 
 /* On the map's neutrals the ink follows the theme (chart.text.on-dark on
    the dark grays, on-light on the light ones). */
-/* On a neutral fill — nothing counted yet. */
-.state-label--neutral {
-  fill: var(--color-chart-text-on-neutral);
-  opacity: 0.8;
-}
-
-/* On the no-data grey, which is the one fill that runs against the theme. */
+/* WHICH LABEL A STATE TAKES IS A RULE ABOUT ITS FILL, and there are only
+   the two DS tones to choose from. Everything with colour in it —
+   rep, dem, tossup, ind — takes on-dark, in both themes. The neutrals are
+   the only fills that move, so they are the only labels that do:
+     offballot / unreported  on-dark here, on-light in Light (below)
+     nodata                  on-dark in BOTH, because that fill goes
+                             DARKER in Light rather than lighter
+   MEASURED: white on nodata is 6.7:1 in Light and 3.2:1 here, which is
+   under AA — reported rather than quietly corrected. */
+.state-label--neutral,
 .state-label--nodata {
-  fill: var(--color-chart-text-on-nodata);
+  fill: var(--color-chart-text-on-dark);
   opacity: 0.8;
 }
 
@@ -4176,14 +4179,9 @@ button,
   --color-chart-neutral-offballot: var(--color-gray-200);
   --color-chart-neutral-unreported: var(--color-gray-300);
   --color-chart-neutral-nodata: var(--color-gray-500);
-  --color-chart-border-default: var(--color-gray-100); /* = the light card */
-  --color-chart-border-hovered: var(--color-gray-500);
-  --color-chart-border-selected: var(--color-gray-900);
-  /* Offballot and unreported go light here, so their label goes dark. The
-     no-data grey goes the other way — DARKER than in the dark theme — so
-     it keeps the white one. */
-  --color-chart-text-on-neutral: var(--color-chart-text-on-light);
-  --color-chart-text-on-nodata: var(--color-chart-text-on-dark);
+  --color-chart-map-border-default: var(--color-gray-100); /* = the light card */
+  --color-chart-map-border-hovered: var(--color-gray-500);
+  --color-chart-map-border-selected: var(--color-gray-900);
   --color-chart-overlay-dim: rgb(0 0 0 / 0.4);
   --color-chart-overlay-hatch: rgb(0 0 0 / 0.25);
   --dim-k: 0.6; /* chart.overlay.dim = black 40%, as a brightness filter */
@@ -4191,7 +4189,9 @@ button,
      selected darker. tossup/bold is the exception: it runs 900 · 800 · 700
      · 950, because its default is already the deepest step. */
   --color-background-rep-bold-hovered: var(--color-crimson-500);
-  --color-background-rep-bold-pressed: var(--color-crimson-pressed-light);
+  /* The hex, for the same reason as the dark one: #ff6c69 is not
+     crimson/400 (#ff6b6f), and the DS has no primitive for it. */
+  --color-background-rep-bold-pressed: #ff6c69;
   --color-background-rep-bold-selected: var(--color-crimson-500);
   --color-background-rep-bold-disabled: var(--color-gray-200);
   --color-background-rep-subtle-default: var(--color-crimson-300);
@@ -4241,9 +4241,14 @@ button,
   fill: var(--ink);
 }
 
-/* No light override for .state-label--light any more (Sep 29 2026): the
-   abbreviation on a coloured fill is chart/text/on-dark in both themes,
-   because what it sits on does not change with the theme. */
+/* No light override for .state-label--light: the abbreviation on a coloured
+   fill is chart/text/on-dark in both themes, because what it sits on does
+   not change with the theme. The two neutrals that DO go light here take
+   the dark label; nodata, which goes darker, keeps the white one. */
+:root[data-theme='light'] .state-label--neutral,
+:root[data-theme='light'] .state-label--dim {
+  fill: var(--color-chart-text-on-light);
+}
 
 /* Light mode keeps the same neutral step (the token flips with the theme). */
 

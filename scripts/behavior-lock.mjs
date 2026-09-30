@@ -436,11 +436,9 @@ const PER_THEME = {
     '--color-chart-neutral-offballot': '#292929',
     '--color-chart-neutral-unreported': '#424242',
     '--color-chart-neutral-nodata': '#8f8f8f',
-    '--color-chart-border-default': '#151515',
-    '--color-chart-border-hovered': '#8f8f8f',
-    '--color-chart-border-selected': '#ffffffff',
-    '--color-chart-text-on-neutral': '#ffffffff',
-    '--color-chart-text-on-nodata': '#ffffffff',
+    '--color-chart-map-border-default': '#151515',
+    '--color-chart-map-border-hovered': '#8f8f8f',
+    '--color-chart-map-border-selected': '#ffffffff',
     '--color-background-rep-bold-default': '#fc002c',
     '--color-background-rep-bold-hovered': '#fc002c',
     '--color-background-rep-bold-pressed': '#cd0028',
@@ -459,11 +457,9 @@ const PER_THEME = {
     '--color-chart-neutral-offballot': '#dfdfdf',
     '--color-chart-neutral-unreported': '#d1d1d1',
     '--color-chart-neutral-nodata': '#5c5c5c',
-    '--color-chart-border-default': '#f0f0f0',
-    '--color-chart-border-hovered': '#5c5c5c',
-    '--color-chart-border-selected': '#0a0909ff',
-    '--color-chart-text-on-neutral': '#0a0909ff',
-    '--color-chart-text-on-nodata': '#ffffffff',
+    '--color-chart-map-border-default': '#f0f0f0',
+    '--color-chart-map-border-hovered': '#5c5c5c',
+    '--color-chart-map-border-selected': '#0a0909ff',
     '--color-background-rep-bold-default': '#fc002c',
     '--color-background-rep-bold-hovered': '#fc002c',
     '--color-background-rep-bold-pressed': '#ff6c69',
@@ -508,6 +504,45 @@ for (const theme of ['dark', 'light']) {
   const wanted = Object.values(want).map((v) => (v.length === 7 ? v + 'ff' : v));
   const diff = got.map((g, i) => (g === wanted[i] ? null : `${Object.keys(want)[i]}=${g}`)).filter(Boolean);
   check(`the map's palette is unchanged in ${theme} (${wanted.length} values)`, diff.join(' ') || 'ok', 'ok');
+}
+/* And the RULE the two text tones are spent on, which is not a token: what
+   a state's abbreviation is painted with depends on its FILL. Everything
+   with colour takes on-dark in both themes; the two neutrals that go light
+   in Light take on-light there; the no-data grey, which goes darker in
+   Light, keeps on-dark in both. */
+for (const theme of ['dark', 'light']) {
+  const got = await page.evaluate((t) => {
+    if (t === 'light') document.documentElement.dataset.theme = 'light';
+    else delete document.documentElement.dataset.theme;
+    const probe = document.createElement('span');
+    document.body.appendChild(probe);
+    const hex = (v) => {
+      probe.style.color = '';
+      probe.style.color = v;
+      const m = getComputedStyle(probe).color.match(/[\d.]+/g);
+      const p2 = (x) => Math.round(+x).toString(16).padStart(2, '0');
+      return m ? '#' + p2(m[0]) + p2(m[1]) + p2(m[2]) : v;
+    };
+    /* Read the RULE, not whichever states happen to be on screen: which
+       tones exist depends on the chamber and the source, and the lock has
+       just switched both. A throwaway label in the map's own svg answers
+       for the stylesheet every time. */
+    const svg = document.querySelector('svg.election-map');
+    const of = (cls) => {
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('class', 'state-label state-label--' + cls);
+      svg.appendChild(t);
+      const f = hex(getComputedStyle(t).fill);
+      t.remove();
+      return f;
+    };
+    const out = [of('light'), of('neutral'), of('dim'), of('nodata')].join(' ');
+    probe.remove();
+    return out;
+  }, theme);
+  const want =
+    theme === 'dark' ? '#ffffff #ffffff #ffffff #ffffff' : '#ffffff #0a0909 #0a0909 #ffffff';
+  check(`the state label follows its fill in ${theme} (colour · unreported · offballot · no-data)`, got, want);
 }
 await page.evaluate(() => delete document.documentElement.dataset.theme);
 await page.waitForTimeout(1200);
