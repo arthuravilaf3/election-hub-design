@@ -12,9 +12,11 @@
  * in the file) — so it is a hanging indent here, not three stacked rows.
  *
  * TWO RULES FROM THE PRD ARE LOAD-BEARING:
- *  - Posting is gated on sign-in. The composer reads as the file draws it
- *    until it is touched, then states the gate — an anonymous reader can read
- *    every message, and only posting asks for the account (hub tenet 1).
+ *  - Posting is for MEMBERS (Arthur, Oct 9 2026: "o chat só membership" —
+ *    the PRD's "log in or buy a membership", over the hub's free-account
+ *    gate). The composer reads as the file draws it until it is touched,
+ *    then states the gate: join, or sign in if you already are a member.
+ *    Reading stays open to everyone.
  *  - Moderation is declared where it matters, in that gate, rather than as a
  *    label the file does not have.
  *
@@ -23,19 +25,50 @@
  * bury the race calls a screen reader actually needs. The calls are announced
  * from the results band instead; the chat is reachable and readable, not
  * narrated. [Deliberate deviation, flagged for a11y review.]
+ *
+ * THE STREAM'S STATE (Oct 8 2026). The chat follows the broadcast but does
+ * not fall with it: before the show it is open with a line saying when the
+ * stream starts, during an interruption it keeps running and says so, and
+ * once the broadcast ends it closes to new posts and stays readable.
  */
 import { useEffect, useRef, useState } from 'react';
+import { formatET } from '../data/time';
 import { CHAT_INCOMING, CHAT_SEED, type ChatMessage } from './homeContent';
+import type { ChatStatus } from './chat';
+import { STREAM_STARTS_MS, type StreamStatus } from './stream';
+
+const NOTICE: Partial<Record<StreamStatus, string>> = {
+  upcoming: `The stream starts at ${formatET(STREAM_STARTS_MS)}. The chat is already open.`,
+  interrupted: 'The stream is reconnecting. The chat is still on.',
+  ended: 'The broadcast has ended. The chat is closed and stays readable.',
+};
 
 const ARRIVAL_MS = 4200;
 
-export function LiveChat() {
+interface LiveChatProps {
+  status: StreamStatus;
+  /** The chat's own health — never derived from the stream's (see chat.ts). */
+  chat: ChatStatus;
+  /** Collapses the panel to the "Join the Conversation" button (Figma 391:150108). */
+  onClose: () => void;
+}
+
+export function LiveChat({ status, chat, onClose }: LiveChatProps) {
+  const down = chat === 'down';
+  /* Two different silences. "Closed" is the broadcast ending and the room
+     being wound down on purpose; "down" is the service failing while the
+     night carries on. Both stop new messages and posting, and the notice
+     says which one it is — the page never goes quiet without saying why. */
+  const closed = status === 'ended';
+  const quiet = closed || down;
   const [messages, setMessages] = useState<ChatMessage[]>(CHAT_SEED);
   const [composing, setComposing] = useState(false);
   const pending = useRef(0);
 
-  // Mock traffic: one message every few seconds until the fixture runs out.
+  // Mock traffic: one message every few seconds until the fixture runs out —
+  // and none once the chat has closed.
   useEffect(() => {
+    if (quiet) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
       setMessages([...CHAT_SEED, ...CHAT_INCOMING]);
@@ -51,14 +84,14 @@ export function LiveChat() {
       setMessages((prev) => [...prev, next]);
     }, ARRIVAL_MS);
     return () => window.clearInterval(t);
-  }, []);
+  }, [quiet]);
 
   return (
     <section className="en-chat" aria-label="Live chat">
       <div className="en-chat-top">
         <header className="en-chat-head">
           <h2 className="en-chat-title">Live Chat</h2>
-          <button type="button" className="en-chat-close">
+          <button type="button" className="en-chat-close" onClick={onClose}>
             Close
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -66,10 +99,33 @@ export function LiveChat() {
           </button>
         </header>
         <hr className="en-chat-rule" />
+        {/* The chat's own failure outranks whatever the stream is doing:
+            if the room is unreachable, that is the thing to say. */}
+        {down ? (
+          <p className="en-chat-notice en-chat-notice--down" role="status">
+            <b>Chat is down.</b> The stream is unaffected. Messages already here stay readable, and
+            new ones appear when the room is back.
+          </p>
+        ) : (
+          NOTICE[status] && (
+            <p className={`en-chat-notice en-chat-notice--${status}`} role="status">
+              {NOTICE[status]}
+            </p>
+          )
+        )}
 
         {/* role="log" belongs on the region, not on the <ol> — an ol with a
             non-list role strips its children of their list semantics. */}
-        <div className="en-chat-scroll" role="log" aria-live="off" aria-label="Chat messages">
+        {/* Closed, the rows lose their reply buttons and nothing inside takes
+            focus — so the region does, to stay scrollable from the keyboard. */}
+        <div
+          className="en-chat-scroll"
+          role="log"
+          aria-live="off"
+          aria-label="Chat messages"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={quiet ? 0 : undefined}
+        >
           <ol className="en-chat-list">
             {messages.map((m) => (
               <li key={m.id} className={`en-msg${m.house ? ' en-msg--house' : ''}`}>
@@ -80,7 +136,7 @@ export function LiveChat() {
                   <span className="en-msg-author">{m.author}</span> {m.text}
                 </p>
                 {/* The house account posts; it does not invite replies to itself. */}
-                {!m.house && (
+                {!m.house && !quiet && (
                   <button type="button" className="en-msg-reply">
                     Reply Comment
                   </button>
@@ -92,14 +148,21 @@ export function LiveChat() {
       </div>
 
       <div className="en-chat-foot">
-        {composing ? (
+        {down ? (
+          <p className="en-chat-closed en-chat-closed--down">Chat unavailable</p>
+        ) : closed ? (
+          <p className="en-chat-closed">Chat closed</p>
+        ) : composing ? (
           <div className="en-gate" role="status">
-            <p className="en-gate-line">Sign in to chat</p>
+            <p className="en-gate-line">The chat is for members</p>
             <p className="en-gate-sub">
-              A free DailyWire+ account lets you post in a moderated room. Reading stays open.
+              DailyWire+ members post in a moderated room tonight. Anyone can read along.
             </p>
             <div className="en-gate-actions">
               <button type="button" className="en-gate-btn">
+                Become a member
+              </button>
+              <button type="button" className="en-gate-signin">
                 Sign in
               </button>
               <button type="button" className="en-gate-back" onClick={() => setComposing(false)}>

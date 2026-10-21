@@ -2232,3 +2232,21 @@
     font-size: 15px;
   }
 }
+
+/* CHAT DOWN (Oct 21 2026). The room failing is not the broadcast failing, so
+   it gets the warning rail the stream's own interruption uses — the reader
+   should see at a glance that something is off, and read one line to learn
+   it is only this panel. */
+.en-chat-notice--down {
+  box-shadow: inset 3px 0 0 var(--warning);
+  color: var(--ink);
+}
+.en-chat-notice--down b {
+  color: var(--warning);
+  font-weight: 600;
+}
+/* The composer goes, as it does when the chat closes, but the word is
+   different: unavailable is a fault, closed is a decision. */
+.en-chat-closed--down {
+  color: var(--warning);
+}

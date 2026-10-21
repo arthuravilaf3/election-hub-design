@@ -16,21 +16,56 @@
  * The hero carousel and Top Stories are gone by the same round's call: the
  * stream IS the lead on this night, and a second full-width promo right under
  * it only competed with it. The page runs takeover, then Opinion Board.
+ *
+ * BEFORE ELECTION DAY (Oct 9 2026). The same page carries the site's own
+ * home up to the night: the banner carousel led by the Midterms slide
+ * (Figma 376:135725) beside Top Stories, then the sections, with the
+ * Midterms strip (376:136521) between Opinion Board and Hosts. A DEV switch
+ * flips between the two.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DWNav } from '../components/DWNav';
 import { SiteFooter } from '../components/SiteFooter';
 import { NightClock } from '../components/NightClock';
 import { ElectionNight } from './ElectionNight';
-import { EPISODES, HOSTS, OPINION } from './homeContent';
+import { ResultsDock } from './ResultsDock';
+import { GAME_URL, HUB_URL } from './ResultsBand';
+import { EPISODES, HOSTS, OPINION, TOP_STORIES } from './homeContent';
+import { HeroCarousel } from './HeroCarousel';
+import { MidtermsStrip } from './MidtermsPromo';
+import { PhaseSwitch, phaseFromUrl, type HomePhase } from './PhaseSwitch';
 import { useElectionData } from '../state/useElectionData';
 import { useNightClock } from '../state/useNightClock';
 import { msOfMinute } from '../data/night';
+import { StreamSwitch } from './StreamSwitch';
+import { ChatSwitch } from './ChatSwitch';
+import { parseStreamParam, streamStatusAt, type StreamStatus } from './stream';
+import { parseChatParam, type ChatStatus } from './chat';
+
+/** `?chat=on|down` forces the chat's health, independently of the stream. */
+function chatFromUrl(): ChatStatus {
+  try {
+    return parseChatParam(new URLSearchParams(window.location.search).get('chat')) ?? 'on';
+  } catch {
+    return 'on';
+  }
+}
+
+/** `?stream=upcoming|live|down|ended` forces the broadcast's state. */
+function streamFromUrl(): StreamStatus | null {
+  try {
+    return parseStreamParam(new URLSearchParams(window.location.search).get('stream'));
+  } catch {
+    return null;
+  }
+}
 
 /* 9:41 PM ET — the moment the block's header names, and a good one to open
    on: the east is called, the midwest is counting, the west is still too
    early. `?night=HH:MM` overrides it (useNightClock reads the param). */
 const OPENS_AT = msOfMinute(3 * 60 + 41);
+
+const DEV_KEY = 'dw-home-dev';
 
 export function HomePage() {
   const { state, dispatch } = useElectionData();
@@ -48,6 +83,38 @@ export function HomePage() {
     dispatch({ type: 'NIGHT_TICK', at: OPENS_AT });
   }, [dispatch]);
   useNightClock(state, dispatch, true);
+
+  /* The broadcast follows the clock unless the prototype forces a state
+     (null = follow the clock). */
+  const [forcedStream, setForcedStream] = useState<StreamStatus | null>(streamFromUrl);
+  const stream = forcedStream ?? streamStatusAt(state.night.at);
+  /* The chat's health is its own: the PRD requires the surfaces to fail
+     independently, so nothing about the stream can set this. */
+  const [chat, setChat] = useState<ChatStatus>(chatFromUrl);
+  /* Election day unless the link says otherwise: /election-day/ keeps
+     opening on the night it was shared for. */
+  const [phase, setPhase] = useState<HomePhase>(() => phaseFromUrl() ?? 'day');
+  const day = phase === 'day';
+
+  /* Prototype chrome on/off, remembered per browser (a convenience, so it
+     tolerates storage being blocked). */
+  const [devHidden, setDevHidden] = useState(() => {
+    try {
+      return window.localStorage.getItem(DEV_KEY) === 'hidden';
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    const root = document.documentElement;
+    if (devHidden) root.dataset.dev = 'hidden';
+    else delete root.dataset.dev;
+    try {
+      window.localStorage.setItem(DEV_KEY, devHidden ? 'hidden' : 'shown');
+    } catch {
+      /* storage blocked: the toggle still works for this view */
+    }
+  }, [devHidden]);
 
   return (
     <div className="home">
@@ -70,19 +137,55 @@ export function HomePage() {
           <span>ADVERTISEMENT</span>
         </div>
 
-        <DWNav />
+        <DWNav links={{ hub: HUB_URL, game: GAME_URL }} />
 
         <div className="home-masthead">
-          <span className="home-date">Tuesday, November 3, 2026</span>
+          <span className="home-date">
+            {day
+              ? 'Tuesday, November 3, 2026'
+              : new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                  timeZone: 'America/New_York',
+                })}
+          </span>
           <span className="home-wordmark">DAILYWIRE</span>
           <span className="home-tagline">Unfiltered Honest News.</span>
         </div>
       </header>
 
-      {/* THE TAKEOVER — first thing on the page. */}
-      <ElectionNight state={state} />
+      {/* THE TAKEOVER — first thing on the page, on the night only. */}
+      {day && <ElectionNight state={state} stream={stream} chat={chat} />}
 
-      <main className="home-main">
+      <main className={`home-main${day ? '' : ' home-main--pre'}`}>
+        {!day && (
+          <>
+            <div className="home-hero-row">
+              <HeroCarousel />
+              <section className="home-top" aria-labelledby="home-top-title">
+                <h2 id="home-top-title" className="home-section-title">
+                  Top Stories
+                </h2>
+                <ol className="home-top-list">
+                  {TOP_STORIES.map((s) => (
+                    <li key={s.title} className="home-top-item">
+                      <img src={s.image} alt="" />
+                      <div>
+                        <h3>{s.title}</h3>
+                        <p className="home-byline">
+                          {s.byline} <span aria-hidden="true">·</span> {s.read}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            </div>
+          </>
+        )}
+
         {/* Opinion is set in the exclusive serif — commentary is never
             dressed as reporting (Coverage Feed rule, applied to the home). */}
         <section className="home-section" aria-label="Opinion Board">
@@ -99,6 +202,10 @@ export function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* The Midterms strip sits between Opinion Board and Hosts (Arthur,
+            Oct 9 2026), before Election Day only. */}
+        {!day && <MidtermsStrip />}
 
         <section className="home-section" aria-label="Hosts">
           <h2 className="home-section-title">Hosts</h2>
@@ -135,9 +242,21 @@ export function HomePage() {
 
       <SiteFooter />
 
+      {/* The night's results, fixed to the bottom of the window. */}
+      {day && <ResultsDock state={state} />}
+
       {/* Prototype chrome: the hub's own clock. Playing the night moves the
           band exactly as it moves the full map — one reducer, one outcome. */}
-      <NightClock night={state.night} dispatch={dispatch} />
+      {day && <NightClock night={state.night} dispatch={dispatch} />}
+      <div className="home-dev" role="region" aria-label="Prototype controls">
+        <button type="button" className="dev-toggle" aria-pressed={!devHidden} onClick={() => setDevHidden((h) => !h)}>
+          <span className="dev-chip">Dev</span>
+          {devHidden ? 'Show' : 'Hide'}
+        </button>
+        {day && <StreamSwitch forced={forcedStream} current={stream} onChange={setForcedStream} />}
+        {day && <ChatSwitch chat={chat} onChange={setChat} />}
+        <PhaseSwitch phase={phase} onChange={setPhase} />
+      </div>
     </div>
   );
 }

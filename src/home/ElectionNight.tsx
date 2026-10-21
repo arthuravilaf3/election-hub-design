@@ -37,10 +37,12 @@ import { MoreEpisodes } from './MoreEpisodes';
 import polymarketLogo from '../images/polymarketlogo.png';
 import type { ElectionState } from '../state/electionReducer';
 import { STREAM_STARTS_MS, type StreamStatus } from './stream';
+import type { ChatStatus } from './chat';
 
 interface ElectionNightProps {
   state: ElectionState;
   stream: StreamStatus;
+  chat: ChatStatus;
 }
 
 /* The block's own line follows the night (Oct 8 2026): the pill says what
@@ -53,7 +55,7 @@ function headLine(stream: StreamStatus, at: number | null): string {
   return at !== null ? `Results updating · ${formatET(at)}` : 'Results updating';
 }
 
-export function ElectionNight({ state, stream }: ElectionNightProps) {
+export function ElectionNight({ state, stream, chat }: ElectionNightProps) {
   const [chatOpen, setChatOpen] = useState(true);
   const tabRef = useRef<HTMLButtonElement>(null);
   const touched = useRef(false);
@@ -108,7 +110,7 @@ export function ElectionNight({ state, stream }: ElectionNightProps) {
           </div>
           {chatOpen && (
             <div className="en-chat-holder">
-              <LiveChat status={stream} onClose={() => toggle(false)} />
+              <LiveChat status={stream} chat={chat} onClose={() => toggle(false)} />
             </div>
           )}
           <MoreEpisodes />
