@@ -96,13 +96,19 @@ export function ResultsDock({ state }: { state: ElectionState }) {
             {asOf ? ` · ${delayed ? 'last update' : 'updated'} ${asOf}` : ''}
           </span>
         </div>
-        <div className="dock-chambers">
+        {/* On a phone only ONE chamber shows — both side by side came out
+            cramped (Arthur, Oct 21). It is the chamber the map is on, so the
+            bar and the map never disagree about what you are looking at, and
+            the CTA is the way to the other one. */}
+        <div className="dock-chambers" data-only={state.chamber === 'house' ? 'house' : 'senate'}>
           {CHAMBERS.map(({ id, label }) => (
-            <SeatBar key={id} c={chamberSeats(state, id, label)} compact />
+            <div key={id} className="dock-chamber" data-chamber={id}>
+              <SeatBar c={chamberSeats(state, id, label)} compact />
+            </div>
           ))}
         </div>
         <a className="mp-btn mp-btn--primary dock-cta" href={HUB_URL}>
-          Full map
+          Check the election hub
         </a>
         <button type="button" className="dock-close" onClick={close} aria-label="Close live results bar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">

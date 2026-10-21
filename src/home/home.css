@@ -2311,3 +2311,111 @@
   color: var(--ink);
   background: rgb(255 255 255 / 0.06);
 }
+
+/* ====================================================================== */
+/* THE DOCK ON A PHONE (Oct 21 2026)                                      */
+/* ====================================================================== */
+
+/* Two chambers across a phone came out cramped, so the bar becomes three
+   rows: the brand with the close beside it, ONE chamber, then the CTA. With
+   a single chamber there is room again for the middle of the top row and the
+   "current" counts, so they come back — the squeeze below 1180 was about
+   fitting two, not about the phone. */
+@media (max-width: 760px) {
+  .dock-rail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 14px 12px;
+  }
+  .dock-brand {
+    display: flex;
+    grid-area: 1 / 1;
+  }
+  .dock-close {
+    grid-area: 1 / 2;
+    align-self: center;
+    margin: 0;
+  }
+  .dock-chambers {
+    grid-area: 2 / 1 / 3 / -1;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .dock-chambers[data-only='senate'] .dock-chamber[data-chamber='house'],
+  .dock-chambers[data-only='house'] .dock-chamber[data-chamber='senate'] {
+    display: none;
+  }
+  .dock-cta {
+    grid-area: 3 / 1 / 4 / -1;
+    flex: none;
+  }
+  .hseat-open,
+  .hseat--compact .hseat-foot > span:not(.hseat-foot-control) {
+    display: revert;
+  }
+  .hseat--compact .hseat-foot {
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .hseat--compact .party-mark {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ====================================================================== */
+/* THE STREAM AND THE CHAT ON A PHONE (Oct 21 2026)                       */
+/* ====================================================================== */
+
+/* With the chat open, the page scrolling and the chat scrolling fight each
+   other — you cannot read the room without losing the picture. So the video
+   pins to the top and the chat takes the rest of the screen under it, with
+   its own scroll; the episode's title and the carousel follow after it.
+   `display: contents` dissolves the two wrappers so the stage, the text and
+   the panel are siblings that can be ordered. Chat folded (en-grid--solo)
+   there is nothing to fight, so this does not apply. */
+@media (max-width: 760px) {
+  .en-grid:not(.en-grid--solo) {
+    display: flex;
+    flex-direction: column;
+  }
+  .en-grid:not(.en-grid--solo) .en-stream-col,
+  .en-grid:not(.en-grid--solo) .en-player {
+    display: contents;
+  }
+  .en-grid:not(.en-grid--solo) .en-stage {
+    order: 1;
+    position: sticky;
+    top: 0;
+    z-index: 4;
+  }
+  /* ONE scroll, not two. The panel leaves its fixed box and joins the page:
+     the whole room is in the flow, the page is the only thing that scrolls,
+     and the pinned video stays in view the whole way down it. A box with its
+     own scrollbar under a pinned video puts the room's own header out of
+     reach — which is the fight Arthur called. */
+  .en-grid:not(.en-grid--solo) .en-chat-holder {
+    order: 2;
+    height: auto;
+  }
+  .en-grid:not(.en-grid--solo) .en-chat {
+    position: static;
+  }
+  .en-grid:not(.en-grid--solo) .en-chat-scroll {
+    overflow: visible;
+    min-height: 0;
+  }
+  /* The fade marked where the room ran under the composer; with nothing
+     scrolling it only smudged the last message. */
+  .en-grid:not(.en-grid--solo) .en-chat-foot::before {
+    display: none;
+  }
+  .en-grid:not(.en-grid--solo) .en-text {
+    order: 3;
+  }
+  .en-grid:not(.en-grid--solo) .en-more {
+    order: 4;
+  }
+}
