@@ -2209,3 +2209,66 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+/* ---------- the membership gate, at the composer (Oct 21 2026) ---------- */
+
+/* The design's wall, folded down to the foot: same padlock, same two lines,
+   same pill — but over the composer, so the room behind stays legible. */
+.en-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 24px 20px;
+  background: var(--surface-2);
+}
+.en-gate-say {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.en-gate .en-block-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+}
+.en-gate-line {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.en-gate-line span {
+  display: block;
+}
+.en-gate-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.en-gate-btn {
+  height: 40px;
+  padding: 12px 22px;
+  font-size: 14px;
+}
+.en-gate-signin,
+.en-gate-back {
+  border: 0;
+  background: none;
+  color: var(--ink-subtle);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.en-gate-back {
+  font-weight: 400;
+  color: var(--ink-subtlest);
+}
+.en-gate-signin:hover,
+.en-gate-back:hover {
+  color: var(--ink);
+  background: rgb(255 255 255 / 0.06);
+}

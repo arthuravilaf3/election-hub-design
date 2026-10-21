@@ -8,15 +8,18 @@
  * it. Two surfaces, two controls.
  *
  * `member` the reader is a paid member: the room is live and they can post.
- * `locked` the reader is not: the room is behind the membership gate.
+ * `locked` the reader is not: they read everything, and the membership gate
+ *          meets them at the composer, the moment they try to post.
  * `down`   the service is unreachable, whatever the reader is.
  *
- * READING IS GATED, NOT JUST POSTING (Arthur's designs, Oct 21 2026): the
- * locked state veils the whole room behind "Join the live chat with a paid
- * membership", rather than letting anyone read and gating only the composer.
- * That is further than hub tenet 1 ("anonymous first... a FREE account is the
- * single, consistent gate") and further than the module PRD, which gates
- * posting. [Flagged for the P.O. — the design is built as drawn.]
+ * READING STAYS OPEN (Arthur, Oct 21 2026). The first cut of `locked` walled
+ * the whole room off, as the design drew it. That gated READING on a paid
+ * membership, which is further than hub tenet 1 ("anonymous first... a FREE
+ * account is the single, consistent gate") and further than this module's
+ * PRD, which gates posting only. Arthur's call on the flag: keep reading open
+ * and put the gate on the attempt to comment. The design's own language — the
+ * padlock, "Join the live chat with a paid membership", "Upgrade Plan" — came
+ * with it, in the foot where the action is, instead of over the room.
  */
 export type ChatStatus = 'member' | 'locked' | 'down';
 

@@ -11,18 +11,18 @@
  * first line, and wrapped lines hang to the avatar's right (the 26px indent
  * in the file) — so it is a hanging indent here, not three stacked rows.
  *
- * THE TWO BLOCKED STATES (Arthur's designs, Oct 21 2026). Both work the same
- * way and nothing like the notice bar they replaced: the room blurs behind a
- * centred glyph, two lines and one button.
- *   locked — a padlock, "Join the live chat with a paid membership",
- *            "Upgrade Plan". Reading is gated too, not only posting, so the
- *            composer's old sign-in gate is gone: a non-member never reaches
- *            it. See chat.ts for why that is flagged for the P.O.
- *   down   — a crimson alert, "Something went wrong, please try again",
- *            "Reload Comments". The stream is untouched (chat.ts).
- * The blurred room is INERT: it is decoration behind a wall, so it takes no
- * focus and no screen reader reads it. The header stays live above both, so
- * Close always works.
+ * DOWN IS A WALL (Arthur's design, Oct 21 2026): the room blurs behind a
+ * crimson alert, "Something went wrong, please try again" and "Reload
+ * Comments". Nothing to read is nothing to read, so the blurred room goes
+ * INERT — decoration behind a wall takes no focus and no screen reader reads
+ * it. The header stays live above it, so Close always works.
+ *
+ * THE MEMBERSHIP GATE IS NOT A WALL (Arthur, Oct 21 2026). It was drawn as
+ * one, over the whole room; that gated reading on a paid membership, against
+ * hub tenet 1 and this module's PRD, and his call was to keep reading open
+ * and meet the reader at the composer instead. So it keeps the design's
+ * language — padlock, the same two lines, the same pill — at the foot, the
+ * moment someone tries to post, and the room behind it stays legible.
  *
  * ENDED is deliberately NOT one of them. The broadcast finishing winds the
  * room down on purpose — the PRD says it "stays readable" — so it keeps the
@@ -77,24 +77,21 @@ function AlertIcon() {
 /* The designs break each message in a particular place — after "with", after
    "wrong," — so the lines are authored, not left to the wrapper to guess.
    They still wrap inside themselves on a narrow panel. */
-const BLOCK_LINES: Record<'locked' | 'down', [string, string]> = {
-  locked: ['Join the live chat with', 'a paid membership'],
-  down: ['Something went wrong,', 'please try again'],
-};
+const GATE_LINES = ['Join the live chat with', 'a paid membership'];
+const DOWN_LINES = ['Something went wrong,', 'please try again'];
 
-/** The wall over the room. Two states, one shape. */
-function ChatBlock({ kind }: { kind: 'locked' | 'down' }) {
-  const locked = kind === 'locked';
+/** The wall over the room — the service being unreachable. */
+function ChatDown() {
   return (
-    <div className={`en-chat-block en-chat-block--${kind}`} role={locked ? undefined : 'alert'}>
-      {locked ? <LockIcon /> : <AlertIcon />}
+    <div className="en-chat-block" role="alert">
+      <AlertIcon />
       <p className="en-block-line">
-        {BLOCK_LINES[kind].map((line) => (
+        {DOWN_LINES.map((line) => (
           <span key={line}>{line}</span>
         ))}
       </p>
       <button type="button" className="mp-btn mp-btn--primary mp-btn--pill">
-        {locked ? 'Upgrade Plan' : 'Reload Comments'}
+        Reload Comments
       </button>
     </div>
   );
@@ -109,11 +106,28 @@ interface LiveChatProps {
 }
 
 export function LiveChat({ status, chat, onClose }: LiveChatProps) {
-  const block = chat === 'member' ? null : chat;
-  const closed = !block && status === 'ended';
-  const quiet = block !== null || closed;
+  const down = chat === 'down';
+  const closed = !down && status === 'ended';
+  const quiet = down || closed;
   const [messages, setMessages] = useState<ChatMessage[]>(CHAT_SEED);
+  const [gated, setGated] = useState(false);
   const pending = useRef(0);
+  const gateRef = useRef<HTMLButtonElement>(null);
+  const composerRef = useRef<HTMLButtonElement>(null);
+
+  /* The gate takes focus when it opens and hands it back when it is waved
+     off — a reader who got here from the keyboard is never left on nothing.
+     Both sides run from the effect: on the way back the composer does not
+     exist yet when the click handler fires. */
+  const touched = useRef(false);
+  useEffect(() => {
+    if (gated) {
+      touched.current = true;
+      gateRef.current?.focus();
+    } else if (touched.current) {
+      composerRef.current?.focus();
+    }
+  }, [gated]);
 
   // Mock traffic: one message every few seconds until the fixture runs out —
   // and none once the room is closed or walled off.
@@ -149,7 +163,7 @@ export function LiveChat({ status, chat, onClose }: LiveChatProps) {
           </button>
         </header>
         <hr className="en-chat-rule" />
-        {!block && NOTICE[status] && (
+        {!down && NOTICE[status] && (
           <p className={`en-chat-notice en-chat-notice--${status}`} role="status">
             {NOTICE[status]}
           </p>
@@ -162,11 +176,11 @@ export function LiveChat({ status, chat, onClose }: LiveChatProps) {
               focus — so the region does, to stay scrollable from the keyboard.
               Walled off, the whole thing goes inert instead. */}
           <div
-            className={`en-chat-scroll${block ? ' is-veiled' : ''}`}
+            className={`en-chat-scroll${down ? ' is-veiled' : ''}`}
             role="log"
             aria-live="off"
             aria-label="Chat messages"
-            inert={block !== null}
+            inert={down}
             // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={closed ? 0 : undefined}
           >
@@ -189,15 +203,48 @@ export function LiveChat({ status, chat, onClose }: LiveChatProps) {
               ))}
             </ol>
           </div>
-          {block && <ChatBlock kind={block} />}
+          {down && <ChatDown />}
         </div>
       </div>
 
-      <div className={`en-chat-foot${block ? ' is-veiled' : ''}`} inert={block !== null}>
+      <div className={`en-chat-foot${down ? ' is-veiled' : ''}`} inert={down}>
         {closed ? (
           <p className="en-chat-closed">Chat closed</p>
+        ) : gated ? (
+          /* The design's wall, compact and at the foot: same padlock, same two
+             lines, same pill — over the composer, not over the room. */
+          <div className="en-gate" role="status">
+            <div className="en-gate-say">
+              <LockIcon />
+              <p className="en-gate-line">
+                {GATE_LINES.map((line) => (
+                  <span key={line}>{line}</span>
+                ))}
+              </p>
+            </div>
+            <div className="en-gate-actions">
+              <button ref={gateRef} type="button" className="mp-btn mp-btn--primary mp-btn--pill en-gate-btn">
+                Upgrade Plan
+              </button>
+              <button type="button" className="en-gate-signin">
+                Sign in
+              </button>
+              <button
+                type="button"
+                className="en-gate-back"
+                onClick={() => setGated(false)}
+              >
+                Not now
+              </button>
+            </div>
+          </div>
         ) : (
-          <button type="button" className="en-composer">
+          <button
+            ref={composerRef}
+            type="button"
+            className="en-composer"
+            onClick={() => chat === 'locked' && setGated(true)}
+          >
             <span className="en-composer-hint">Leave a comment</span>
             <span className="en-composer-send" aria-hidden="true">
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
