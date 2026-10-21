@@ -80,6 +80,16 @@ export function chamberSeats(state: ElectionState, id: 'house' | 'senate', label
   };
 }
 
+/* The dock says who HAS won, not how far each side still is (Arthur, Oct 21
+   2026: "pode tirar o D needs 27 e o R needs 15"). The arithmetic stays in
+   controlLine for the bar's description and the full panel — a screen reader
+   still gets it; the fixed bar just stops doing sums at the reader. */
+function controlWon(c: ChamberSeats): string | null {
+  if (c.toWin - c.rep <= 0) return 'R wins control';
+  if (c.toWin - c.dem <= 0) return 'D wins control';
+  return null;
+}
+
 function controlLine(c: ChamberSeats): string {
   const needD = c.toWin - c.dem;
   const needR = c.toWin - c.rep;
@@ -155,7 +165,7 @@ export function SeatBar({ c, compact = false }: { c: ChamberSeats; compact?: boo
           <span className="hseat-held">{c.holdDem} current</span>
           <span className="hseat-foot-control">
             <span className="hseat-chamber">{c.label}</span>
-            {control}
+            {controlWon(c)}
           </span>
           <span className="hseat-held">{c.holdRep} current</span>
         </p>

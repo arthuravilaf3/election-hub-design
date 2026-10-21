@@ -1029,12 +1029,51 @@
   transform: translateY(110%);
   transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+/* The top line carries the nav's Midterms sweep (index.css, the same strip
+   at 300%): the first and last thirds are the resting paint, the middle runs
+   red back to blue, so one full slide sends red rolling left to right and
+   lands exactly where it started. At rest the slice shown is identical to
+   --brand-gradient — the sweep is pure addition. It runs ONCE, when the dock
+   comes up; a line animating for the whole night at the bottom of the window
+   would be something to ignore, not to notice. */
 .dock::before {
   content: '';
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
-  background: var(--brand-gradient);
+  background-image: linear-gradient(
+    90deg,
+    #2a60f7 0%,
+    #2a60f7 11.67%,
+    var(--color-crimson-500) 20.67%,
+    var(--color-crimson-500) 33.33%,
+    var(--color-crimson-500) 45%,
+    #2a60f7 54%,
+    #2a60f7 66.67%,
+    #2a60f7 78.33%,
+    var(--color-crimson-500) 87.33%,
+    var(--color-crimson-500) 100%
+  );
+  background-size: 300% 100%;
+  background-position: 0% 50%;
+}
+.dock.is-shown::before {
+  animation: dock-gradient-sweep 1100ms cubic-bezier(0.65, 0, 0.35, 1) 260ms both;
+}
+/* Position runs 100% -> 0%: the strip slides right, so the colours travel
+   left to right along the line. */
+@keyframes dock-gradient-sweep {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0% 50%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock.is-shown::before {
+    animation: none;
+  }
 }
 .dock.is-shown {
   transform: none;
@@ -1042,7 +1081,7 @@
 .dock-rail {
   max-width: var(--rail);
   margin: 0 auto;
-  padding: 14px var(--rail-pad);
+  padding: 24px var(--rail-pad);
   display: flex;
   align-items: center;
   gap: 64px;
@@ -1336,7 +1375,7 @@
   }
   .dock-rail {
     gap: 14px;
-    padding: 10px 16px;
+    padding: 16px 16px 18px;
   }
   .dock-brand {
     display: none;

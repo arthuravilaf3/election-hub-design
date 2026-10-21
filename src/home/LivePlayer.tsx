@@ -116,18 +116,12 @@ function StageMessage({ status, at }: { status: StreamStatus; at: number | null 
     return (
       <div className="en-stage-msg">
         <p className="en-stage-eyebrow">Starts at {formatET(STREAM_STARTS_MS)}</p>
-        <p className="en-stage-big">{startsIn(at)}</p>
-        <button type="button" className="en-stage-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16ZM10 20.5a2 2 0 0 0 4 0"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Remind me
-        </button>
+        {/* Forced from the switch while the clock is already past 7, the
+            countdown would read "in 0 min" and look broken. On the real night
+            the state flips to live at that moment and this never shows. */}
+        <p className="en-stage-big">
+          {at !== null && at >= STREAM_STARTS_MS ? 'Starting soon' : startsIn(at)}
+        </p>
       </div>
     );
   }

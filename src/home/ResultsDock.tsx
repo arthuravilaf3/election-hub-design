@@ -18,7 +18,7 @@
  * A11Y: a complementary landmark with its own name; no live region — the race
  * calls are already announced once by the page.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CHAMBERS, HUB_URL, SeatBar, chamberSeats } from './ResultsBand';
 import { resultsLabel } from '../data/sources';
 import { formatET } from '../data/time';
@@ -39,13 +39,29 @@ export function ResultsDock({ state }: { state: ElectionState }) {
   const shown = !dismissed;
 
   /* The prototype's own chrome (night clock, DEV corner, the chat's Join
-     button) sits on the same bottom edge; it reads this to step up. */
+     button) sits on the same bottom edge; it reads this to step up.
+     --dock-h is MEASURED, not declared: the bar's height moves with its
+     padding, with the breakpoint and with whether a chamber has been won,
+     and a hand-written number goes stale the first time any of those change
+     (it already had). The CSS keeps a value for the first paint. */
+  const ref = useRef<HTMLElement>(null);
   useEffect(() => {
     const root = document.documentElement;
-    if (shown) root.dataset.dock = 'on';
-    else delete root.dataset.dock;
-    return () => {
+    const node = ref.current;
+    if (!shown || !node) {
       delete root.dataset.dock;
+      root.style.removeProperty('--dock-h');
+      return;
+    }
+    root.dataset.dock = 'on';
+    const measure = () => root.style.setProperty('--dock-h', `${node.offsetHeight}px`);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(node);
+    return () => {
+      ro.disconnect();
+      delete root.dataset.dock;
+      root.style.removeProperty('--dock-h');
     };
   }, [shown]);
 
@@ -65,7 +81,7 @@ export function ResultsDock({ state }: { state: ElectionState }) {
 
   if (!shown) return null;
   return (
-    <aside className="dock is-shown" aria-label="Live results">
+    <aside className="dock is-shown" aria-label="Live results" ref={ref}>
       <div className="dock-rail">
         <div className="dock-brand">
           {/* The live tag came out on Oct 21 2026 — the dock is on screen
