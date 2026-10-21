@@ -1448,12 +1448,22 @@
   .hseat-foot-control {
     display: inline;
   }
+  /* The dock on a phone: two chambers across ~170px each, so the middle of
+     the top row and the "current" counts drop and the foot keeps the one
+     thing that cannot go — which chamber this is, and who wins it. The marks
+     go with them; DEM and GOP already say whose number it is. */
   .hseat--compact .party-mark,
-  .hseat--compact .hseat-foot {
+  .hseat-open {
     display: none;
   }
-  .hseat--compact .hseat-big {
-    font-size: 16px;
+  .hseat--compact .hseat-foot {
+    justify-content: center;
+    gap: 0;
+  }
+  .hseat--compact .hseat-big,
+  .hseat--compact .hseat-party--dem,
+  .hseat--compact .hseat-party--rep {
+    font-size: 15px;
   }
   .hseat-chamber {
     font-size: 10px;
@@ -2186,5 +2196,39 @@
 @media (prefers-reduced-motion: reduce) {
   .ds-badge-dot {
     animation: none;
+  }
+}
+
+/* THE DOCK BETWEEN PHONE AND DESKTOP (Oct 21 2026). The full line — brand,
+   two chambers of three columns each, CTA, close — needs about 1300px of
+   rail. Below that the middle of each chamber's top row and the "current"
+   counts step out, in that order, because the chamber and who wins it are
+   the two things the dock cannot stop saying. The phone block under 760px
+   then takes away the marks and wraps the CTA onto its own row. */
+@media (max-width: 1180px) {
+  .dock-rail {
+    gap: 28px;
+    padding-inline: 24px;
+  }
+  .dock-chambers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+  }
+  .hseat-open,
+  .hseat--compact .hseat-foot > span:not(.hseat-foot-control) {
+    display: none;
+  }
+  .hseat--compact .hseat-foot {
+    justify-content: center;
+    gap: 0;
+  }
+  .hseat--compact .party-mark {
+    width: 16px;
+    height: 16px;
+  }
+  .hseat--compact .hseat-big,
+  .hseat--compact .hseat-party--dem,
+  .hseat--compact .hseat-party--rep {
+    font-size: 15px;
   }
 }
