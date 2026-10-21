@@ -29,6 +29,7 @@
  * episodes; ResultsBand.tsx is kept, unrendered, in case the panel returns.
  */
 import { useEffect, useRef, useState } from 'react';
+import { useScrollLock } from '../hooks/useScrollLock';
 import { formatET } from '../data/time';
 import { FINAL_MS } from '../data/night';
 import { LivePlayer } from './LivePlayer';
@@ -57,6 +58,29 @@ function headLine(stream: StreamStatus, at: number | null): string {
 
 export function ElectionNight({ state, stream, chat }: ElectionNightProps) {
   const [chatOpen, setChatOpen] = useState(true);
+  /* WATCH MODE ON A PHONE (Oct 21 2026). With the chat open there is no page
+     left to scroll: the video pins to the top, the room takes the rest of the
+     screen, and the only scroll is the room's own. Closing the chat gives the
+     page back. Nothing of the sort on a wider screen, where both columns fit
+     and the page behaves. */
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 760px)');
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+  const locked = chatOpen && narrow;
+  useScrollLock(locked);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (locked) root.dataset.chatLock = 'on';
+    else delete root.dataset.chatLock;
+    return () => {
+      delete root.dataset.chatLock;
+    };
+  }, [locked]);
   const tabRef = useRef<HTMLButtonElement>(null);
   const touched = useRef(false);
 

@@ -18,7 +18,7 @@
  * A11Y: a complementary landmark with its own name; no live region — the race
  * calls are already announced once by the page.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { CHAMBERS, HUB_URL, SeatBar, chamberSeats } from './ResultsBand';
 import { resultsLabel } from '../data/sources';
 import { formatET } from '../data/time';
@@ -65,6 +65,39 @@ export function ResultsDock({ state }: { state: ElectionState }) {
     };
   }, [shown]);
 
+  /* On a phone the bar closes the way a sheet does: the grab bar at its top
+     is dragged down past a threshold, or tapped. It is a real <button>, so
+     the keyboard and a screen reader get the same door the finger does —
+     which is what lets the X go (Arthur, Oct 21). A drag that springs back
+     must not also fire the tap, hence `moved`. */
+  const [dragPx, setDragPx] = useState(0);
+  const dragging = useRef(false);
+  const startY = useRef(0);
+  const dragY = useRef(0);
+  const moved = useRef(false);
+
+  const onGrabDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    dragging.current = true;
+    moved.current = false;
+    startY.current = e.clientY;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onGrabMove = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!dragging.current) return;
+    const dy = Math.max(0, e.clientY - startY.current);
+    if (dy > 4) moved.current = true;
+    dragY.current = dy;
+    setDragPx(dy);
+  };
+  const onGrabUp = () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    const far = dragY.current > 56;
+    dragY.current = 0;
+    setDragPx(0);
+    if (far) close();
+  };
+
   const close = () => {
     setDismissed(true);
     try {
@@ -81,8 +114,31 @@ export function ResultsDock({ state }: { state: ElectionState }) {
 
   if (!shown) return null;
   return (
-    <aside className="dock is-shown" aria-label="Live results" ref={ref}>
+    <aside
+      className={`dock is-shown${dragging.current ? ' is-dragging' : ''}`}
+      aria-label="Live results"
+      ref={ref}
+      style={dragPx ? { transform: `translateY(${dragPx}px)` } : undefined}
+    >
       <div className="dock-rail">
+        <button
+          type="button"
+          className="dock-grab"
+          aria-label="Close live results bar"
+          onPointerDown={onGrabDown}
+          onPointerMove={onGrabMove}
+          onPointerUp={onGrabUp}
+          onPointerCancel={onGrabUp}
+          onClick={() => {
+            if (moved.current) {
+              moved.current = false;
+              return;
+            }
+            close();
+          }}
+        >
+          <span className="dock-grab-bar" aria-hidden="true" />
+        </button>
         <div className="dock-brand">
           {/* The live tag came out on Oct 21 2026 — the dock is on screen
               only while the night is running, so a chip saying "Live" said

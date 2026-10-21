@@ -2365,57 +2365,114 @@
   }
 }
 
+
 /* ====================================================================== */
-/* THE STREAM AND THE CHAT ON A PHONE (Oct 21 2026)                       */
+/* WATCH MODE ON A PHONE (Oct 21 2026)                                    */
 /* ====================================================================== */
 
-/* With the chat open, the page scrolling and the chat scrolling fight each
-   other — you cannot read the room without losing the picture. So the video
-   pins to the top and the chat takes the rest of the screen under it, with
-   its own scroll; the episode's title and the carousel follow after it.
-   `display: contents` dissolves the two wrappers so the stage, the text and
-   the panel are siblings that can be ordered. Chat folded (en-grid--solo)
-   there is nothing to fight, so this does not apply. */
+/* Opening the chat on a phone takes over the screen: the video pins to the
+   top, the room fills the rest, and the PAGE STOPS SCROLLING — the only
+   scroll left is the room's own, so the two can no longer fight. Closing the
+   chat gives the page back. The round before this put the room in the page's
+   flow instead; that kept one scroll but let the video and the room drift
+   apart, and this is what Arthur asked for: both pinned until he closes it.
+   `display: contents` dissolves the two wrappers so the stage and the panel
+   become the overlay's own children; the episode's text and the carousel are
+   not part of watch mode. */
 @media (max-width: 760px) {
-  .en-grid:not(.en-grid--solo) {
+  :root[data-chat-lock='on'] .en-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 630;
     display: flex;
     flex-direction: column;
+    gap: 0;
+    background: var(--surface-dim);
   }
-  .en-grid:not(.en-grid--solo) .en-stream-col,
-  .en-grid:not(.en-grid--solo) .en-player {
+  :root[data-chat-lock='on'] .en-stream-col,
+  :root[data-chat-lock='on'] .en-player {
     display: contents;
   }
-  .en-grid:not(.en-grid--solo) .en-stage {
-    order: 1;
-    position: sticky;
-    top: 0;
-    z-index: 4;
+  :root[data-chat-lock='on'] .en-stage {
+    flex: none;
+    border-radius: 0;
   }
-  /* ONE scroll, not two. The panel leaves its fixed box and joins the page:
-     the whole room is in the flow, the page is the only thing that scrolls,
-     and the pinned video stays in view the whole way down it. A box with its
-     own scrollbar under a pinned video puts the room's own header out of
-     reach — which is the fight Arthur called. */
-  .en-grid:not(.en-grid--solo) .en-chat-holder {
-    order: 2;
+  :root[data-chat-lock='on'] .en-chat-holder {
+    flex: 1;
+    min-height: 0;
     height: auto;
   }
-  .en-grid:not(.en-grid--solo) .en-chat {
-    position: static;
+  :root[data-chat-lock='on'] .en-chat {
+    border-radius: 0;
   }
-  .en-grid:not(.en-grid--solo) .en-chat-scroll {
-    overflow: visible;
-    min-height: 0;
-  }
-  /* The fade marked where the room ran under the composer; with nothing
-     scrolling it only smudged the last message. */
-  .en-grid:not(.en-grid--solo) .en-chat-foot::before {
+  :root[data-chat-lock='on'] .en-text,
+  :root[data-chat-lock='on'] .en-more {
     display: none;
   }
-  .en-grid:not(.en-grid--solo) .en-text {
-    order: 3;
+  /* The results bar would sit on the composer, and watch mode is not the
+     moment for it — it comes back with the page. */
+  :root[data-chat-lock='on'] .dock,
+  :root[data-chat-lock='on'] .home-dev,
+  :root[data-chat-lock='on'] .night-clock {
+    display: none;
   }
-  .en-grid:not(.en-grid--solo) .en-more {
-    order: 4;
+}
+
+/* ---------- the dock closes like a sheet on a phone ---------- */
+
+.dock-grab {
+  display: none;
+}
+.dock.is-dragging {
+  transition: none;
+}
+@media (max-width: 760px) {
+  .dock-rail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 6px 16px 18px;
+  }
+  /* The wordmark and the X go; the grab bar is the door now. The provider
+     and the last batch STAY — freshness is not optional, and "Results
+     delayed" has nowhere else to be said on a phone. */
+  .dock-grab {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: grab;
+    touch-action: none;
+    grid-area: 1 / 1;
+  }
+  .dock-grab:active {
+    cursor: grabbing;
+  }
+  .dock-grab-bar {
+    width: 44px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.3);
+  }
+  .dock-grab:focus-visible .dock-grab-bar {
+    background: var(--ink);
+    outline: 2px solid var(--ink);
+    outline-offset: 4px;
+  }
+  .dock-title,
+  .dock-close {
+    display: none;
+  }
+  .dock-brand {
+    display: flex;
+    grid-area: 2 / 1;
+  }
+  .dock-chambers {
+    grid-area: 3 / 1;
+  }
+  .dock-cta {
+    grid-area: 4 / 1;
   }
 }
