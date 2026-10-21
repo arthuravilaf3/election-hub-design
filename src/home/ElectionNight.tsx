@@ -15,28 +15,71 @@
  * the panel hanging below the share buttons. In the holder it contributes no
  * height at all, so the row is the stream's, and the panel ends exactly where
  * the text does — the 767px the Figma gives both columns.
+ *
+ * CLOSING THE CHAT (Oct 9 2026, the DW+ watch page's own behaviour, from
+ * Arthur's screenshot): the panel folds away, the stream takes the whole
+ * rail, and a vertical "Live Chat" tab on the video's right edge opens it
+ * again. (It replaced the floating "Join the Conversation" button of the
+ * file's 391:150108.) More Episodes (391:150032) sits under the
+ * player in the stream's column.
+ *
+ * NO RESULTS PANEL IN THE BLOCK (Oct 9 2026: "o banner grande que não é
+ * fixo" came out). The results live in the dock fixed to the bottom of the
+ * window (ResultsDock), so the block is the stream, the chat and the
+ * episodes; ResultsBand.tsx is kept, unrendered, in case the panel returns.
  */
+import { useEffect, useRef, useState } from 'react';
+import { formatET } from '../data/time';
+import { FINAL_MS } from '../data/night';
 import { LivePlayer } from './LivePlayer';
 import { LiveChat } from './LiveChat';
-import { ResultsBand } from './ResultsBand';
+import { MoreEpisodes } from './MoreEpisodes';
 import polymarketLogo from '../images/polymarketlogo.png';
 import type { ElectionState } from '../state/electionReducer';
+import { STREAM_STARTS_MS, type StreamStatus } from './stream';
 
 interface ElectionNightProps {
   state: ElectionState;
+  stream: StreamStatus;
 }
 
-export function ElectionNight({ state }: ElectionNightProps) {
+/* The block's own line follows the night (Oct 8 2026): the pill says what
+   the broadcast is doing, the line beside it what the results are doing.
+   An interruption is the stream's fault, not the night's, so the pill stays
+   LIVE and only the player says so. */
+function headLine(stream: StreamStatus, at: number | null): string {
+  if (stream === 'upcoming') return `On air at ${formatET(STREAM_STARTS_MS)}`;
+  if (at !== null && at >= FINAL_MS) return 'Final results';
+  return at !== null ? `Results updating · ${formatET(at)}` : 'Results updating';
+}
+
+export function ElectionNight({ state, stream }: ElectionNightProps) {
+  const [chatOpen, setChatOpen] = useState(true);
+  const tabRef = useRef<HTMLButtonElement>(null);
+  const touched = useRef(false);
+
+  /* Focus follows the fold: closing the chat hands it to the Live Chat tab,
+     opening hands it back to the panel's Close — never dropped on <body>. */
+  useEffect(() => {
+    if (!touched.current) return;
+    if (!chatOpen) tabRef.current?.focus();
+    else document.querySelector<HTMLButtonElement>('.en-chat-close')?.focus();
+  }, [chatOpen]);
+  const toggle = (open: boolean) => {
+    touched.current = true;
+    setChatOpen(open);
+  };
+
   return (
     <section className="en" aria-label="Election night coverage">
       <div className="en-rail">
         <header className="en-head">
-          <span className="en-live">
-            <span className="en-live-dot" aria-hidden="true" />
-            LIVE
-          </span>
+          {/* No live tag up here (Oct 21 2026). The badge under the player is
+              the one that says what the broadcast is doing; two of them, one
+              above the other, said it twice. This line is the night's: what
+              it is, and what the results are doing. */}
           <h2 className="en-head-title">Election Night 2026</h2>
-          <span className="en-head-time">Results updating · 9:41 PM ET</span>
+          <span className="en-head-time">{headLine(stream, state.night.at)}</span>
           <span className="en-head-spacer" />
           <span className="en-sponsor">
             Presented by
@@ -44,14 +87,32 @@ export function ElectionNight({ state }: ElectionNightProps) {
           </span>
         </header>
 
-        <div className="en-grid">
-          <LivePlayer />
-          <div className="en-chat-holder">
-            <LiveChat />
+        <div className={`en-grid${chatOpen ? '' : ' en-grid--solo'}`}>
+          <div className="en-stream-col">
+            <LivePlayer status={stream} at={state.night.at} />
+            {/* Chat folded: the DW+ watch page's own tab, standing on the
+                video's right edge, opens it again. */}
+            {!chatOpen && (
+              <button ref={tabRef} type="button" className="en-chat-tab" onClick={() => toggle(true)}>
+                <span className="en-chat-tab-label">Live Chat</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M4 12a8 8 0 1 1 3.3 6.5L4 19.5l1-3.2A8 8 0 0 1 4 12Z"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
+          {chatOpen && (
+            <div className="en-chat-holder">
+              <LiveChat status={stream} onClose={() => toggle(false)} />
+            </div>
+          )}
+          <MoreEpisodes />
         </div>
-
-        <ResultsBand state={state} />
       </div>
     </section>
   );

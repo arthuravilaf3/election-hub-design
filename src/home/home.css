@@ -122,27 +122,6 @@
   margin-bottom: 20px;
   border-bottom: 1px solid rgb(255 255 255 / 0.1);
 }
-/* LIVE is chrome, so it takes brand — never the party ramp — and brand/600
-   is the step that clears AA with white (the nav's SIGN UP precedent). */
-.en-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--brand-pressed);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 5px 9px 4px;
-  border-radius: 2px;
-}
-.en-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: en-pulse 2s ease-in-out infinite;
-}
 @keyframes en-pulse {
   0%,
   100% {
@@ -204,28 +183,6 @@
   object-fit: cover;
   display: block;
 }
-.en-mark {
-  position: absolute;
-  bottom: 18px;
-  color: #fff;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
-  pointer-events: none;
-}
-.en-mark--dw {
-  left: 24px;
-  font-size: 17px;
-}
-.en-mark--dw i {
-  font-style: normal;
-  color: var(--brand);
-}
-.en-mark--show {
-  right: 24px;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-}
 
 /* The file draws a clean frame, so the controls are a small cluster rather
    than a bar: captions and the persistent player are PRD requirements and
@@ -252,9 +209,116 @@
   background: rgb(0 0 0 / 0.7);
 }
 
-/* The text block is inset 56px from the video's left edge (file 11123:6772). */
+/* ---------- the stream's other states (Oct 8 2026) ----------
+   Upcoming, reconnecting and the replay put one message over the picture,
+   dimmed so the type reads on any frame. Live keeps the clean frame. */
+.en-player:not(.en-player--live) .en-poster {
+  filter: brightness(0.38) saturate(0.7);
+}
+.en-player--interrupted .en-poster {
+  filter: brightness(0.3) saturate(0.4) blur(6px);
+  transform: scale(1.04);
+}
+.en-stage-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  color: #fff;
+}
+.en-stage-msg p {
+  margin: 0;
+}
+.en-stage-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+}
+.en-stage-big {
+  font-size: clamp(36px, 4.4vw, 56px);
+  line-height: 1.05;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.en-stage-title {
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+.en-stage-sub {
+  font-size: 14px;
+  color: var(--ink-subtle);
+}
+.en-stage-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 4px;
+  background: #fff;
+  color: #0a0909;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.en-stage-btn--quiet {
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+}
+.en-stage-btn:focus-visible,
+.en-stage-play:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+.en-stage-play {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 8px;
+  padding-left: 4px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #0a0909;
+  cursor: pointer;
+}
+.en-spinner {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 8px;
+  border: 3px solid rgb(255 255 255 / 0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: en-spin 900ms linear infinite;
+}
+@keyframes en-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* The badge is the DS component and owns its own colour, so the warning
+   tone lands on the line beside it ("Back in a moment"), not on the chip. */
+.en-status--interrupted .en-viewers {
+  color: var(--warning);
+}
+
+/* The text block's inset (Oct 21 2026). The file gives it 56px either side
+   — 800 of text in the 912 column — which reads as a wide gutter once the
+   watermarks are gone. Down to 24, the same inset the chat panel uses, so
+   the two columns share one rhythm and the dek still clears the edges. */
 .en-text {
-  padding: 24px 0 0 56px;
+  padding: 24px 24px 0;
 }
 .en-status {
   display: flex;
@@ -314,21 +378,31 @@
   place-items: center;
   width: 28px;
   height: 28px;
-  border: 0;
   border-radius: 50%;
-  cursor: pointer;
+  text-decoration: none;
+  transition: filter 150ms ease;
 }
+.en-share-btn:hover {
+  filter: brightness(1.15);
+}
+.en-share-btn:focus-visible {
+  outline: 2px solid #fafafa;
+  outline-offset: 2px;
+}
+/* The file's fills: Facebook #3A5999, X #1B1B1B (with a hairline so it
+   reads on the page), email #999. */
 .en-share-btn--fb {
-  background: #1877f2;
+  background: #3a5999;
   color: #fff;
 }
 .en-share-btn--x {
-  background: #000;
+  background: #1b1b1b;
   color: #fff;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
 }
-.en-share-btn--send {
-  background: #d9d9d9;
-  color: #1a1a1a;
+.en-share-btn--email {
+  background: #999;
+  color: #0a0909;
 }
 
 /* ---------- chat ---------- */
@@ -554,16 +628,43 @@
   gap: 10px;
   margin-top: 12px;
 }
+/* DS Button, Style=primary (Oct 9 2026, replacing the red): #FAFAFA with
+   #0A0909 SemiBold, radius sm (4px), at the small size. */
 .en-gate-btn {
+  height: 40px;
+  padding: 11px 20px;
   border: 0;
   border-radius: 4px;
-  background: var(--brand-pressed);
-  color: #fff;
+  background: #fafafa;
+  color: #0a0909;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  cursor: pointer;
+}
+.en-gate-btn:hover {
+  background: #e5e5e5;
+}
+.en-gate-btn:focus-visible {
+  outline: 2px solid #fafafa;
+  outline-offset: 2px;
+}
+/* Members already in sign in; the secondary action is outlined, not filled. */
+.en-gate-signin {
+  height: 40px;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  border-radius: 4px;
+  background: none;
+  color: var(--ink);
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  padding: 8px 14px;
+  padding: 7px 14px;
   cursor: pointer;
+}
+.en-gate-signin:hover {
+  border-color: rgb(255 255 255 / 0.5);
 }
 .en-gate-back {
   border: 0;
@@ -574,44 +675,230 @@
   cursor: pointer;
 }
 
-/* ====================================================================== */
-/* RESULTS BAND — under the stream and the chat                           */
-/* ====================================================================== */
-
-.results-band {
-  display: flex;
-  align-items: center;
-  gap: 48px;
-  margin-top: 28px;
-  padding-top: 24px;
-  border-top: 1px solid rgb(255 255 255 / 0.1);
+.en-chat-notice {
+  margin: 0 0 4px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-subtle);
+}
+.en-chat-notice--interrupted {
+  box-shadow: inset 3px 0 0 var(--warning);
+}
+.en-chat-closed {
+  margin: 0;
+  padding: 24px;
+  background: var(--surface-2);
+  font-size: 14px;
+  color: var(--ink-subtlest);
 }
 
-.band-map-block {
+/* ====================================================================== */
+/* MORE EPISODES — under the player (Figma 391:150032)                    */
+/* ====================================================================== */
+
+.en-grid--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+.en-more {
+  grid-column: 1;
+  min-width: 0;
+  margin-top: 40px;
+}
+.en-more-title {
+  margin: 0 0 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.en-more-frame {
+  position: relative;
+}
+.en-more-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.en-more-row::-webkit-scrollbar {
+  display: none;
+}
+.en-ep {
+  flex: 0 0 338px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.en-ep-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--surface);
+  margin-bottom: 6px;
+}
+.en-ep-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.en-ep:hover .en-ep-art img {
+  transform: scale(1.03);
+}
+.en-ep-length {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: rgb(0 0 0 / 0.72);
+  font-size: 11px;
+  font-weight: 600;
+}
+.en-ep-show {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.en-ep-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.en-ep:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+/* The file's Carousel Arrow: 32px round, gray-20 ground, a 20px chevron. */
+.en-more-arrow {
+  position: absolute;
+  top: calc((338px * 9 / 16) / 2 - 16px);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #333;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.5);
+}
+.en-more-arrow:hover {
+  background: #444;
+}
+.en-more-arrow--next {
+  right: -16px;
+}
+.en-more-arrow--prev {
+  left: -16px;
+}
+
+/* ====================================================================== */
+/* RESULTS BAND — the hub's panel, under the stream and the chat          */
+/* ====================================================================== */
+
+/* The brand gradient is the nav's "The Midterms" paint (#2A60F7 → crimson,
+   solid blue to 35%, blend to 62%) — kept as an identity literal, as the
+   nav keeps it, not as a reading of any race. */
+.results-band {
+  --brand-gradient: linear-gradient(90deg, #2a60f7 0%, #2a60f7 35%, var(--color-crimson-500) 62%, var(--color-crimson-500) 100%);
+  position: relative;
+  margin-top: 48px;
+  padding: 28px 32px 22px;
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.results-band::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--brand-gradient);
+}
+
+.band-head {
   display: flex;
   align-items: center;
-  gap: 18px;
-  flex: none;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+}
+/* Set like the hub's own title: bold, tight, in ink. */
+.band-title {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.band-fresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.band-fresh::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-crimson-500);
+  animation: en-pulse 2s ease-in-out infinite;
+}
+.band-fresh--delayed {
+  color: var(--warning);
+}
+.band-fresh--delayed::before {
+  background: var(--warning);
+  animation: none;
+}
+.band-mark {
+  display: block;
+  width: 210px;
+  height: auto;
+}
+
+.band-body {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+}
+.band-map-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 .band-map {
   display: block;
-  width: 190px;
+  width: 100%;
   height: auto;
-}
-.band-map-side {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 .band-legend {
   display: flex;
-  flex-direction: column;
-  gap: 7px;
+  flex-wrap: wrap;
+  gap: 8px 18px;
   list-style: none;
   margin: 0;
   padding: 0;
   font-size: 12px;
-  color: var(--ink-subtlest);
+  color: var(--ink-soft);
 }
 .band-legend li {
   display: flex;
@@ -641,94 +928,323 @@
 .band-swatch--early {
   background: var(--color-chart-neutral-unreported);
 }
-.band-full {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink);
-  text-decoration: none;
+
+.band-chambers {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
 }
-.band-full:hover {
-  text-decoration: underline;
+.band-chamber-title {
+  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }
 
-.band-balances {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px 48px;
-  align-items: start;
-}
-.band-balance-head {
+.band-foot {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin: 0 0 8px;
-}
-.band-balance-label {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.band-balance-sub {
-  font-size: 12px;
-  color: var(--ink-subtlest);
-}
-.band-bar {
-  position: relative;
-  display: flex;
-  height: 12px;
-  border-radius: 2px;
-  overflow: hidden;
-  background: var(--color-chart-neutral-unreported);
-}
-.band-bar-seg {
-  height: 100%;
-}
-.band-bar-seg--dem {
-  background: var(--color-chart-dem-safe);
-}
-.band-bar-seg--rep {
-  margin-left: auto;
-  background: var(--color-chart-rep-safe);
-}
-.band-bar-mark {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--ink);
-  transform: translateX(-50%);
-}
-.band-bar-legend {
-  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin: 6px 0 0;
-  font-size: 13px;
-}
-/* The numbers are NOT set in the party hues: indigo/500 on this surface
-   measures 2.51:1, and the hub only tints party text in light mode. The bar
-   above carries the colour and the D and R do the identifying — which is the
-   encoding the PRD asks for anyway: never colour alone. */
-.band-num {
-  font-weight: 700;
-}
-.band-num--win {
-  font-weight: 400;
-  color: var(--ink-subtlest);
+  gap: 24px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
 }
 .band-source {
-  grid-column: 1 / -1;
   margin: 0;
   font-size: 11px;
   line-height: 1.5;
-  color: var(--ink-subtlest);
+  color: var(--ink-soft);
 }
-.band-source--delayed {
+.band-full {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.band-full:hover {
+  background: var(--surface-hover);
+}
+
+/* ---------- the seat line, at the home's scale ---------- */
+
+/* The hub's .seatline, re-set here: avatars at the ends, the figure in ink,
+   only the party letter in colour, rounded runs with 3px gaps, the majority
+   ticked over the bar. Party letters ride the safe fills, which clear 3:1 on
+   this surface as large bold text. */
+.hseat-ends {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.hseat-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.hseat-big {
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.hseat-party {
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.hseat-party--dem {
+  color: var(--color-chart-dem-safe);
+}
+.hseat-party--rep {
+  color: var(--color-chart-rep-safe);
+}
+.hseat .party-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+.hseat-win {
+  position: absolute;
+  bottom: -12px;
+  transform: translateX(-50%);
+  padding-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.hseat-win::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 1px;
+  height: 7px;
+  background: var(--ink);
+}
+.hseat-bar {
+  position: relative;
+  display: flex;
+  gap: 3px;
+  height: 12px;
+}
+.hseat-run {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hseat-run--called-dem { background: var(--color-chart-dem-reporting-5); }
+.hseat-run--lead-dem {
+  background: repeating-linear-gradient(45deg, var(--color-chart-overlay-hatch) 0 2px, transparent 2px 5px), var(--color-chart-dem-reporting-3);
+}
+.hseat-run--early {
+  flex: 1;
+  background: var(--color-chart-neutral-unreported);
+}
+.hseat-run--lead-rep {
+  background: repeating-linear-gradient(45deg, var(--color-chart-overlay-hatch) 0 2px, transparent 2px 5px), var(--color-chart-rep-reporting-3);
+}
+.hseat-run--called-rep { background: var(--color-chart-rep-reporting-5); }
+.hseat-mark {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ink);
+  transform: translateX(-50%);
+}
+.hseat-foot {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+/* On a phone the majority line has no room over the bar; it takes the
+   middle of the foot instead (the uncalled count steps out). */
+.hseat-foot-control {
+  display: none;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ====================================================================== */
+/* RESULTS DOCK — the band, docked while it is off screen                 */
+/* ====================================================================== */
+
+.dock {
+  --brand-gradient: linear-gradient(90deg, #2a60f7 0%, #2a60f7 35%, var(--color-crimson-500) 62%, var(--color-crimson-500) 100%);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 620;
+  background: rgb(21 21 21 / 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 -10px 30px rgb(0 0 0 / 0.45);
+  transform: translateY(110%);
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dock::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--brand-gradient);
+}
+.dock.is-shown {
+  transform: none;
+}
+.dock-rail {
+  max-width: var(--rail);
+  margin: 0 auto;
+  padding: 14px var(--rail-pad);
+  display: flex;
+  align-items: center;
+  gap: 64px;
+}
+.dock-brand {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.dock-title {
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dock-fresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.dock-fresh--delayed {
   color: var(--warning);
 }
+.dock-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-crimson-500);
+  animation: en-pulse 2s ease-in-out infinite;
+}
+/* Oct 9 2026: the races a little narrower and more air between the dock's
+   parts — each seat line caps at 380px and the pair sits centred between
+   the brand and the CTA instead of stretching to meet them. */
+.dock-chambers {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 380px));
+  justify-content: center;
+  gap: 72px;
+}
+.hseat--compact .hseat-ends {
+  margin-bottom: 7px;
+}
+.hseat--compact .hseat-big {
+  font-size: 18px;
+}
+.hseat--compact .hseat-party {
+  font-size: 12px;
+}
+.hseat--compact .party-mark {
+  width: 18px;
+  height: 18px;
+}
+.hseat--compact .hseat-end {
+  gap: 6px;
+}
+.hseat-chamber {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.hseat--compact .hseat-bar {
+  height: 6px;
+  gap: 2px;
+}
+.hseat--compact .hseat-run {
+  border-radius: 2px;
+}
+.hseat--compact .hseat-foot {
+  justify-content: center;
+  margin-top: 6px;
+  font-size: 11px;
+}
+.dock-source {
+  font-size: 11px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.dock-source--delayed {
+  color: var(--warning);
+}
+/* The full map is the dock's one action: the DS primary button (white on
+   the dark surface, as the promos draw it), a step shorter for the bar. */
+.dock-cta {
+  flex: none;
+  height: 40px;
+  padding: 11px 24px;
+}
+.dock-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: -40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+}
+.dock-close:hover {
+  background: var(--surface-hover);
+}
+.dock-close:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Everything else on the bottom edge steps up over the dock. */
+:root[data-page='home'] {
+  --dock-h: 96px;
+}
+
 
 /* ====================================================================== */
 /* THE SECTIONS BELOW                                                     */
@@ -813,24 +1329,99 @@
   }
   .en-text {
     padding-left: 0;
+    padding-right: 0;
   }
-  .results-band {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 24px;
+  .band-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
   }
+  .band-map-block {
+    max-width: 420px;
+  }
+
   .home-row--8 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 @media (max-width: 760px) {
-  .band-balances,
   .home-row--4,
   .home-row--8 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .band-balances {
-    grid-template-columns: 1fr;
+  .results-band {
+    padding: 22px 18px 18px;
+  }
+  .band-title {
+    font-size: 28px;
+  }
+  .band-mark {
+    width: 104px;
+  }
+  .band-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hseat-big {
+    font-size: 24px;
+  }
+  .dock-rail {
+    gap: 14px;
+    padding: 10px 16px;
+  }
+  .dock-brand {
+    display: none;
+  }
+  /* Two rows on a phone: the seat lines and the close, then the CTA. */
+  .dock-rail {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .dock-chambers {
+    flex: 1 1 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dock-cta {
+    order: 3;
+    flex: 1 0 100%;
+    height: 36px;
+    padding: 9px 12px;
+  }
+  .dock-chambers {
+    gap: 16px;
+  }
+  .dock-close {
+    margin-left: 0;
+  }
+  .en-ep {
+    flex-basis: 260px;
+  }
+  .hseat-win,
+  .hseat-foot > span:not(.hseat-foot-control) {
+    display: none;
+  }
+  .hseat-foot {
+    justify-content: center;
+  }
+  .hseat-foot-control {
+    display: inline;
+  }
+  .hseat--compact .party-mark,
+  .hseat--compact .hseat-foot {
+    display: none;
+  }
+  .hseat--compact .hseat-big {
+    font-size: 16px;
+  }
+  .hseat-chamber {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+  .dock-close {
+    width: 30px;
+    height: 30px;
+  }
+  :root[data-page='home'] {
+    --dock-h: 106px;
   }
   .home-masthead {
     grid-template-columns: 1fr;
@@ -846,8 +1437,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .en-live-dot {
+  .en-spinner,
+  .band-fresh::before,
+  .dock-dot {
     animation: none;
+  }
+  .dock,
+  .hseat-run,
+  .en-ep-art img {
+    transition: none;
   }
 }
 
@@ -859,4 +1457,687 @@
   left: auto;
   right: 24px;
   bottom: 24px;
+  transition: bottom 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Oct 9 2026: the clock steps up over the results dock and over the chat's
+   Join button, which own the bottom edge and the bottom-right corner. */
+:root[data-page='home'][data-dock='on'] .night-clock {
+  bottom: calc(24px + var(--dock-h));
+}
+
+/* Prototype chrome: the stream-state switch, in the corner the clock leaves
+   free on this page. */
+.stream-switch {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 640;
+  transition: bottom 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 999px;
+  background: rgb(20 20 20 / 0.9);
+  backdrop-filter: blur(10px);
+  font-size: 12px;
+}
+.stream-switch-label {
+  padding: 0 8px 0 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-subtlest);
+}
+.stream-switch-btn {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-subtle);
+  font: inherit;
+  cursor: pointer;
+}
+.stream-switch-btn[aria-pressed='true'] {
+  background: #fff;
+  color: #0a0909;
+}
+.stream-switch-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.stream-switch-now {
+  opacity: 0.6;
+}
+@media (max-width: 760px) {
+  .stream-switch {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    overflow-x: auto;
+  }
+}
+
+/* ====================================================================== */
+/* BEFORE ELECTION DAY — hero row, Top Stories, the Midterms promos       */
+/* ====================================================================== */
+
+.home-main--pre {
+  padding-top: 8px;
+}
+/* The file's hero is 852 wide on the 1376 rail; Top Stories takes the rest. */
+.home-hero-row {
+  display: grid;
+  grid-template-columns: minmax(0, 852fr) minmax(0, 500fr);
+  gap: 24px;
+  align-items: start;
+}
+.home-top-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.home-top-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+}
+.home-top-item:first-child {
+  padding-top: 0;
+}
+.home-top-item img {
+  flex: none;
+  width: 88px;
+  height: 66px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.home-top-item h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+/* ---------- banner carousel (Figma 376:135725 frame) ---------- */
+
+.hc {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0b0a0a;
+}
+.hc-stage {
+  position: relative;
+  aspect-ratio: 852 / 479;
+  background: #180501;
+}
+.hc-slide {
+  position: absolute;
+  inset: 0;
+  animation: hc-in 500ms ease both;
+}
+@keyframes hc-in {
+  from {
+    opacity: 0;
+  }
+}
+.hc-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hc-kicker {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  padding: 6px 12px;
+  background: var(--brand-pressed);
+  color: #fafafa;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.hc-body {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 120px 48px 40px;
+  background: linear-gradient(to top, #0a0909, rgb(10 9 9 / 0));
+  text-align: center;
+}
+.hc-title {
+  margin: 0 auto 20px;
+  max-width: 560px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  color: #fafafa;
+  text-wrap: balance;
+}
+/* 40px 120px 48px around a 612px row of 4px segments, 15px apart. */
+.hc-progress {
+  display: flex;
+  gap: 15px;
+  padding: 40px 120px 48px;
+}
+.hc-seg {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #424242;
+  overflow: hidden;
+  cursor: pointer;
+}
+/* A taller hit area than the 4px bar it sits on. */
+.hc-seg::before {
+  content: '';
+  position: absolute;
+  inset: -10px 0;
+}
+.hc-seg.is-done {
+  background: #8f8f8f;
+}
+.hc-seg:focus-visible {
+  outline: 2px solid #fafafa;
+  outline-offset: 6px;
+}
+.hc-fill {
+  position: absolute;
+  inset: 0;
+  background: #fafafa;
+  transform-origin: left;
+  animation-name: hc-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+.hc:hover .hc-fill,
+.hc:focus-within .hc-fill {
+  animation-play-state: paused;
+}
+@keyframes hc-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---------- the Midterms promo art (shared) ---------- */
+
+.mp-hero,
+.mp-strip {
+  position: relative;
+  overflow: hidden;
+  background: #180501;
+  color: #fafafa;
+  isolation: isolate;
+}
+.mp-bokeh {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3;
+}
+/* The file's 40% wash with a progressive background blur (15px at the top,
+   none at the bottom): one blur over the circles, masked to fade out. */
+.mp-wash {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: rgb(11 10 10 / 0.4);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  mask-image: linear-gradient(to bottom, #000, rgb(0 0 0 / 0.35));
+}
+/* The file's badge red, #DB3D3B, measures 4.2:1 under 14px white text —
+   short of AA. brand/600 (the LIVE pill's step) is the nearest red that
+   clears it; flagged for the DS Badge. */
+.mp-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--brand-pressed);
+  color: #fafafa;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.mp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+  padding: 16px 32px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  text-decoration: none;
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
+}
+.mp-btn--primary {
+  background: #fafafa;
+  color: #0a0909;
+}
+.mp-btn--primary:hover {
+  background: #e5e5e5;
+}
+.mp-btn--ghost {
+  color: #fafafa;
+}
+.mp-btn--ghost:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+.mp-btn:focus-visible {
+  outline: 2px solid #fafafa;
+  outline-offset: 3px;
+}
+.mp-btn:active {
+  transform: scale(0.98);
+}
+
+/* The map's entrance: each dot resolves out of a blur, west to east. */
+.mp-dot {
+  animation: mp-dot-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(120ms + var(--mp-at, 0ms));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes mp-dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+    filter: blur(4px);
+  }
+}
+
+/* ---------- hero slide (852x479) ---------- */
+
+.mp-hero {
+  position: absolute;
+  inset: 0;
+}
+.mp-hero-shade {
+  position: absolute;
+  inset: 27% 0 0;
+  z-index: -1;
+  background: linear-gradient(to bottom, rgb(10 9 9 / 0), #0a0909);
+}
+.mp-hero .mp-badge {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+}
+/* 404x214 at (224,114) of 852x479. */
+.mp-map--hero {
+  position: absolute;
+  left: 26.3%;
+  top: 23.8%;
+  width: 47.4%;
+  height: auto;
+}
+.mp-hero-copy {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 24px;
+}
+.mp-hero-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.mp-hero-dek {
+  margin: 4px 0 20px;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #8f8f8f;
+}
+
+/* ---------- strip (1376x320) ---------- */
+
+.mp-strip {
+  margin-top: 48px;
+  min-height: 320px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 40px 64px;
+}
+.mp-strip-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to right, rgb(10 9 9 / 0.95), rgb(10 9 9 / 0) 55%);
+}
+.mp-strip-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.mp-strip-title {
+  margin: 16px 0 8px;
+  font-size: 48px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.mp-strip-dek {
+  margin: 0 0 32px;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #8f8f8f;
+}
+.mp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.mp-map--strip {
+  flex: none;
+  width: 454px;
+  height: auto;
+}
+
+@media (max-width: 1180px) {
+  .home-hero-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mp-strip {
+    flex-direction: column-reverse;
+    align-items: center;
+    text-align: center;
+    padding: 40px 32px;
+  }
+  .mp-strip-copy {
+    align-items: center;
+  }
+  .mp-strip-shade {
+    background: linear-gradient(to bottom, rgb(10 9 9 / 0), rgb(10 9 9 / 0.9) 60%);
+  }
+  .mp-map--strip {
+    width: min(454px, 100%);
+  }
+}
+/* Phone: the file's Hero · Mobile (360x552) and Strip · Mobile (360x535). */
+@media (max-width: 760px) {
+  .hc-stage {
+    aspect-ratio: 360 / 460;
+  }
+  .mp-hero .mp-badge {
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  .mp-map--hero {
+    left: 7%;
+    top: 18%;
+    width: 86%;
+  }
+  .mp-hero-shade {
+    inset: 40% 0 0;
+  }
+  .mp-hero-title {
+    font-size: 20px;
+  }
+  .hc-progress {
+    padding: 28px 48px 36px;
+  }
+  .hc-body {
+    padding: 80px 20px 28px;
+  }
+  .mp-strip {
+    padding: 32px 24px;
+    gap: 24px;
+  }
+  .mp-strip-title {
+    font-size: 36px;
+  }
+  .mp-strip-dek {
+    font-size: 16px;
+    margin-bottom: 24px;
+  }
+  .mp-actions {
+    flex-direction: column;
+    align-self: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mp-dot,
+  .hc-slide {
+    animation: none;
+  }
+  /* No auto-advance: the segment only marks the current slide. */
+  .hc-fill {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* ---------- prototype chrome: the DEV corner ---------- */
+
+/* The phase switch and (on the night) the stream switch stack bottom-left. */
+.home-dev {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 640;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  transition: bottom 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.home-dev .stream-switch {
+  position: static;
+}
+:root[data-page='home'][data-dock='on'] .home-dev {
+  bottom: calc(24px + var(--dock-h));
+}
+/* DEV: amber and dashed, the opposite of anything in the design. */
+.phase-switch {
+  border: 1px dashed #f5a524;
+}
+.dev-chip {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f5a524;
+  color: #0a0909;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Phone: the home keeps the 16px gutter the hub uses on a phone (the 64px
+   desktop rail was squeezing every surface on this page to ~260px). The hero
+   slide stacks in flow, as Hero · Mobile 376:136251 draws it: badge, map,
+   copy — so the map can never run under the title. */
+@media (max-width: 760px) {
+  :root[data-page='home'] {
+    --rail-pad: 16px;
+  }
+  .hc-stage {
+    aspect-ratio: auto;
+  }
+  .hc-slide {
+    position: relative;
+  }
+  .hc-slide--story {
+    aspect-ratio: 360 / 460;
+  }
+  .mp-hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 0;
+  }
+  .mp-hero .mp-badge {
+    position: static;
+    transform: none;
+    order: -1;
+  }
+  .en-head {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .en-head-spacer {
+    display: none;
+  }
+
+  .mp-map--hero {
+    position: static;
+    width: 100%;
+    margin: 24px 0 28px;
+  }
+  .mp-hero-copy {
+    position: static;
+    padding: 0;
+  }
+}
+
+/* DEV chrome can be hidden to judge the layout clean (Oct 9 2026): only the
+   small toggle stays. Stored per browser. */
+.dev-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 6px;
+  border: 1px dashed #f5a524;
+  border-radius: 999px;
+  background: rgb(20 20 20 / 0.9);
+  backdrop-filter: blur(10px);
+  color: var(--ink-subtle);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.dev-toggle:hover {
+  color: var(--ink);
+}
+.dev-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+:root[data-dev='hidden'] .night-clock,
+:root[data-dev='hidden'] .home-dev > :not(.dev-toggle) {
+  display: none;
+}
+
+/* ====================================================================== */
+/* DS BADGE (live) — Badge translucid/sm/regular/sm + StatusDot live      */
+/* ====================================================================== */
+
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.8);
+  color: #fafafa;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.ds-badge--nodot {
+  padding-left: 8px;
+}
+.ds-badge-dot-slot {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+}
+.ds-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #db3d3b;
+  animation: en-pulse 2s ease-in-out infinite;
+}
+/* On the page's near-black the 80% black ground disappears; a hairline
+   keeps the badge's edge (the DS draws it over pictures). */
+.en-head .ds-badge,
+.dock .ds-badge {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+
+/* ---------- the folded chat's tab (DW+ watch page) ---------- */
+
+.en-stream-col {
+  position: relative;
+  min-width: 0;
+}
+/* Stands on the video's right edge near the top: a dark tab, the label set
+   vertically, the chat glyph under it. */
+/* Under the player's control cluster (14–46px), so it never covers them. */
+.en-chat-tab {
+  position: absolute;
+  top: 64px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px;
+  border: 0;
+  border-radius: 6px 0 0 6px;
+  background: rgb(21 21 21 / 0.92);
+  color: #fafafa;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: -4px 0 16px rgb(0 0 0 / 0.35);
+}
+.en-chat-tab:hover {
+  background: #212121;
+}
+.en-chat-tab:focus-visible {
+  outline: 2px solid #fafafa;
+  outline-offset: 2px;
+}
+.en-chat-tab-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------- dock: the live badge over the title ---------- */
+
+.dock-brand {
+  gap: 6px;
+}
+.dock-brand .ds-badge {
+  align-self: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-badge-dot {
+    animation: none;
+  }
 }

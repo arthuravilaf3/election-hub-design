@@ -3,10 +3,11 @@
  * visual weight").
  *
  * Built to DW 3.0 Source of Truth, "Desktop - Default" 11123:6768 (Sep 22
- * 2026): the video frame at 912x502 with 8px radius and the two burnt-in
- * watermarks, then the text block INSET 56px from the video's left edge —
- * status line, heading, show · date, dek — and the three share circles 28px
- * wide, 12px apart, at the foot.
+ * 2026): the video frame at 912x502 with 8px radius, then the text block
+ * under it — status line, heading, show · date, dek — and the three share
+ * circles 28px wide, 12px apart, at the foot. The file's two burnt-in
+ * watermarks came out on Oct 21 2026: they belong to the broadcast's own
+ * picture, not to the player chrome, and a real feed carries its own.
  *
  * MOCK: a poster, not a video element. Nothing here plays.
  *
@@ -15,33 +16,33 @@
  * in the PRD and have to be visible somewhere), and the viewer count rides the
  * status line below rather than a bar over the picture.
  *
- * Status is TEXT + ICON, never colour alone (hub a11y rule) — the dot is
- * decoration on top of the word "Live", not the carrier of it.
+ * THE STATUS LINE IS THE DS BADGE (Oct 21 2026), the same LiveBadge the
+ * results dock uses — translucid black, 4px radius, the 8px brand dot
+ * pulsing while the stream is on air. It had been a bare dot and a word.
+ * Status is still TEXT + ICON, never colour alone (hub a11y rule): the dot
+ * is decoration on top of the word, not the carrier of it.
+ *
+ * FOUR STATES (Oct 8 2026, see stream.ts). Live is the frame as the file
+ * draws it. The other three put one plain message over a dimmed picture —
+ * when it starts, that it is reconnecting, or the replay — and swap the
+ * status line under it; the title, the dek and the share row never move, so
+ * the page does not jump when the broadcast changes state.
  */
+import { formatET } from '../data/time';
+import { LiveBadge } from './LiveBadge';
 import { STREAM } from './homeContent';
+import { STREAM_STARTS_MS, startsIn, type StreamStatus } from './stream';
 
-const STATUS: Record<'live' | 'upcoming' | 'ended', { label: string; icon: 'dot' | 'clock' | 'replay' }> = {
-  live: { label: 'Live', icon: 'dot' },
-  upcoming: { label: 'Upcoming', icon: 'clock' },
-  ended: { label: 'Replay', icon: 'replay' },
+/* The badge asks one thing of each state: is the dot on? It is on only while
+   the reader is actually watching live — "Reconnecting" is the stream off the
+   air, so the dot stops and the line goes to the warning tone instead. */
+const STATUS: Record<StreamStatus, { label: string; dot: boolean }> = {
+  live: { label: 'Live', dot: true },
+  upcoming: { label: 'Upcoming', dot: false },
+  interrupted: { label: 'Reconnecting', dot: false },
+  ended: { label: 'Replay', dot: false },
 };
 
-function StatusIcon({ kind }: { kind: 'dot' | 'clock' | 'replay' }) {
-  if (kind === 'dot') return <span className="en-status-dot" aria-hidden="true" />;
-  if (kind === 'clock') {
-    return (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-        <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 const CONTROLS: Array<{ id: string; label: string; path: React.ReactNode }> = [
   {
@@ -78,42 +79,115 @@ const CONTROLS: Array<{ id: string; label: string; path: React.ReactNode }> = [
   },
 ];
 
-/* The file's three circles: Facebook blue, X black, send on a light chip. */
-const SHARE: Array<{ id: string; label: string; path: React.ReactNode }> = [
-  { id: 'fb', label: 'Share on Facebook', path: <path d="M15.2 9.6h1.8V7.2h-1.8c-1.6 0-2.9 1.3-2.9 2.9v1.3h-1.6v2.4h1.6v5h2.4v-5h1.8l.5-2.4h-2.3v-1.3c0-.3.2-.5.5-.5Z" fill="currentColor" /> },
-  { id: 'x', label: 'Share on X', path: <path d="M8.4 7.8 12.6 13 8.6 18.2h1.4l3.3-4.3 3.2 4.3h3.1l-4.2-5.4 3.8-5h-1.4l-3 3.9-2.9-3.9H8.4Z" fill="currentColor" /> },
-  { id: 'send', label: 'Send', path: <path d="M20 7 6.5 12.8l4.8 1.9 1.9 4.8L20 7Z" fill="currentColor" /> },
+/* The file's three share circles (391:150010): Facebook, X, email — 28px,
+   12px apart. Real share links now (Oct 9 2026), each to the watch page;
+   the glyphs are drawn on a 28px box so they sit centred in the circle. */
+const SHARE_URL = 'https://www.dailywire.com/watch/election-night-2026';
+const SHARE_TEXT = 'Election Night 2026: live results, race calls and analysis on DailyWire+';
+const SHARE: Array<{ id: string; label: string; href: string; path: React.ReactNode }> = [
+  {
+    id: 'fb',
+    label: 'Share on Facebook',
+    href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SHARE_URL)}`,
+    path: <path d="M15.3 9.5H17V7h-2c-2 0-3.2 1.3-3.2 3.2V12H10v2.5h1.8V21h2.6v-6.5h2.1l.4-2.5h-2.5v-1.6c0-.6.3-.9.9-.9Z" fill="currentColor" />,
+  },
+  {
+    id: 'x',
+    label: 'Share on X',
+    href: `https://x.com/intent/post?url=${encodeURIComponent(SHARE_URL)}&text=${encodeURIComponent(SHARE_TEXT)}`,
+    path: <path d="M8.5 8h3.1l2.6 3.5L17.2 8h1.4l-3.8 4.3L19.5 20h-3.1l-2.9-3.9L10.1 20H8.7l4.1-4.6L8.5 8Zm2 1 6.4 10h1.1L11.6 9h-1.1Z" fill="currentColor" />,
+  },
+  {
+    id: 'email',
+    label: 'Share by email',
+    href: `mailto:?subject=${encodeURIComponent(SHARE_TEXT)}&body=${encodeURIComponent(SHARE_URL)}`,
+    path: (
+      <>
+        <rect x="8" y="9.5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+        <path d="m8.5 10.5 5.5 4 5.5-4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      </>
+    ),
+  },
 ];
 
-export function LivePlayer() {
-  const status = STATUS[STREAM.status];
+/** What the picture says when it is not the broadcast. */
+function StageMessage({ status, at }: { status: StreamStatus; at: number | null }) {
+  if (status === 'upcoming') {
+    return (
+      <div className="en-stage-msg">
+        <p className="en-stage-eyebrow">Starts at {formatET(STREAM_STARTS_MS)}</p>
+        <p className="en-stage-big">{startsIn(at)}</p>
+        <button type="button" className="en-stage-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16ZM10 20.5a2 2 0 0 0 4 0"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Remind me
+        </button>
+      </div>
+    );
+  }
+  if (status === 'interrupted') {
+    return (
+      <div className="en-stage-msg" role="status">
+        <span className="en-spinner" aria-hidden="true" />
+        <p className="en-stage-title">The stream is reconnecting</p>
+        <p className="en-stage-sub">The chat and the results below keep updating.</p>
+        <button type="button" className="en-stage-btn en-stage-btn--quiet">
+          Try again
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="en-stage-msg">
+      <button type="button" className="en-stage-play" aria-label="Watch the replay">
+        <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor" />
+        </svg>
+      </button>
+      <p className="en-stage-title">Watch the replay</p>
+      <p className="en-stage-sub">{STREAM.replayLength} · aired Nov 3</p>
+    </div>
+  );
+}
+
+export function LivePlayer({ status: kind, at }: { status: StreamStatus; at: number | null }) {
+  const status = STATUS[kind];
   const viewers = new Intl.NumberFormat('en-US').format(STREAM.viewers);
+  const live = kind === 'live';
 
   return (
-    <div className="en-player">
+    <div className={`en-player en-player--${kind}`}>
       <div className="en-stage">
         <img className="en-poster" src={STREAM.poster} alt="" />
-        <span className="en-mark en-mark--dw">
-          DAILY WIRE<i aria-hidden="true">+</i>
-        </span>
-        <span className="en-mark en-mark--show">ELECTION NIGHT</span>
 
-        <div className="en-controls">
-          {CONTROLS.map((c) => (
-            <button key={c.id} type="button" className="en-ctrl" aria-label={c.label} title={c.label}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                {c.path}
-              </svg>
-            </button>
-          ))}
-        </div>
+        {live ? (
+          <div className="en-controls">
+            {CONTROLS.map((c) => (
+              <button key={c.id} type="button" className="en-ctrl" aria-label={c.label} title={c.label}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  {c.path}
+                </svg>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <StageMessage status={kind} at={at} />
+        )}
       </div>
 
       <div className="en-text">
-        <p className="en-status">
-          <StatusIcon kind={status.icon} />
-          {status.label}
-          <span className="en-viewers">{viewers} watching</span>
+        <p className={`en-status en-status--${kind}`}>
+          <LiveBadge label={status.label} dot={status.dot} />
+          {live && <span className="en-viewers">{viewers} watching</span>}
+          {kind === 'upcoming' && <span className="en-viewers">Tonight, {formatET(STREAM_STARTS_MS)}</span>}
+          {kind === 'interrupted' && <span className="en-viewers">Back in a moment</span>}
+          {kind === 'ended' && <span className="en-viewers">{viewers} watched live</span>}
         </p>
         <h2 className="en-title">{STREAM.title}</h2>
         <p className="en-meta">
@@ -127,17 +201,19 @@ export function LivePlayer() {
 
         <div className="en-share">
           {SHARE.map((s) => (
-            <button
+            <a
               key={s.id}
-              type="button"
               className={`en-share-btn en-share-btn--${s.id}`}
+              href={s.href}
+              target={s.id === 'email' ? undefined : '_blank'}
+              rel={s.id === 'email' ? undefined : 'noopener noreferrer'}
               aria-label={s.label}
               title={s.label}
             >
               <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-                <g transform="translate(2 2)">{s.path}</g>
+                {s.path}
               </svg>
-            </button>
+            </a>
           ))}
         </div>
       </div>
