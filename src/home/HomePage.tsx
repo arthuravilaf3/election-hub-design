@@ -42,12 +42,12 @@ import { ChatSwitch } from './ChatSwitch';
 import { parseStreamParam, streamStatusAt, type StreamStatus } from './stream';
 import { parseChatParam, type ChatStatus } from './chat';
 
-/** `?chat=on|down` forces the chat's health, independently of the stream. */
+/** `?chat=member|locked|down` forces the chat panel, independently of the stream. */
 function chatFromUrl(): ChatStatus {
   try {
-    return parseChatParam(new URLSearchParams(window.location.search).get('chat')) ?? 'on';
+    return parseChatParam(new URLSearchParams(window.location.search).get('chat')) ?? 'member';
   } catch {
-    return 'on';
+    return 'member';
   }
 }
 
@@ -88,7 +88,7 @@ export function HomePage() {
      (null = follow the clock). */
   const [forcedStream, setForcedStream] = useState<StreamStatus | null>(streamFromUrl);
   const stream = forcedStream ?? streamStatusAt(state.night.at);
-  /* The chat's health is its own: the PRD requires the surfaces to fail
+  /* The chat panel is its own: the PRD requires the surfaces to fail
      independently, so nothing about the stream can set this. */
   const [chat, setChat] = useState<ChatStatus>(chatFromUrl);
   /* Election day unless the link says otherwise: /election-day/ keeps

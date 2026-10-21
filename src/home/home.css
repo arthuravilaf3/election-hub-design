@@ -468,6 +468,13 @@
   border: 0;
   border-top: 1px solid rgb(255 255 255 / 0.12);
 }
+/* The room, and the wall that can cover it. */
+.en-chat-main {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
 .en-chat-scroll {
   flex: 1;
   min-height: 0;
@@ -606,86 +613,6 @@
   width: 32px;
   height: 32px;
   color: var(--ink);
-}
-.en-gate {
-  background: var(--surface-2);
-  padding: 20px 24px;
-}
-.en-gate-line {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-}
-.en-gate-sub {
-  margin: 4px 0 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--ink-subtlest);
-}
-.en-gate-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-}
-/* DS Button, Style=primary (Oct 9 2026, replacing the red): #FAFAFA with
-   #0A0909 SemiBold, radius sm (4px), at the small size. */
-.en-gate-btn {
-  height: 40px;
-  padding: 11px 20px;
-  border: 0;
-  border-radius: 4px;
-  background: #fafafa;
-  color: #0a0909;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 18px;
-  cursor: pointer;
-}
-.en-gate-btn:hover {
-  background: #e5e5e5;
-}
-.en-gate-btn:focus-visible {
-  outline: 2px solid #fafafa;
-  outline-offset: 2px;
-}
-/* Members already in sign in; the secondary action is outlined, not filled. */
-.en-gate-signin {
-  height: 40px;
-  border: 1px solid rgb(255 255 255 / 0.28);
-  border-radius: 4px;
-  background: none;
-  color: var(--ink);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 7px 14px;
-  cursor: pointer;
-}
-.en-gate-signin:hover {
-  border-color: rgb(255 255 255 / 0.5);
-}
-.en-gate-back {
-  border: 0;
-  background: none;
-  color: var(--ink-subtlest);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.en-chat-notice {
-  margin: 0 0 4px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background: var(--surface-2);
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--ink-subtle);
-}
-.en-chat-notice--interrupted {
-  box-shadow: inset 3px 0 0 var(--warning);
 }
 .en-chat-closed {
   margin: 0;
@@ -2233,20 +2160,52 @@
   }
 }
 
-/* CHAT DOWN (Oct 21 2026). The room failing is not the broadcast failing, so
-   it gets the warning rail the stream's own interruption uses — the reader
-   should see at a glance that something is off, and read one line to learn
-   it is only this panel. */
-.en-chat-notice--down {
-  box-shadow: inset 3px 0 0 var(--warning);
+
+/* ---------- the chat's two blocked states (Arthur's designs, Oct 21 2026) ---------- */
+
+/* Blurred, dimmed and inert: the room is there, visibly, but it is behind a
+   wall. The header above stays sharp so Close always works. */
+.en-chat-scroll.is-veiled,
+.en-chat-foot.is-veiled {
+  filter: blur(5px);
+  opacity: 0.5;
+  user-select: none;
+}
+.en-chat-block {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+}
+.en-block-icon {
+  color: var(--ink-subtle);
+}
+.en-block-icon--alert {
+  color: var(--color-crimson-500, var(--brand));
+}
+.en-block-line {
+  margin: 0;
+  max-width: 30ch;
+  font-size: 17px;
+  line-height: 1.35;
   color: var(--ink);
 }
-.en-chat-notice--down b {
-  color: var(--warning);
-  font-weight: 600;
+.en-block-line span {
+  display: block;
 }
-/* The composer goes, as it does when the chat closes, but the word is
-   different: unavailable is a fault, closed is a decision. */
-.en-chat-closed--down {
-  color: var(--warning);
+/* The file's button is a full pill, not the 4px the rest of the page uses. */
+.mp-btn--pill {
+  height: 46px;
+  padding: 14px 28px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
 }

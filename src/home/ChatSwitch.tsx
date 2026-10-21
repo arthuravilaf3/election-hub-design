@@ -1,12 +1,13 @@
 /**
- * Prototype chrome, not design (Oct 21 2026): forces the chat's health on its
- * own, beside the stream's switch and never inside it — the two surfaces fail
- * separately and the controls have to show that they can.
+ * Prototype chrome, not design (Oct 21 2026): forces what the chat panel is
+ * showing, on its own and never inside the stream's switch — the two surfaces
+ * fail separately and the controls have to show that they can.
  */
 import type { ChatStatus } from './chat';
 
 const OPTIONS: Array<{ value: ChatStatus; label: string }> = [
-  { value: 'on', label: 'On' },
+  { value: 'member', label: 'Member' },
+  { value: 'locked', label: 'Locked' },
   { value: 'down', label: 'Down' },
 ];
 

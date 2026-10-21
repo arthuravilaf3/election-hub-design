@@ -11,14 +11,23 @@
  * first line, and wrapped lines hang to the avatar's right (the 26px indent
  * in the file) — so it is a hanging indent here, not three stacked rows.
  *
- * TWO RULES FROM THE PRD ARE LOAD-BEARING:
- *  - Posting is for MEMBERS (Arthur, Oct 9 2026: "o chat só membership" —
- *    the PRD's "log in or buy a membership", over the hub's free-account
- *    gate). The composer reads as the file draws it until it is touched,
- *    then states the gate: join, or sign in if you already are a member.
- *    Reading stays open to everyone.
- *  - Moderation is declared where it matters, in that gate, rather than as a
- *    label the file does not have.
+ * THE TWO BLOCKED STATES (Arthur's designs, Oct 21 2026). Both work the same
+ * way and nothing like the notice bar they replaced: the room blurs behind a
+ * centred glyph, two lines and one button.
+ *   locked — a padlock, "Join the live chat with a paid membership",
+ *            "Upgrade Plan". Reading is gated too, not only posting, so the
+ *            composer's old sign-in gate is gone: a non-member never reaches
+ *            it. See chat.ts for why that is flagged for the P.O.
+ *   down   — a crimson alert, "Something went wrong, please try again",
+ *            "Reload Comments". The stream is untouched (chat.ts).
+ * The blurred room is INERT: it is decoration behind a wall, so it takes no
+ * focus and no screen reader reads it. The header stays live above both, so
+ * Close always works.
+ *
+ * ENDED is deliberately NOT one of them. The broadcast finishing winds the
+ * room down on purpose — the PRD says it "stays readable" — so it keeps the
+ * messages sharp and only swaps the composer for "Chat closed". A fault and a
+ * decision should not look alike.
  *
  * A11Y: role="log" with aria-live OFF. A log is the right role, but election
  * night chat arrives several messages a minute — announcing each one would
@@ -45,28 +54,69 @@ const NOTICE: Partial<Record<StreamStatus, string>> = {
 
 const ARRIVAL_MS = 4200;
 
+function LockIcon() {
+  return (
+    <svg className="en-block-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="12" cy="15.5" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg className="en-block-icon en-block-icon--alert" width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 7.6v5.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="12" cy="16.1" r="1.05" fill="currentColor" />
+    </svg>
+  );
+}
+
+/* The designs break each message in a particular place — after "with", after
+   "wrong," — so the lines are authored, not left to the wrapper to guess.
+   They still wrap inside themselves on a narrow panel. */
+const BLOCK_LINES: Record<'locked' | 'down', [string, string]> = {
+  locked: ['Join the live chat with', 'a paid membership'],
+  down: ['Something went wrong,', 'please try again'],
+};
+
+/** The wall over the room. Two states, one shape. */
+function ChatBlock({ kind }: { kind: 'locked' | 'down' }) {
+  const locked = kind === 'locked';
+  return (
+    <div className={`en-chat-block en-chat-block--${kind}`} role={locked ? undefined : 'alert'}>
+      {locked ? <LockIcon /> : <AlertIcon />}
+      <p className="en-block-line">
+        {BLOCK_LINES[kind].map((line) => (
+          <span key={line}>{line}</span>
+        ))}
+      </p>
+      <button type="button" className="mp-btn mp-btn--primary mp-btn--pill">
+        {locked ? 'Upgrade Plan' : 'Reload Comments'}
+      </button>
+    </div>
+  );
+}
+
 interface LiveChatProps {
   status: StreamStatus;
-  /** The chat's own health — never derived from the stream's (see chat.ts). */
+  /** What the panel is showing — never derived from the stream (see chat.ts). */
   chat: ChatStatus;
   /** Collapses the panel to the "Join the Conversation" button (Figma 391:150108). */
   onClose: () => void;
 }
 
 export function LiveChat({ status, chat, onClose }: LiveChatProps) {
-  const down = chat === 'down';
-  /* Two different silences. "Closed" is the broadcast ending and the room
-     being wound down on purpose; "down" is the service failing while the
-     night carries on. Both stop new messages and posting, and the notice
-     says which one it is — the page never goes quiet without saying why. */
-  const closed = status === 'ended';
-  const quiet = closed || down;
+  const block = chat === 'member' ? null : chat;
+  const closed = !block && status === 'ended';
+  const quiet = block !== null || closed;
   const [messages, setMessages] = useState<ChatMessage[]>(CHAT_SEED);
-  const [composing, setComposing] = useState(false);
   const pending = useRef(0);
 
   // Mock traffic: one message every few seconds until the fixture runs out —
-  // and none once the chat has closed.
+  // and none once the room is closed or walled off.
   useEffect(() => {
     if (quiet) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -99,79 +149,55 @@ export function LiveChat({ status, chat, onClose }: LiveChatProps) {
           </button>
         </header>
         <hr className="en-chat-rule" />
-        {/* The chat's own failure outranks whatever the stream is doing:
-            if the room is unreachable, that is the thing to say. */}
-        {down ? (
-          <p className="en-chat-notice en-chat-notice--down" role="status">
-            <b>Chat is down.</b> The stream is unaffected. Messages already here stay readable, and
-            new ones appear when the room is back.
+        {!block && NOTICE[status] && (
+          <p className={`en-chat-notice en-chat-notice--${status}`} role="status">
+            {NOTICE[status]}
           </p>
-        ) : (
-          NOTICE[status] && (
-            <p className={`en-chat-notice en-chat-notice--${status}`} role="status">
-              {NOTICE[status]}
-            </p>
-          )
         )}
 
-        {/* role="log" belongs on the region, not on the <ol> — an ol with a
-            non-list role strips its children of their list semantics. */}
-        {/* Closed, the rows lose their reply buttons and nothing inside takes
-            focus — so the region does, to stay scrollable from the keyboard. */}
-        <div
-          className="en-chat-scroll"
-          role="log"
-          aria-live="off"
-          aria-label="Chat messages"
-          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-          tabIndex={quiet ? 0 : undefined}
-        >
-          <ol className="en-chat-list">
-            {messages.map((m) => (
-              <li key={m.id} className={`en-msg${m.house ? ' en-msg--house' : ''}`}>
-                <p className="en-msg-text">
-                  <span className={`en-avatar${m.house ? ' en-avatar--house' : ''}`} aria-hidden="true">
-                    {m.mark}
-                  </span>
-                  <span className="en-msg-author">{m.author}</span> {m.text}
-                </p>
-                {/* The house account posts; it does not invite replies to itself. */}
-                {!m.house && !quiet && (
-                  <button type="button" className="en-msg-reply">
-                    Reply Comment
-                  </button>
-                )}
-              </li>
-            ))}
-          </ol>
+        <div className="en-chat-main">
+          {/* role="log" belongs on the region, not on the <ol> — an ol with a
+              non-list role strips its children of their list semantics. */}
+          {/* Closed, the rows lose their reply buttons and nothing inside takes
+              focus — so the region does, to stay scrollable from the keyboard.
+              Walled off, the whole thing goes inert instead. */}
+          <div
+            className={`en-chat-scroll${block ? ' is-veiled' : ''}`}
+            role="log"
+            aria-live="off"
+            aria-label="Chat messages"
+            inert={block !== null}
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={closed ? 0 : undefined}
+          >
+            <ol className="en-chat-list">
+              {messages.map((m) => (
+                <li key={m.id} className={`en-msg${m.house ? ' en-msg--house' : ''}`}>
+                  <p className="en-msg-text">
+                    <span className={`en-avatar${m.house ? ' en-avatar--house' : ''}`} aria-hidden="true">
+                      {m.mark}
+                    </span>
+                    <span className="en-msg-author">{m.author}</span> {m.text}
+                  </p>
+                  {/* The house account posts; it does not invite replies to itself. */}
+                  {!m.house && !quiet && (
+                    <button type="button" className="en-msg-reply">
+                      Reply Comment
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+          {block && <ChatBlock kind={block} />}
         </div>
       </div>
 
-      <div className="en-chat-foot">
-        {down ? (
-          <p className="en-chat-closed en-chat-closed--down">Chat unavailable</p>
-        ) : closed ? (
+      <div className={`en-chat-foot${block ? ' is-veiled' : ''}`} inert={block !== null}>
+        {closed ? (
           <p className="en-chat-closed">Chat closed</p>
-        ) : composing ? (
-          <div className="en-gate" role="status">
-            <p className="en-gate-line">The chat is for members</p>
-            <p className="en-gate-sub">
-              DailyWire+ members post in a moderated room tonight. Anyone can read along.
-            </p>
-            <div className="en-gate-actions">
-              <button type="button" className="en-gate-btn">
-                Become a member
-              </button>
-              <button type="button" className="en-gate-signin">
-                Sign in
-              </button>
-              <button type="button" className="en-gate-back" onClick={() => setComposing(false)}>
-                Not now
-              </button>
-            </div>
-          </div>
         ) : (
-          <button type="button" className="en-composer" onClick={() => setComposing(true)}>
+          <button type="button" className="en-composer">
             <span className="en-composer-hint">Leave a comment</span>
             <span className="en-composer-send" aria-hidden="true">
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
