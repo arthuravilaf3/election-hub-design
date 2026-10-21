@@ -98,9 +98,15 @@ export function HomePage() {
 
   /* Prototype chrome on/off, remembered per browser (a convenience, so it
      tolerates storage being blocked). */
+  /* On a phone the switches stack over the player — the stream's, the chat's,
+     the clock and the phase take the whole frame — so the panel starts folded
+     there and "Show" opens it. A stored choice still wins: someone who opened
+     it on this device meant it. */
   const [devHidden, setDevHidden] = useState(() => {
     try {
-      return window.localStorage.getItem(DEV_KEY) === 'hidden';
+      const stored = window.localStorage.getItem(DEV_KEY);
+      if (stored) return stored === 'hidden';
+      return window.matchMedia('(max-width: 900px)').matches;
     } catch {
       return false;
     }
