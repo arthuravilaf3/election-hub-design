@@ -2429,8 +2429,8 @@
 @media (max-width: 760px) {
   .dock-rail {
     grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-    padding: 6px 16px 18px;
+    gap: 6px;
+    padding: 4px 16px 18px;
   }
   /* The wordmark and the X go; the grab bar is the door now. The provider
      and the last batch STAY — freshness is not optional, and "Results
@@ -2439,7 +2439,7 @@
     display: grid;
     place-items: center;
     width: 100%;
-    height: 26px;
+    height: 16px;
     padding: 0;
     border: 0;
     background: none;
@@ -2471,6 +2471,7 @@
   }
   .dock-chambers {
     grid-area: 3 / 1;
+    margin-top: 4px;
   }
   .dock-cta {
     grid-area: 4 / 1;
@@ -2482,51 +2483,54 @@
 /* Wide: the bar shows both chambers, so neither the name nor the switch has
    anything to do. */
 .dock-chamber-name,
-.dock-pick {
+.dock-switch {
   display: none;
 }
 
 @media (max-width: 760px) {
-  /* The row under the grab bar: the chamber on the left with its switch, the
-     feed's freshness on the right, both on the same line. */
+  /* The head under the grab bar: the chamber centred between two chevrons,
+     the feed's freshness on its own line beneath. */
   .dock-brand {
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 2px;
   }
-  .dock-chamber-name {
-    display: inline;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink);
-  }
-  .dock-pick {
+  .dock-switch {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-right: auto;
-    margin-left: 10px;
   }
-  .dock-pick-dot {
-    width: 7px;
-    height: 7px;
+  .dock-chamber-name {
+    display: inline;
+    min-width: 7.5ch;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--ink);
+  }
+  .dock-arrow {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
     padding: 0;
     border: 0;
     border-radius: 50%;
-    background: rgb(255 255 255 / 0.28);
+    background: none;
+    color: var(--ink-soft);
     cursor: pointer;
   }
-  .dock-pick-dot[aria-pressed='true'] {
-    background: var(--ink);
+  .dock-arrow:hover {
+    color: var(--ink);
+    background: rgb(255 255 255 / 0.08);
   }
-  .dock-pick-dot:focus-visible {
+  .dock-arrow:focus-visible {
     outline: 2px solid var(--ink);
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
-  /* The name moved to the row above; the foot keeps who wins. */
+  /* The name moved to the head; the foot keeps who wins. */
   .hseat--compact .hseat-chamber {
     display: none;
   }

@@ -127,6 +127,12 @@ export function ResultsDock({ state }: { state: ElectionState }) {
     picked.current = true;
     setPick(next);
   };
+  /** One step through the chambers, wrapping — what a chevron and a swipe
+   *  both mean. */
+  const step = (dir: 1 | -1) => {
+    const i = CHAMBERS.findIndex((c) => c.id === pick);
+    choose(CHAMBERS[(i + dir + CHAMBERS.length) % CHAMBERS.length].id);
+  };
   const swipeX = useRef<number | null>(null);
   const onSwipeDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     swipeX.current = e.clientX;
@@ -137,9 +143,7 @@ export function ResultsDock({ state }: { state: ElectionState }) {
     if (from === null) return;
     const dx = e.clientX - from;
     if (Math.abs(dx) < 40) return;
-    const i = CHAMBERS.findIndex((c) => c.id === pick);
-    const next = CHAMBERS[(i + (dx < 0 ? 1 : CHAMBERS.length - 1)) % CHAMBERS.length];
-    choose(next.id);
+    step(dx < 0 ? 1 : -1);
   };
 
   const { delayed, feedAsOf } = state.night;
@@ -175,22 +179,32 @@ export function ResultsDock({ state }: { state: ElectionState }) {
           <span className="dock-grab-bar" aria-hidden="true" />
         </button>
         <div className="dock-brand">
-          {/* On a phone this row is the chamber on the left and the feed's
-              freshness on the right; the wordmark is gone there. */}
-          <span className="dock-chamber-name" aria-hidden="true">
-            {CHAMBERS.find((c) => c.id === pick)?.label}
-          </span>
-          <span className="dock-pick" role="group" aria-label="Chamber">
-            {CHAMBERS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className="dock-pick-dot"
-                aria-label={label}
-                aria-pressed={pick === id}
-                onClick={() => choose(id)}
-              />
-            ))}
+          {/* On a phone the head is the chamber, centred between two
+              chevrons, with the feed's freshness under it; the wordmark is
+              gone there. The chevrons are the swipe's twin — the switch for
+              a finger that does not swipe, for the keyboard and for a reader. */}
+          <span className="dock-switch" role="group" aria-label="Chamber">
+            <button
+              type="button"
+              className="dock-arrow"
+              aria-label="Previous chamber"
+              onClick={() => step(-1)}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="m14 6-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <span className="dock-chamber-name">{CHAMBERS.find((c) => c.id === pick)?.label}</span>
+            <button
+              type="button"
+              className="dock-arrow"
+              aria-label="Next chamber"
+              onClick={() => step(1)}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="m10 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
           </span>
           {/* The live tag came out on Oct 21 2026 — the dock is on screen
               only while the night is running, so a chip saying "Live" said
