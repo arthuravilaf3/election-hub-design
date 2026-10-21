@@ -1,0 +1,99 @@
+/**
+ * The results dock — the night's results, fixed to the bottom of the window
+ * (Oct 9 2026: "talvez até deixar sticky na página com a opção de fechar").
+ *
+ * It replaces the Sep 22 "no fixed ticker" call for this page, and since the
+ * same day's later round it is the ONLY results surface on the home: the big
+ * panel under the stream came out ("o banner grande que não é fixo"), so the
+ * dock is always up from the first paint. The seat lines come from the same
+ * reducer as the hub's map; the full map is one primary CTA away.
+ *
+ * Every number on screen carries its source and freshness (hub rule), so the
+ * dock names the provider and the last batch, and says so louder when the
+ * feed stalls.
+ *
+ * Closing it is remembered for the visit (sessionStorage, guarded: a private
+ * window simply shows it again on the next load).
+ *
+ * A11Y: a complementary landmark with its own name; no live region — the race
+ * calls are already announced once by the page.
+ */
+import { useEffect, useState } from 'react';
+import { CHAMBERS, HUB_URL, SeatBar, chamberSeats } from './ResultsBand';
+import { resultsLabel } from '../data/sources';
+import { formatET } from '../data/time';
+import type { ElectionState } from '../state/electionReducer';
+
+const DISMISSED_KEY = 'dw-home-dock-closed';
+
+function readDismissed(): boolean {
+  try {
+    return window.sessionStorage.getItem(DISMISSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function ResultsDock({ state }: { state: ElectionState }) {
+  const [dismissed, setDismissed] = useState(readDismissed);
+  const shown = !dismissed;
+
+  /* The prototype's own chrome (night clock, DEV corner, the chat's Join
+     button) sits on the same bottom edge; it reads this to step up. */
+  useEffect(() => {
+    const root = document.documentElement;
+    if (shown) root.dataset.dock = 'on';
+    else delete root.dataset.dock;
+    return () => {
+      delete root.dataset.dock;
+    };
+  }, [shown]);
+
+  const close = () => {
+    setDismissed(true);
+    try {
+      window.sessionStorage.setItem(DISMISSED_KEY, '1');
+    } catch {
+      /* storage blocked: closed for this page view only */
+    }
+  };
+
+  const { delayed, feedAsOf } = state.night;
+  const races = state.ballot[state.chamber];
+  const source = resultsLabel(Object.values(races).find((r) => r.results?.providerId)?.results?.providerId ?? '');
+  const asOf = feedAsOf ? formatET(new Date(feedAsOf).getTime()) : null;
+
+  if (!shown) return null;
+  return (
+    <aside className="dock is-shown" aria-label="Live results">
+      <div className="dock-rail">
+        <div className="dock-brand">
+          {/* The live tag came out on Oct 21 2026 — the dock is on screen
+              only while the night is running, so a chip saying "Live" said
+              what the whole bar already said. A STALLED feed is different:
+              that is a state the PRD will not let go unsaid, so the source
+              line names it in full where the chip used to. */}
+          <span className="dock-title">The Midterms</span>
+          <span className={`dock-source${delayed ? ' dock-source--delayed' : ''}`}>
+            {delayed ? 'Results delayed · ' : ''}
+            {source}
+            {asOf ? ` · ${delayed ? 'last update' : 'updated'} ${asOf}` : ''}
+          </span>
+        </div>
+        <div className="dock-chambers">
+          {CHAMBERS.map(({ id, label }) => (
+            <SeatBar key={id} c={chamberSeats(state, id, label)} compact />
+          ))}
+        </div>
+        <a className="mp-btn mp-btn--primary dock-cta" href={HUB_URL}>
+          Full map
+        </a>
+        <button type="button" className="dock-close" onClick={close} aria-label="Close live results bar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+    </aside>
+  );
+}
