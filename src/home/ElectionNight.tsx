@@ -57,7 +57,16 @@ function headLine(stream: StreamStatus, at: number | null): string {
 }
 
 export function ElectionNight({ state, stream, chat }: ElectionNightProps) {
-  const [chatOpen, setChatOpen] = useState(true);
+  /* On a phone the chat starts CLOSED (Arthur, Oct 21): opening it takes the
+     whole screen, and that is a choice the reader makes, not a state they
+     land in. On a wider screen both columns fit, so it opens with the page. */
+  const [chatOpen, setChatOpen] = useState(() => {
+    try {
+      return !window.matchMedia('(max-width: 760px)').matches;
+    } catch {
+      return true;
+    }
+  });
   /* WATCH MODE ON A PHONE (Oct 21 2026). With the chat open there is no page
      left to scroll: the video pins to the top, the room takes the rest of the
      screen, and the only scroll is the room's own. Closing the chat gives the
@@ -91,8 +100,24 @@ export function ElectionNight({ state, stream, chat }: ElectionNightProps) {
     if (!chatOpen) tabRef.current?.focus();
     else document.querySelector<HTMLButtonElement>('.en-chat-close')?.focus();
   }, [chatOpen]);
+  /* Entering watch mode used to jump: the video was wherever the page had it
+     and the overlay snapped it to the top edge. Now the page SCROLLS the
+     video up first, smoothly, and the fixed overlay takes over at the pixel
+     the scroll lands on — so nothing moves at the swap. Reduced motion skips
+     straight to it. */
+  const openTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(openTimer.current), []);
   const toggle = (open: boolean) => {
     touched.current = true;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stage = document.querySelector('.en-stage');
+    if (open && narrow && stage && !reduced) {
+      stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.clearTimeout(openTimer.current);
+      openTimer.current = window.setTimeout(() => setChatOpen(true), 420);
+      return;
+    }
+    window.clearTimeout(openTimer.current);
     setChatOpen(open);
   };
 

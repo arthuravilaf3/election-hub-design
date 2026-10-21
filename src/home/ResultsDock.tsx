@@ -107,6 +107,41 @@ export function ResultsDock({ state }: { state: ElectionState }) {
     }
   };
 
+  /* Which chamber the phone shows. It starts on the map's, then the reader
+     owns it: a swipe across the bars, or the dots, moves between the two
+     (Arthur, Oct 21 — "adiciona uma funcao de scroll left/right pra trocar a
+     race ali mesmo"). The dots are not decoration: they are the same switch
+     for a finger that does not swipe, for the keyboard and for a reader. */
+  const [pick, setPick] = useState<'house' | 'senate'>(
+    state.chamber === 'house' ? 'house' : 'senate'
+  );
+  /* It FOLLOWS the map until the reader takes it over. Captured once at
+     mount it froze on the reducer's initial chamber while the map had
+     already moved on, and the bar and the map disagreed about what you were
+     looking at — the one thing this bar must not do. */
+  const picked = useRef(false);
+  useEffect(() => {
+    if (!picked.current) setPick(state.chamber === 'house' ? 'house' : 'senate');
+  }, [state.chamber]);
+  const choose = (next: 'house' | 'senate') => {
+    picked.current = true;
+    setPick(next);
+  };
+  const swipeX = useRef<number | null>(null);
+  const onSwipeDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    swipeX.current = e.clientX;
+  };
+  const onSwipeUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const from = swipeX.current;
+    swipeX.current = null;
+    if (from === null) return;
+    const dx = e.clientX - from;
+    if (Math.abs(dx) < 40) return;
+    const i = CHAMBERS.findIndex((c) => c.id === pick);
+    const next = CHAMBERS[(i + (dx < 0 ? 1 : CHAMBERS.length - 1)) % CHAMBERS.length];
+    choose(next.id);
+  };
+
   const { delayed, feedAsOf } = state.night;
   const races = state.ballot[state.chamber];
   const source = resultsLabel(Object.values(races).find((r) => r.results?.providerId)?.results?.providerId ?? '');
@@ -140,6 +175,23 @@ export function ResultsDock({ state }: { state: ElectionState }) {
           <span className="dock-grab-bar" aria-hidden="true" />
         </button>
         <div className="dock-brand">
+          {/* On a phone this row is the chamber on the left and the feed's
+              freshness on the right; the wordmark is gone there. */}
+          <span className="dock-chamber-name" aria-hidden="true">
+            {CHAMBERS.find((c) => c.id === pick)?.label}
+          </span>
+          <span className="dock-pick" role="group" aria-label="Chamber">
+            {CHAMBERS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className="dock-pick-dot"
+                aria-label={label}
+                aria-pressed={pick === id}
+                onClick={() => choose(id)}
+              />
+            ))}
+          </span>
           {/* The live tag came out on Oct 21 2026 — the dock is on screen
               only while the night is running, so a chip saying "Live" said
               what the whole bar already said. A STALLED feed is different:
@@ -156,7 +208,15 @@ export function ResultsDock({ state }: { state: ElectionState }) {
             cramped (Arthur, Oct 21). It is the chamber the map is on, so the
             bar and the map never disagree about what you are looking at, and
             the CTA is the way to the other one. */}
-        <div className="dock-chambers" data-only={state.chamber === 'house' ? 'house' : 'senate'}>
+        <div
+          className="dock-chambers"
+          data-only={pick}
+          onPointerDown={onSwipeDown}
+          onPointerUp={onSwipeUp}
+          onPointerCancel={() => {
+            swipeX.current = null;
+          }}
+        >
           {CHAMBERS.map(({ id, label }) => (
             <div key={id} className="dock-chamber" data-chamber={id}>
               <SeatBar c={chamberSeats(state, id, label)} compact />

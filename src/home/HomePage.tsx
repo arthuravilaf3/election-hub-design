@@ -211,7 +211,9 @@ export function HomePage() {
 
         {/* The Midterms strip sits between Opinion Board and Hosts (Arthur,
             Oct 9 2026), before Election Day only. */}
-        {!day && <MidtermsStrip />}
+        {/* On election day too (Arthur, Oct 21): the same slot it has before
+            the election, right under the Opinion Board. */}
+        <MidtermsStrip />
 
         <section className="home-section" aria-label="Hosts">
           <h2 className="home-section-title">Hosts</h2>
