@@ -224,7 +224,7 @@ export function ResultsDock({ state }: { state: ElectionState }) {
           ))}
         </div>
         <a className="mp-btn mp-btn--primary dock-cta" href={HUB_URL}>
-          Check the election hub
+          Go to election hub
         </a>
         <button type="button" className="dock-close" onClick={close} aria-label="Close live results bar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
