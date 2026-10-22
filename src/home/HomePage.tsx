@@ -39,8 +39,20 @@ import { useNightClock } from '../state/useNightClock';
 import { msOfMinute } from '../data/night';
 import { StreamSwitch } from './StreamSwitch';
 import { ChatSwitch } from './ChatSwitch';
+import { TakeoverSwitch } from './TakeoverSwitch';
+import { PolymarketTakeover } from './PolymarketTakeover';
+import { parseAdParam, type AdState } from './takeover';
 import { parseStreamParam, streamStatusAt, type StreamStatus } from './stream';
 import { parseChatParam, type ChatStatus } from './chat';
+
+/** `?ad=on|off` serves or withholds the Polymarket wallpaper. */
+function adFromUrl(): AdState {
+  try {
+    return parseAdParam(new URLSearchParams(window.location.search).get('ad')) ?? 'off';
+  } catch {
+    return 'off';
+  }
+}
 
 /** `?chat=member|locked|down` forces the chat panel, independently of the stream. */
 function chatFromUrl(): ChatStatus {
@@ -91,6 +103,18 @@ export function HomePage() {
   /* The chat panel is its own: the PRD requires the surfaces to fail
      independently, so nothing about the stream can set this. */
   const [chat, setChat] = useState<ChatStatus>(chatFromUrl);
+  /* The wallpaper takeover. It is a LAYOUT state, not a component that sits
+     on top: the root attribute narrows the page's rail so the creative and
+     the coverage never share a pixel (see PolymarketTakeover). */
+  const [ad, setAd] = useState<AdState>(adFromUrl);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (ad === 'on') root.dataset.ad = 'on';
+    else delete root.dataset.ad;
+    return () => {
+      delete root.dataset.ad;
+    };
+  }, [ad]);
   /* Election day unless the link says otherwise: /election-day/ keeps
      opening on the night it was shared for. */
   const [phase, setPhase] = useState<HomePhase>(() => phaseFromUrl() ?? 'day');
@@ -123,7 +147,9 @@ export function HomePage() {
   }, [devHidden]);
 
   return (
-    <div className="home">
+    <>
+      {ad === 'on' && <PolymarketTakeover />}
+      <div className="home">
       {/* Promo, ad slot, nav and masthead are one banner landmark — loose
           blocks above the fold otherwise sit outside every landmark. */}
       <header className="home-chrome">
@@ -264,7 +290,9 @@ export function HomePage() {
         {day && <StreamSwitch forced={forcedStream} current={stream} onChange={setForcedStream} />}
         {day && <ChatSwitch chat={chat} onChange={setChat} />}
         <PhaseSwitch phase={phase} onChange={setPhase} />
+        <TakeoverSwitch ad={ad} onChange={setAd} />
       </div>
-    </div>
+      </div>
+    </>
   );
 }
