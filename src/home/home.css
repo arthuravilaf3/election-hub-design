@@ -2641,164 +2641,39 @@
   }
 }
 
-/* ---------- the lockup and the offer, in both gutters ---------- */
+/* ---------- the creative ---------- */
 
-.pm-lockup {
-  display: block;
-  height: 17px;
-  width: auto;
-  /* The asset is drawn for a dark surface; the skin is light. */
-  filter: invert(1);
-}
-.pm-lockup--lg {
-  height: 28px;
-}
-.pm-offer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-}
-.pm-offer-line {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #2b2d35;
-}
-
-/* ---------- the leaderboard ---------- */
-
+/* The art is placed, never stretched: the leaderboard caps at its own 1000px
+   and centres, so it stays crisp and the skin's ground shows either side —
+   which is how a leaderboard unit sits anyway. */
 .pm-top {
   position: relative;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 48px;
-  min-height: 200px;
-  padding: 18px 32px;
-  overflow: hidden;
+  padding: 0;
 }
-.pm-top-inner {
-  display: flex;
-  align-items: center;
-  gap: 48px;
-  text-decoration: none;
-}
-.pm-top-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-.pm-top-head {
-  display: flex;
-  flex-direction: column;
-  font-family: var(--font-default);
-  font-size: 52px;
-  line-height: 0.96;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #16181d;
-}
-.pm-top-grad {
-  background: linear-gradient(90deg, #2a60f7 0%, #7b4bd6 70%, #a03fc4 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.pm-top-code {
-  margin-top: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: #2b2d35;
-}
-.pm-top-code b {
-  color: #2a60f7;
-}
-.pm-top-cta {
-  flex: none;
-  padding: 14px 26px;
-  border-radius: 8px;
-  background: #2a60f7;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  text-decoration: none;
-}
-.pm-top-cta:hover {
-  background: #1f4fd8;
-}
-
-/* The app shot: chrome, a headline card, a few rows. Enough to read as the
-   product, and no more — the real art comes from the advertiser. */
-.pm-top-art {
+.pm-top-frame {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  height: 168px;
+  max-width: 1000px;
+  margin-inline: auto;
 }
-.pm-phone {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 104px;
-  height: 160px;
-  padding: 8px 8px 0;
-  border-radius: 14px 14px 4px 4px;
-  background: linear-gradient(170deg, #233a9a 0%, #3a2a7e 55%, #6b2a63 100%);
-  box-shadow: 0 10px 24px rgb(32 20 70 / 0.26);
-  overflow: hidden;
+.pm-top-link {
+  display: block;
 }
-.pm-phone--back {
-  height: 146px;
-  opacity: 0.92;
+.pm-top-art {
+  display: block;
+  width: 100%;
+  height: auto;
 }
-.pm-phone-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 6px;
-  color: rgb(255 255 255 / 0.85);
+/* The creative's own "View the Hub" button, made to reach the hub. */
+.pm-top-hub {
+  position: absolute;
+  display: block;
+  border-radius: 8px;
 }
-.pm-phone-bar i {
-  font-style: normal;
+.pm-top-hub:focus-visible {
+  outline: 3px solid #16181d;
+  outline-offset: 2px;
 }
-.pm-phone-bar b {
-  width: 16px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgb(255 255 255 / 0.5);
-}
-.pm-phone-head {
-  font-size: 7px;
-  font-weight: 700;
-  color: rgb(255 255 255 / 0.9);
-}
-.pm-phone-card {
-  padding: 6px;
-  border-radius: 5px;
-  background: rgb(255 255 255 / 0.14);
-  font-size: 7px;
-  line-height: 1.25;
-  font-weight: 600;
-  color: #fff;
-}
-.pm-phone-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.pm-phone-rows i {
-  height: 17px;
-  border-radius: 4px;
-  background: rgb(255 255 255 / 0.1);
-}
-
-/* ---------- the gutters ---------- */
 
 .pm-gutter {
   position: fixed;
@@ -2806,14 +2681,10 @@
   bottom: 0;
   z-index: 0;
   display: none;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 30px;
   width: calc((100vw - var(--rail)) / 2);
-  padding: 24px 14px;
   overflow: hidden;
-  text-decoration: none;
 }
 .pm-gutter--left {
   left: 0;
@@ -2821,204 +2692,18 @@
 .pm-gutter--right {
   right: 0;
 }
+.pm-gutter img {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: 100%;
+  object-fit: contain;
+}
 @media (min-width: 1380px) {
   :root[data-ad='on'] .pm-gutter {
     display: flex;
   }
 }
-.pm-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  width: 100%;
-  max-width: 252px;
-}
-
-/* Left: head-to-head markets on white cards. */
-.pm-mkt {
-  position: relative;
-  padding: 10px 12px 12px;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 6px 18px rgb(40 24 70 / 0.1);
-}
-.pm-mkt-faces img {
-  position: absolute;
-  top: 10px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: top center;
-}
-.pm-mkt-faces img:first-child {
-  left: 10px;
-  background: #dbe4fb;
-}
-.pm-mkt-faces img:last-child {
-  right: 10px;
-  background: #fbdce1;
-}
-.pm-mkt-title {
-  display: block;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 700;
-  color: #16181d;
-}
-.pm-mkt-sub {
-  display: block;
-  margin-top: 1px;
-  text-align: center;
-  font-size: 8px;
-  color: #6b6d78;
-}
-.pm-mkt-bar {
-  display: block;
-  position: relative;
-  height: 5px;
-  margin: 10px 0 4px;
-  border-radius: 3px;
-  background: #f06d7e;
-  overflow: hidden;
-}
-.pm-mkt-fill {
-  display: block;
-  height: 100%;
-  border-radius: 3px;
-  background: #4b6ef5;
-}
-.pm-mkt-pcts {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  font-weight: 700;
-  font-style: normal;
-}
-.pm-pct--dem {
-  color: #2a60f7;
-  font-style: normal;
-}
-.pm-pct--rep {
-  color: #e2445c;
-  font-style: normal;
-}
-
-/* Right: balance-of-power markets on navy cards. */
-.pm-bet {
-  padding: 11px 12px 12px;
-  border-radius: 12px;
-  background: linear-gradient(160deg, #1d2b70 0%, #2b2f86 100%);
-  box-shadow: 0 6px 18px rgb(20 20 60 / 0.22);
-  color: #fff;
-}
-.pm-bet-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.pm-bet-title {
-  flex: 1;
-  font-size: 10px;
-  line-height: 1.25;
-  font-weight: 700;
-}
-.pm-bet-chip {
-  flex: none;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.16);
-  font-size: 7px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.pm-bet-outs {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-.pm-out {
-  flex: 1;
-  min-width: 0;
-}
-.pm-out-label {
-  display: block;
-  font-size: 8px;
-  line-height: 1.2;
-  color: rgb(255 255 255 / 0.82);
-}
-.pm-out-pct {
-  display: block;
-  margin-top: 2px;
-  font-size: 11px;
-  font-weight: 700;
-}
-.pm-out--dem .pm-out-pct {
-  color: #8fb0ff;
-}
-.pm-out--rep .pm-out-pct {
-  color: #ff8fa3;
-}
-.pm-bet-split {
-  display: block;
-  margin-top: 10px;
-}
-.pm-bet-splitlabels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 9px;
-  font-weight: 700;
-}
-.pm-bet-splitlabels i {
-  font-style: normal;
-}
-.pm-bet-splitlabels:first-child i:first-child {
-  color: #8fb0ff;
-}
-.pm-bet-splitlabels:first-child i:last-child {
-  color: #ff8fa3;
-}
-.pm-bet-bar {
-  display: block;
-  height: 4px;
-  margin: 5px 0 4px;
-  border-radius: 2px;
-  background: #e2445c;
-  overflow: hidden;
-}
-.pm-bet-bar i {
-  display: block;
-  height: 100%;
-  background: #4b6ef5;
-}
-.pm-gutter--right .pm-offer-line,
-.pm-gutter--right .pm-lockup {
-  color: #2b2d35;
-}
-
-/* ---------- the leaderboard on a narrow window ---------- */
-
-@media (max-width: 1100px) {
-  .pm-top {
-    flex-direction: column;
-    gap: 20px;
-    min-height: 0;
-    padding: 24px 16px 28px;
-    text-align: center;
-  }
-  .pm-top-inner {
-    flex-direction: column;
-    gap: 20px;
-  }
-  .pm-top-copy {
-    align-items: center;
-  }
-  .pm-top-head {
-    font-size: 38px;
-    align-items: center;
-  }
-}
-
 
 /* ---------- what the narrowed rail breaks (Oct 22 2026) ---------- */
 
@@ -3046,4 +2731,17 @@
 /* The house slot is what the advertiser just bought. */
 :root[data-ad='on'] .home-ad {
   display: none;
+}
+
+
+/* The page's display type comes down a step under the skin: in a 1040px
+   column the masthead and the stream's heading were set for a rail 400px
+   wider, and read as shouting next to the buy. */
+@media (min-width: 1380px) {
+  :root[data-ad='on'] .home-wordmark {
+    font-size: 26px;
+  }
+  :root[data-ad='on'] .en-title {
+    font-size: 20px;
+  }
 }
