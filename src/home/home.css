@@ -642,6 +642,15 @@
 }
 .en-more-frame {
   position: relative;
+  /* The card's width is a share of THIS box, not a fixed 338 (Oct 22 2026).
+     Fixed, it left a card and a half in the stream column once the wallpaper
+     narrowed the rail to 512, and the arrow landed on top of the one card
+     that fit. A container unit keeps it fluid and lets the same value place
+     the arrow, which a percentage could not: in `top` a percentage resolves
+     against the frame's HEIGHT. Caps at the file's 338 so the desktop row is
+     unchanged. */
+  container-type: inline-size;
+  --ep-w: clamp(228px, 40cqw, 338px);
 }
 .en-more-row {
   display: flex;
@@ -654,7 +663,7 @@
   display: none;
 }
 .en-ep {
-  flex: 0 0 338px;
+  flex: 0 0 var(--ep-w);
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
@@ -708,7 +717,9 @@
 /* The file's Carousel Arrow: 32px round, gray-20 ground, a 20px chevron. */
 .en-more-arrow {
   position: absolute;
-  top: calc((338px * 9 / 16) / 2 - 16px);
+  /* Centred on the art, whatever the card is wide. */
+  top: calc(var(--ep-w) * 9 / 16 / 2 - 16px);
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 32px;
@@ -722,6 +733,21 @@
 }
 .en-more-arrow:hover {
   background: #444;
+}
+/* The card that peeks used to be chopped mid-word at the frame's edge; it
+   fades out instead, and only while there is more to come. */
+.en-more-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 56px;
+  background: linear-gradient(to right, rgb(10 9 9 / 0), var(--surface-dim));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.en-more-frame.has-more::after {
+  opacity: 1;
 }
 .en-more-arrow--next {
   right: -16px;
@@ -1400,9 +1426,6 @@
   }
   .dock-close {
     margin-left: 0;
-  }
-  .en-ep {
-    flex-basis: 260px;
   }
   .hseat-win,
   .hseat-foot > span:not(.hseat-foot-control) {
